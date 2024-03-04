@@ -1,0 +1,26 @@
+.sidebarMenu {
+    position: fixed; /* Or absolute */
+    left: 10;
+    top: 70;
+    width: 150px; /* Adjust as needed */
+    height: 100%;
+    background-color: white; /* Adjust as needed */
+    text-align: left;
+    /* Add more styles as needed */
+}
+
+.sidebarMenu ul {
+    list-style-type: none; /* Removes bullets */
+    padding: 0; /* Removes default padding */
+}
+
+.sidebarMenu ul li {
+    margin-left: 20px; /* Adjusts margin to the left, increase as needed */
+    padding-left: 10px; /* Adds padding to the left, optional */
+    margin-bottom: 5px;
+    font-size: large;
+}
+
+.sidebarMenu h2 {
+    margin-left: 28px;
+}

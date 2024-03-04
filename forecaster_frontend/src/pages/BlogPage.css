@@ -1,0 +1,10 @@
+home-page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .project-info, .forecast-scores {
+    margin-bottom: 20px;
+    text-align: left;
+  }

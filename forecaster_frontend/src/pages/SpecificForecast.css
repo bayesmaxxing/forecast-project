@@ -1,0 +1,56 @@
+.info-box {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: auto;
+    margin-top: 10px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #f7f7f7;
+    width: 780px;
+  }
+
+
+
+  .info-item {
+    margin-bottom: 10px;
+    text-align: left;
+  }
+
+  .update-list {
+    list-style: none;
+    border: 1px solid #ccc; /* Add a border around the entire list */
+    border-radius: 5px; /* Optional: round the corners for a smoother look */
+    padding: 20px; /* Add some padding inside the box */
+    margin:auto;
+    width: 780px;
+    max-height: 300px; /* Set a max height to keep the box consistent */
+    overflow-y: auto; /* Enable scrolling within the box if content exceeds max height */
+    margin-top: 10px;
+  }
+  
+  .update-item + .update-item {
+    margin-top: 15px; /* Add space between updates */
+  }
+  
+  .update-container {
+    background-color: #f8f8f8; /* Light background for each update container */
+    border-left: 3px solid #007bff; /* Add a colored border to the left for emphasis */
+    padding: 5px 10px; /* Padding inside each update container */
+    border-radius: 3px; /* Optional: round the corners */
+  }
+  
+  .info-header {
+    font-weight: bold; /* Make the header bold */
+    margin-bottom: 5px; /* Add some space between the header and the content */
+    text-align: left;
+  }
+
+  .question-header { 
+    margin:auto;
+    font-size: 30px;
+    font-weight:bold;
+    align-self:center;
+    width:780px;
+    margin-top: 20px;
+  }
+
