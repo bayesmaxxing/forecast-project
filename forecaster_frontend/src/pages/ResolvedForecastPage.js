@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
-import Sidebar from '/Users/samuelsvensson/Documents/forecasting_project/forecaster_frontend/src/components/Sidebar';
+import Sidebar from './components/Sidebar';
 
 
 function ResolvedForecastPage() {
@@ -73,3 +73,5 @@ function ResolvedForecastPage() {
 };
   
   export default ResolvedForecastPage;
+
+  

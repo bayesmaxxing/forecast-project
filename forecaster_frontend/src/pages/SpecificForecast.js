@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import ForecastGraph from '/Users/samuelsvensson/Documents/forecasting_project/forecaster_frontend/src/components/ForecastGraph';
+import ForecastGraph from './components/ForecastGraph';
 import './SpecificForecast.css';
 
 
