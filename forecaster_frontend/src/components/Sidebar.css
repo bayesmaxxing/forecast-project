@@ -19,8 +19,13 @@
     padding-left: 10px; /* Adds padding to the left, optional */
     margin-bottom: 5px;
     font-size: large;
+    
 }
 
 .sidebarMenu h2 {
     margin-left: 28px;
+}
+
+.sidebarMenu a {
+    color: black;
 }
