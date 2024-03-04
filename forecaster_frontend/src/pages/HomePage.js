@@ -1,4 +1,4 @@
-import SummaryScores from '/Users/samuelsvensson/Documents/forecasting_project/forecaster_frontend/src/components/SummaryScores';
+import SummaryScores from '../components/SummaryScores';
 import './HomePage.css';
 import { Link } from 'react-router-dom';
 

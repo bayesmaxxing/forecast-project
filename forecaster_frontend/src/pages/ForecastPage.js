@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import './ForecastPage.css';
-import Sidebar from './components/Sidebar';
+import Sidebar from '../components/Sidebar';
 
 
 function ForecastPage() {
