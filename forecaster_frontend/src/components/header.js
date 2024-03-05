@@ -9,8 +9,8 @@ function Header () {
             <h1 className='header-title'>Samuel's Forecasts</h1>
             <nav className='navbar'>
                 <ul className='nav-links'>
-                    <li><Link to='/home'>Home</Link></li>
-                    <li><Link to='/'>Questions</Link></li>
+                    <li><Link to='/'>Home</Link></li>
+                    <li><Link to='/questions'>Questions</Link></li>
                     <li><Link to='/faq'>FAQ</Link></li>
                 </ul>
             </nav>

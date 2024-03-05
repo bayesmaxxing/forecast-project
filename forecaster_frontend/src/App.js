@@ -7,7 +7,6 @@ import SpecificForecast from './pages/SpecificForecast';
 import HomePage from './pages/HomePage';
 import FaqPage from './pages/faqPage';
 import Header from './components/header';
-import BlogPost from './pages/BlogPage';
 import './App.css';
 
 function App() {
@@ -16,11 +15,11 @@ function App() {
       <div className="App">
         <Header />
         <Routes>  
-          <Route path="/home" element={<HomePage />}/>
-          <Route path="/" element={<ForecastPage />}/>
+          <Route path="/" element={<HomePage />}/>
+          <Route path="/questions" element={<ForecastPage />}/>
           <Route path="/forecast/:id" element={<SpecificForecast />}/>
-          <Route path="/category/:category" element={<FilteredForecastPage />}/>
-          <Route path="/resolved" element={<ResolvedForecastPage />}/>
+          <Route path="/questions/category/:category" element={<FilteredForecastPage />}/>
+          <Route path="/questions/resolved" element={<ResolvedForecastPage />}/>
           <Route path="/faq" element={<FaqPage />}/>
         </Routes>
       </div>
