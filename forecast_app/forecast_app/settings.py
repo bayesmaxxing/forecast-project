@@ -82,8 +82,12 @@ WSGI_APPLICATION = 'forecast_app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME':  '/Users/samuelsvensson/Documents/forecasting_project/forecasts.db',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME':  'forecasts_db',
+        'USER': 'postgres',
+        'PASSWORD': 'qwerty',
+        'HOST':'localhost',
+        'PORT':'5432',
     }
 }
 

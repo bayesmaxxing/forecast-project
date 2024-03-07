@@ -12,7 +12,7 @@ class Forecasts(models.Model):
     question = models.TextField(blank=True, null=True)
     short_question = models.TextField(blank=True, null=True)
     category = models.TextField(blank=True, null=True)
-    creation_date = models.DateTimeField(blank=True, null=True)
+    creation_date = models.DateTimeField(blank=True, null=True, auto_now_add=True)
     resolution_criteria = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -25,7 +25,7 @@ class ForecastPoints(models.Model):
     upper_ci = models.FloatField(blank=True, null=True)
     lower_ci = models.FloatField(blank=True, null=True)
     reason = models.TextField(blank=True, null=True)
-    date_added = models.DateTimeField(blank=True, null=True)
+    date_added = models.DateTimeField(blank=True, null=True, auto_now_add=True)
 
     class Meta:
         db_table = 'forecast_points'
@@ -34,7 +34,7 @@ class Resolutions(models.Model):
     id = models.AutoField(primary_key=True)
     forecast = models.ForeignKey(Forecasts, on_delete=models.CASCADE, blank=True, null=True)
     resolution = models.TextField(blank=True, null=True)
-    resolution_date = models.DateTimeField(blank=True, null=True)
+    resolution_date = models.DateTimeField(blank=True, null=True,auto_now_add=True)
     brier_score = models.FloatField(blank=True, null=True)
     logn_score = models.FloatField(blank=True, null=True)
     log2_score = models.FloatField(blank=True, null=True)
