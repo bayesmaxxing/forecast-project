@@ -51,9 +51,6 @@ ptyprocess
 pure_eval
 pygments
 
-python-dateutil
-python-dotenv
-python-tzdata
 pytz
 pyzmq
 readline
