@@ -67,5 +67,5 @@ tzdata
 wcwidth
 wheel
 
-zeromq
+
 zlib
