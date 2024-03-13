@@ -12,10 +12,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import environ
+from dotenv import load_dotenv
 import os
 
-env=environ.Env()
-environ.Env.read_env()
+load_dotenv('/Users/samuelsvensson/Documents/forecasting_project/forecast_app/.env')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,12 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
-
+SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG',default=False)
+DEBUG = os.getenv('DEBUG',default=False)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost','127.0.0.1'])
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -85,12 +84,12 @@ WSGI_APPLICATION = 'forecast_app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':  'forecasts_db',
-        'USER': 'postgres',
-        'PASSWORD': 'qwerty',
-        'HOST':'localhost',
-        'PORT':'5432',
+        'ENGINE':'django.db.backends.postgresql',
+        'NAME':  os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST':os.getenv('DB_HOST'),
+        'PORT':os.getenv('DB_PORT'),
     }
 }
 
