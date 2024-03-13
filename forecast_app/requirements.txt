@@ -68,4 +68,3 @@ wcwidth
 wheel
 
 
-zlib
