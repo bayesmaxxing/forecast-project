@@ -30,7 +30,7 @@ mkl
 mkl-service
 mkl_fft
 mkl_random
-ncurses
+
 nest-asyncio
 numexpr
 numpy
