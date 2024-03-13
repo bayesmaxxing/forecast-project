@@ -14,8 +14,8 @@ function SpecificForecast() {
     useEffect(() => {
       
       Promise.all([
-        fetch(`http://127.0.0.1:8000/forecaster/api/forecasts/${id}/`),
-        fetch(`http://127.0.0.1:8000/forecaster/api/forecast_points/?forecast=${id}`)
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/${id}/`),
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/?forecast=${id}`)
       ])
       .then(async ([idData, pointsData]) => {
         if (!idData.ok || !pointsData.ok) {

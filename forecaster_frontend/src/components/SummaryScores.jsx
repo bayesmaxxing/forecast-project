@@ -12,7 +12,7 @@ function SummaryScores() {
     const [averageScore, setAverageScore] = useState(0);
     useEffect(() => {
       // Fetch the list of resolutions from the API
-      fetch('http://127.0.0.1:8000/forecaster/api/resolutions')
+      fetch('https://forecast-project-backend.vercel.app/forecaster/api/resolutions')
         .then(response => response.json())
         .then(data => setResolutions(data))
         .catch(error => console.error('Error fetching data: ', error));

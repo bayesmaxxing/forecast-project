@@ -9,8 +9,8 @@ function ResolvedForecastPage() {
   useEffect(() => {
     // Fetch the list of forecasts from the API
     Promise.all([
-      fetch(`http://127.0.0.1:8000/forecaster/api/forecasts/?resolved=True`),
-      fetch(`http://127.0.0.1:8000/forecaster/api/resolutions/`) 
+      fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=True`),
+      fetch(`https://forecast-project-backend.vercel.app/forecaster/api/resolutions/`) 
     ])
       .then( async ([forecastData, resData]) => {
         const forecastDataJson = await forecastData.json();
