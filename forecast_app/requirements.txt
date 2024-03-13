@@ -5,7 +5,6 @@ appnope
 asgiref
 asttokens
 backcall
-blas
 bottleneck
 bzip2
 ca-certificates
