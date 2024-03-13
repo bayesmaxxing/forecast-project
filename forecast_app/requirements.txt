@@ -6,7 +6,6 @@ asgiref
 asttokens
 backcall
 bottleneck
-ca-certificates
 click
 comm
 debugpy
