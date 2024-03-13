@@ -66,6 +66,6 @@ traitlets
 tzdata
 wcwidth
 wheel
-xz
+
 zeromq
 zlib
