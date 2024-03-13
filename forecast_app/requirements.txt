@@ -34,7 +34,7 @@ mkl_random
 nest-asyncio
 numexpr
 numpy
-numpy-base
+
 openpyxl
 openssl
 packaging
