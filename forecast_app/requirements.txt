@@ -53,7 +53,7 @@ pygments
 
 pytz
 pyzmq
-readline
+
 setuptools
 six
 
