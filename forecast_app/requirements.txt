@@ -24,7 +24,6 @@ ipython
 jupyter_client
 jupyter_core
 krb5
-libedit
 libffi
 libpq
 libsodium
