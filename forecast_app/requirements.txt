@@ -1,6 +1,7 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: osx-64
+python
 appnope
 asgiref
 asttokens
@@ -23,7 +24,6 @@ ipython
 jupyter_client
 jupyter_core
 krb5
-libcxx
 libedit
 libffi
 libpq
