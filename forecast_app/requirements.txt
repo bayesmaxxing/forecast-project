@@ -24,9 +24,7 @@ ipython
 jupyter_client
 jupyter_core
 krb5
-libffi
-libpq
-libsodium
+
 matplotlib-inline
 mkl
 mkl-service
