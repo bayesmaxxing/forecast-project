@@ -50,7 +50,7 @@ Psycopg2-binary
 ptyprocess
 pure_eval
 pygments
-
+python-dotenv
 pytz
 pyzmq
 
