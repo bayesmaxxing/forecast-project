@@ -36,7 +36,7 @@ numexpr
 numpy
 
 openpyxl
-openssl
+
 packaging
 pandas
 parso
