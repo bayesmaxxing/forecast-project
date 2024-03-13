@@ -46,7 +46,7 @@ pip
 platformdirs
 prompt-toolkit
 psutil
-psycopg2
+Psycopg2-binary
 ptyprocess
 pure_eval
 pygments
@@ -59,7 +59,7 @@ pyzmq
 readline
 setuptools
 six
-sqlite
+
 sqlparse
 stack_data
 tbb
