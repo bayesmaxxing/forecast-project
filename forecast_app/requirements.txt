@@ -6,7 +6,6 @@ asgiref
 asttokens
 backcall
 bottleneck
-bzip2
 ca-certificates
 click
 comm
