@@ -11,11 +11,23 @@ function SummaryScores() {
     const [selectedMetric, setSelectedMetric] = useState('brier_score');
     const [averageScore, setAverageScore] = useState(0);
     useEffect(() => {
-      // Fetch the list of resolutions from the API
-      fetch('https://forecast-project-backend.vercel.app/forecaster/api/resolutions')
-        .then(response => response.json())
-        .then(data => setResolutions(data))
-        .catch(error => console.error('Error fetching data: ', error));
+      const resolutionsCache = localStorage.getItem('resolutions');
+  
+      // Try to load data from cache
+      if (resolutionsCache) {
+        setResolutions(JSON.parse(resolutionsCache));
+      } else {
+        // Fetch the list of resolutions from the API if cache is empty
+        fetch('https://forecast-project-backend.vercel.app/forecaster/api/resolutions')
+          .then(response => response.json())
+          .then(data => {
+            // Update state with fetched data
+            setResolutions(data);
+            // Update cache with new data
+            localStorage.setItem('resolutions', JSON.stringify(data));
+          })
+          .catch(error => console.error('Error fetching data: ', error));
+      }
     }, []);
 
     useEffect(() => {

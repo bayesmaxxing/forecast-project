@@ -7,12 +7,20 @@ function ResolvedForecastPage() {
   const [forecasts, setForecasts] = useState([]);
   const [resolutions, setResolutions] = useState([]);
   useEffect(() => {
-    // Fetch the list of forecasts from the API
-    Promise.all([
-      fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=True`),
-      fetch(`https://forecast-project-backend.vercel.app/forecaster/api/resolutions/`) 
-    ])
-      .then( async ([forecastData, resData]) => {
+    const forecastsCacheKey = 'forecasts_resolved';
+    const resolutionsCacheKey = 'resolutions';
+    const forecastsCached = localStorage.getItem(forecastsCacheKey);
+    const resolutionsCached = localStorage.getItem(resolutionsCacheKey);
+  
+    if (forecastsCached && resolutionsCached) {
+      setForecasts(JSON.parse(forecastsCached));
+      setResolutions(JSON.parse(resolutionsCached));
+    } else {
+      Promise.all([
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=True`),
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/resolutions/`) 
+      ])
+      .then(async ([forecastData, resData]) => {
         const forecastDataJson = await forecastData.json();
         const resDataJson = await resData.json();
         return [forecastDataJson, resDataJson];
@@ -20,8 +28,11 @@ function ResolvedForecastPage() {
       .then(([forecastDataJson, resDataJson]) => {
         setForecasts(forecastDataJson);
         setResolutions(resDataJson);
-      }) 
+        localStorage.setItem(forecastsCacheKey, JSON.stringify(forecastDataJson));
+        localStorage.setItem(resolutionsCacheKey, JSON.stringify(resDataJson));
+      })
       .catch(error => console.error('Error fetching data: ', error));
+    }
   }, []);
 
   const getResolution = (forecastId) => {
