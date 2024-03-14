@@ -8,21 +8,34 @@ function ForecastPage() {
     const [forecasts, setForecasts] = useState([]);
     const [forecastpoints, setForecastPoints] = useState([]);
     useEffect(() => {
-      // Fetch the list of forecasts from the API
-      Promise.all([
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=False`),
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/`) 
-      ])
-        .then( async ([forecastData, pointsData]) => {
+      const forecastsCache = localStorage.getItem('forecasts');
+      const forecastPointsCache = localStorage.getItem('forecastPoints');
+  
+      // Try to load data from cache
+      if (forecastsCache && forecastPointsCache) {
+        setForecasts(JSON.parse(forecastsCache));
+        setForecastPoints(JSON.parse(forecastPointsCache));
+      } else {
+        // Fetch the list of forecasts from the API if cache is empty
+        Promise.all([
+          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=False`),
+          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/`)
+        ])
+        .then(async ([forecastData, pointsData]) => {
           const forecastDataJson = await forecastData.json();
           const pointsDataJson = await pointsData.json();
           return [forecastDataJson, pointsDataJson];
         })
         .then(([forecastDataJson, pointsDataJson]) => {
+          // Update state with fetched data
           setForecasts(forecastDataJson);
           setForecastPoints(pointsDataJson);
-        }) 
+          // Update cache with new data
+          localStorage.setItem('forecasts', JSON.stringify(forecastDataJson));
+          localStorage.setItem('forecastPoints', JSON.stringify(pointsDataJson));
+        })
         .catch(error => console.error('Error fetching data: ', error));
+      }
     }, []);
 
     const getRecentForecastPoint = (forecastId) => {
