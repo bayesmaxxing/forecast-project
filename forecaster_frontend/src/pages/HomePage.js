@@ -9,7 +9,8 @@ return (
     <div className='home-page'>
         <section className='project-info'>
             <h1>Forecasting to understand Reality</h1>
-            <p>To make my beliefs more legible and more accurate, I forecast questions about the world around me.</p>    
+            <p>I forecast to improve my models of the world. On this website, I'll display my current and previous forecasts along with
+                my track record.</p>    
         </section>
         <section className='project-info'>
             <h1>Scores</h1>
@@ -37,7 +38,7 @@ return (
                 <p>Political developments and changes affect both country and world developments. These forecasts anticipate political developments
                 to understand future changes.
                 </p>    
-                <Link to={'/quesitons/category/politics'} className='text-link'>See Politics Forecasts → </Link>
+                <Link to={'/questions/category/politics'} className='text-link'>See Politics Forecasts → </Link>
             </div>
             <div>
                 <Link to={'/questions/category/x-risk'} className='cat-link'>Existential Risks</Link>
