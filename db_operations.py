@@ -19,14 +19,16 @@ def log2_score(point, actual):
 
 #Function to add a new forecast, the parent table
 def add_forecast(question, short_question, category, creation_date, resolution_criteria):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO forecasts (question, short_question, category, creation_date, resolution_criteria) 
                        VALUES (%s, %s, %s, %s, %s)''', (question, short_question, category, creation_date, resolution_criteria))
 
 # Function to update a forecast
 def update_forecast(forecast_id, point_forecast, upper_ci, lower_ci, reason, date_added):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO forecast_points (forecast_id, point_forecast, upper_ci, lower_ci, reason, date_added)
                         VALUES (%s, %s, %s, %s, %s, %s)''', (forecast_id, point_forecast, upper_ci, lower_ci, reason, date_added))
@@ -34,7 +36,8 @@ def update_forecast(forecast_id, point_forecast, upper_ci, lower_ci, reason, dat
 
 # Function to resolve a question
 def resolve_forecast(forecast_id, resolution, resolution_date):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT point_forecast FROM forecast_points WHERE forecast_id=(%s)', (forecast_id, ))
     forecast_points = cursor.fetchall()
@@ -45,7 +48,8 @@ def resolve_forecast(forecast_id, resolution, resolution_date):
     brier = brier_score(points, actual)
     log2 = log2_score(points, actual)
     logn = logn_score(points, actual)
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO resolutions (forecast_id, resolution, resolution_date
                         , brier_score, logn_score, log2_score) VALUES (%s,%s,%s,%s,%s,%s)''',
@@ -53,14 +57,16 @@ def resolve_forecast(forecast_id, resolution, resolution_date):
 
 # Function to get information from the forecast table only
 def get_forecast_question(forecast_id):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM forecasts WHERE id=(%s)", (forecast_id, ))
     return cursor.fetchone()
 
 # Function to get forecast_points information only
 def get_forecast_points(forecast_id):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('''SELECT * FROM forecast_points WHERE forecast_id=(%s)''', (forecast_id,))
     return cursor.fetchall()
@@ -68,7 +74,8 @@ def get_forecast_points(forecast_id):
 
 # Function to get the full forecast information, including updates and resolution
 def get_full_forecast(forecast_id):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('''SELECT *
                     FROM forecasts AS f
@@ -84,7 +91,8 @@ def get_full_forecast(forecast_id):
 
 # Function to delete full forecast with all associated information
 def del_forecast(forecast_id):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('''DELETE FROM forecasts WHERE id=(%s)''', (forecast_id, ))
         cursor.execute('''DELETE FROM forecast_points WHERE forecast_id=(%s)''', (forecast_id, ))
@@ -93,14 +101,16 @@ def del_forecast(forecast_id):
 
 # Function to delete a specific update, NB: this requires knowing the id of the forecast
 def del_update(id, forecast_id):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('''DELETE FROM forecast_points WHERE id=(%s) AND forecast_id=(%s)''', (id, forecast_id))
 
 
 # Function to just change a specific update, in case of a mistake or similar.
 def change_update(id, forecast_id, new_point, new_upper, new_lower):
-    with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+    with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
         cursor = conn.cursor()
         cursor.execute('''UPDATE forecast_points SET point_forecast=(%s), upper_ci=(%s), lower_ci=(%s)
                         WHERE id=(%s) AND forecast_id=(%s)''', (new_point, new_upper, new_lower, id, forecast_id))
@@ -108,7 +118,8 @@ def change_update(id, forecast_id, new_point, new_upper, new_lower):
 # Functions to return the average score
 def avg_brier(category=None):
     if category:
-        with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+        with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
             cursor = conn.cursor()
             like_query = "%" + category + "%"
             cursor.execute('''SELECT brier_score FROM resolutions AS r LEFT JOIN forecasts AS f ON f.id = r.forecast_id WHERE f.category LIKE (%s)''', (like_query,))
@@ -116,7 +127,8 @@ def avg_brier(category=None):
         points = np.array([point for res in scores for point in res])
         return np.mean(points)
     else:
-        with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+        with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
             cursor = conn.cursor()
             cursor.execute('''SELECT brier_score FROM resolutions''')
             scores = cursor.fetchall()
@@ -125,7 +137,8 @@ def avg_brier(category=None):
 
 def avg_logn(category=None):
     if category:
-        with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+        with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
             cursor = conn.cursor()
             like_query = "%" + category + "%"
             cursor.execute('''SELECT logn_score FROM resolutions AS r LEFT JOIN forecasts AS f ON f.id = r.forecast_id WHERE f.category LIKE (%s)''', (like_query,))
@@ -133,7 +146,8 @@ def avg_logn(category=None):
         points = np.array([point for res in scores for point in res])
         return np.mean(points)
     else:
-        with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+        with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
             cursor = conn.cursor()
             cursor.execute('''SELECT logn_score FROM resolutions''')
             scores = cursor.fetchall()
@@ -142,7 +156,8 @@ def avg_logn(category=None):
 
 def avg_log2(category=None):
     if category:
-        with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+        with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
             cursor = conn.cursor()
             like_query = "%" + category + "%"
             cursor.execute('''SELECT log2_score FROM resolutions AS r LEFT JOIN forecasts AS f ON f.id = r.forecast_id WHERE f.category LIKE (%s)''', (like_query,))
@@ -150,7 +165,8 @@ def avg_log2(category=None):
         points = np.array([point for res in scores for point in res])
         return np.mean(points)
     else:
-        with psycopg2.connect('dbname=forecasts_db user=postgres password=qwerty') as conn:
+        with psycopg2.connect(dbname='postgres',user='postgres',password='DA$j9CuU3&T$5Kc22wA$DJEYGt',
+                          host='forecaster.cb80ys44yxlo.eu-north-1.rds.amazonaws.com') as conn:
             cursor = conn.cursor()
             cursor.execute('''SELECT log2_score FROM resolutions''')
             scores = cursor.fetchall()

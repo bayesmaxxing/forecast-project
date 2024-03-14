@@ -11,3 +11,12 @@ media
 # If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
 # in your Git repository. Update and uncomment the following line accordingly.
 forecast_app/staticfiles/
+new_update_forecast.py
+db_operations.py
+forecaster.zip
+forecasts_db.sql
+forecasts.dump
+forecasts.sql 
+forecasts.db 
+populate_database.py
+forcast_database.py 
