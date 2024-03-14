@@ -56,6 +56,7 @@ function ForecastPage() {
     return (
       <div>
         <Sidebar></Sidebar>
+        <h1>ALL QUESTIONS</h1>
         <ul className="forecast-list">
           {sortedForecasts.map(forecast => (
             <li key={forecast.id} className="forecast-item">

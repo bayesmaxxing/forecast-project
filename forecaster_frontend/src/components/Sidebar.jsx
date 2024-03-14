@@ -7,7 +7,7 @@ function Sidebar() {
         <div className='sidebarMenu'>
             <h2>Categories</h2>
             <ul>
-                <li><Link to='/'>All Questions</Link></li>
+                <li><Link to='/questions'>All Questions</Link></li>
                 <li><Link to='/questions/category/ai'>AI</Link></li>
                 <li><Link to='/questions/category/sweden'>Sweden</Link></li>
                 <li><Link to='/questions/category/economy'>Economy</Link></li>

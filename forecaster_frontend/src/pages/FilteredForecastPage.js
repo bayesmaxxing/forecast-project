@@ -60,6 +60,7 @@ function ForecastPage() {
   return (
     <div>
       <Sidebar></Sidebar>
+      <h1 style={{ textTransform: 'uppercase' }}>{category}</h1>
       <ul className="forecast-list">
         {sortedForecasts.map(forecast => (
           <li key={forecast.id} className="forecast-item">
