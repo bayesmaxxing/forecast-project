@@ -11,22 +11,37 @@ function ForecastPage() {
     let { category } = useParams()
 
     useEffect(() => {
-      // Fetch the list of forecasts from the API
-      Promise.all([
-        fetch(`http://127.0.0.1:8000/forecaster/api/forecasts/?category=${category}&resolved=False`),
-        fetch(`http://127.0.0.1:8000/forecaster/api/forecast_points/`)
-      ])
-      .then( async ([forecastData, pointsData]) => {
-        const forecastDataJson = await forecastData.json();
-        const pointsDataJson = await pointsData.json();
-        return [forecastDataJson, pointsDataJson];
-      })
-      .then(([forecastDataJson, pointsDataJson]) => {
-        setForecasts(forecastDataJson);
-        setForecastPoints(pointsDataJson);
-      }) 
-      .catch(error => console.error('Error fetching data: ', error));
-  }, [category]);
+      const forecastsCacheKey = `forecasts_${category}_unresolved`;
+      const forecastPointsCacheKey = 'forecast_points';
+    
+      // Try to load data from cache
+      const forecastsCached = localStorage.getItem(forecastsCacheKey);
+      const forecastPointsCached = localStorage.getItem(forecastPointsCacheKey);
+    
+      if (forecastsCached && forecastPointsCached) {
+        setForecasts(JSON.parse(forecastsCached));
+        setForecastPoints(JSON.parse(forecastPointsCached));
+      } else {
+        // Fetch the list of forecasts from the API
+        Promise.all([
+          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?category=${category}&resolved=False`),
+          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/`)
+        ])
+        .then(async ([forecastData, pointsData]) => {
+          const forecastDataJson = await forecastData.json();
+          const pointsDataJson = await pointsData.json();
+          return [forecastDataJson, pointsDataJson];
+        })
+        .then(([forecastDataJson, pointsDataJson]) => {
+          setForecasts(forecastDataJson);
+          setForecastPoints(pointsDataJson);
+          // Cache the new data
+          localStorage.setItem(forecastsCacheKey, JSON.stringify(forecastDataJson));
+          localStorage.setItem(forecastPointsCacheKey, JSON.stringify(pointsDataJson));
+        })
+        .catch(error => console.error('Error fetching data: ', error));
+      }
+    }, [category]);
     
   const getRecentForecastPoint = (forecastId) => {
     const pointsForForecast = forecastPoints.filter(point => point.forecast === forecastId);
