@@ -52,6 +52,7 @@ function FaqPage() {
                 <p>Apart from design improvements and small features, such as free text search. I'm planning some larger features:</p>
                 <p>(1) Include statistical models with my forecasts. I'm planning for this to be a link to a Google colab notebook or similar.</p>    
                 <p>(2) Comment section and Suggestion box for Users.</p>
+                <p>(3) Blog posts.</p>
             </section>
             <section className='project-info'>
                 <h3>FAQ 6: Can I also forecast?</h3>
