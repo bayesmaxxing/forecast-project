@@ -7,12 +7,19 @@ function ResolvedForecastPage() {
   const [forecasts, setForecasts] = useState([]);
   const [resolutions, setResolutions] = useState([]);
   useEffect(() => {
+    const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
+    const now = new Date().getTime(); // Current time
+
     const forecastsCacheKey = 'forecasts_resolved';
     const resolutionsCacheKey = 'resolutions';
+
     const forecastsCached = localStorage.getItem(forecastsCacheKey);
     const resolutionsCached = localStorage.getItem(resolutionsCacheKey);
+
+    const forecastsDataValid = forecastsCached && now - JSON.parse(forecastsCached).timestamp < CACHE_DURATION;
+    const resolutionsDataValid = resolutionsCached && now - JSON.parse(resolutionsCached).timestamp < CACHE_DURATION;
   
-    if (forecastsCached && resolutionsCached) {
+    if (forecastsDataValid && resolutionsDataValid) {
       setForecasts(JSON.parse(forecastsCached));
       setResolutions(JSON.parse(resolutionsCached));
     } else {

@@ -11,6 +11,9 @@ function ForecastPage() {
     let { category } = useParams()
 
     useEffect(() => {
+      const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
+      const now = new Date().getTime(); // Current time
+
       const forecastsCacheKey = `forecasts_${category}_unresolved`;
       const forecastPointsCacheKey = 'forecast_points';
     
@@ -18,9 +21,12 @@ function ForecastPage() {
       const forecastsCached = localStorage.getItem(forecastsCacheKey);
       const forecastPointsCached = localStorage.getItem(forecastPointsCacheKey);
     
-      if (forecastsCached && forecastPointsCached) {
-        setForecasts(JSON.parse(forecastsCached));
-        setForecastPoints(JSON.parse(forecastPointsCached));
+      const forecastsDataValid = forecastsCached && now - JSON.parse(forecastsCached).timestamp < CACHE_DURATION;
+      const forecastPointsDataValid = forecastPointsCached && now - JSON.parse(forecastPointsCached).timestamp < CACHE_DURATION;
+
+      if (forecastsDataValid && forecastPointsDataValid) {
+        setForecasts(JSON.parse(forecastsCached).data);
+        setForecastPoints(JSON.parse(forecastPointsCached).data);
       } else {
         // Fetch the list of forecasts from the API
         Promise.all([

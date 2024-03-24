@@ -8,15 +8,21 @@ function ForecastPage() {
     const [forecasts, setForecasts] = useState([]);
     const [forecastpoints, setForecastPoints] = useState([]);
     useEffect(() => {
+      const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
+      const now = new Date().getTime(); // Current time
+      
       const forecastsCache = localStorage.getItem('forecasts');
       const forecastPointsCache = localStorage.getItem('forecastPoints');
-  
-      // Try to load data from cache
-      if (forecastsCache && forecastPointsCache) {
-        setForecasts(JSON.parse(forecastsCache));
-        setForecastPoints(JSON.parse(forecastPointsCache));
+
+      const forecastsDataValid = forecastsCache && now - JSON.parse(forecastsCache).timestamp < CACHE_DURATION;
+      const forecastPointsDataValid = forecastPointsCache && now - JSON.parse(forecastPointsCache).timestamp < CACHE_DURATION;
+      
+      // Try to load data from cache if it's valid
+      if (forecastsDataValid && forecastPointsDataValid) {
+        setForecasts(JSON.parse(forecastsCache).data);
+        setForecastPoints(JSON.parse(forecastPointsCache).data);
       } else {
-        // Fetch the list of forecasts from the API if cache is empty
+        // Fetch the list of forecasts from the API if cache is empty or expired
         Promise.all([
           fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=False`),
           fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/`)
@@ -30,9 +36,9 @@ function ForecastPage() {
           // Update state with fetched data
           setForecasts(forecastDataJson);
           setForecastPoints(pointsDataJson);
-          // Update cache with new data
-          localStorage.setItem('forecasts', JSON.stringify(forecastDataJson));
-          localStorage.setItem('forecastPoints', JSON.stringify(pointsDataJson));
+          // Update cache with new data and current timestamp
+          localStorage.setItem('forecasts', JSON.stringify({data: forecastDataJson, timestamp: now}));
+          localStorage.setItem('forecastPoints', JSON.stringify({data: pointsDataJson, timestamp: now}));
         })
         .catch(error => console.error('Error fetching data: ', error));
       }
