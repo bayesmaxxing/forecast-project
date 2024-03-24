@@ -20,3 +20,4 @@ forecasts.sql
 forecasts.db 
 populate_database.py
 forcast_database.py 
+.DS_Store
