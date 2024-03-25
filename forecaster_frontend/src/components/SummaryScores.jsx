@@ -10,11 +10,16 @@ function SummaryScores() {
     const [resolutions, setResolutions] = useState([]);
     const [selectedMetric, setSelectedMetric] = useState('brier_score');
     const [averageScore, setAverageScore] = useState(0);
+
     useEffect(() => {
-      const resolutionsCache = localStorage.getItem('resolutions');
-  
+      const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
+      const now = new Date().getTime(); // Current time
+
+      const resolutionsCache = localStorage.getItem('resolutions_scores');
+
+      const resolutionsDataValid = resolutionsCache && now - JSON.parse(resolutionsCache).timestamp < CACHE_DURATION;
       // Try to load data from cache
-      if (resolutionsCache) {
+      if (resolutionsDataValid) {
         setResolutions(JSON.parse(resolutionsCache));
       } else {
         // Fetch the list of resolutions from the API if cache is empty
@@ -24,7 +29,7 @@ function SummaryScores() {
             // Update state with fetched data
             setResolutions(data);
             // Update cache with new data
-            localStorage.setItem('resolutions', JSON.stringify(data));
+            localStorage.setItem('resolutions_scores', JSON.stringify({data: data, timestamp: now}));
           })
           .catch(error => console.error('Error fetching data: ', error));
       }

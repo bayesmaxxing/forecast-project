@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css';
 
-function Sidebar() {
+function Sidebar( {onSearchChange} ) {
     return (
         <div className='sidebarMenu'>
             <h2>Categories</h2>
@@ -21,7 +21,13 @@ function Sidebar() {
                 <li><Link to='/questions/category/personal'>Personal</Link></li>
                 <li><Link to='/questions/category/other'>Other</Link></li>
                 <li><Link to='/questions/resolved'>Resolved</Link></li>
-            </ul>
+            </ul> 
+            <input
+                type="text"
+                placeholder="Search forecasts"
+                onChange={onSearchChange} // Invoke the passed function on input change
+                className="searchInput"
+            />
         </div>
     );
 };

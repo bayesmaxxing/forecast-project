@@ -8,6 +8,9 @@ import Sidebar from '../components/Sidebar';
 function ForecastPage() {
     const [forecasts, setForecasts] = useState([]);
     const [forecastPoints, setForecastPoints]=useState([]);
+    const [searchQuery, setsearchQuery] = useState('');
+
+    // set category based on URL
     let { category } = useParams()
 
     useEffect(() => {
@@ -21,6 +24,7 @@ function ForecastPage() {
       const forecastsCached = localStorage.getItem(forecastsCacheKey);
       const forecastPointsCached = localStorage.getItem(forecastPointsCacheKey);
     
+      // Check if the cache is older than 5 minutes
       const forecastsDataValid = forecastsCached && now - JSON.parse(forecastsCached).timestamp < CACHE_DURATION;
       const forecastPointsDataValid = forecastPointsCached && now - JSON.parse(forecastPointsCached).timestamp < CACHE_DURATION;
 
@@ -42,8 +46,8 @@ function ForecastPage() {
           setForecasts(forecastDataJson);
           setForecastPoints(pointsDataJson);
           // Cache the new data
-          localStorage.setItem(forecastsCacheKey, JSON.stringify(forecastDataJson));
-          localStorage.setItem(forecastPointsCacheKey, JSON.stringify(pointsDataJson));
+          localStorage.setItem(`forecasts_${category}_unresolved`, JSON.stringify({data: forecastDataJson, timestamp: now}));
+          localStorage.setItem('forecast_points', JSON.stringify({data: pointsDataJson, timestamp: now}));
         })
         .catch(error => console.error('Error fetching data: ', error));
       }
@@ -57,7 +61,19 @@ function ForecastPage() {
 
     return mostRecentPoint;
   };
-  const sortedForecasts = [...forecasts].sort((a, b)=>{
+
+  const handleSearchChange = (e) => {
+    setsearchQuery(e.target.value.toLowerCase());
+  };
+
+  const filteredForecasts = forecasts.filter(forecast => 
+    forecast.question.toLowerCase().includes(searchQuery) ||
+    forecast.short_question.toLowerCase().includes(searchQuery) ||
+    forecast.category.toLowerCase().includes(searchQuery) ||
+    forecast.resolution_criteria.toLowerCase().includes(searchQuery)
+    );
+
+  const sortedForecasts = [...filteredForecasts].sort((a, b)=>{
     return b.id - a.id;
   });
 
@@ -65,7 +81,7 @@ function ForecastPage() {
 
   return (
     <div>
-      <Sidebar></Sidebar>
+      <Sidebar onSearchChange={handleSearchChange}/>
       <h1 style={{ textTransform: 'uppercase' }}>{category}</h1>
       <ul className="forecast-list">
         {sortedForecasts.map(forecast => (
