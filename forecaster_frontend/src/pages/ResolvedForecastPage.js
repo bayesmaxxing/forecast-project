@@ -22,8 +22,8 @@ function ResolvedForecastPage() {
     const resolutionsDataValid = resolutionsCached && now - JSON.parse(resolutionsCached).timestamp < CACHE_DURATION;
   
     if (forecastsDataValid && resolutionsDataValid) {
-      setForecasts(JSON.parse(forecastsCached));
-      setResolutions(JSON.parse(resolutionsCached));
+      setForecasts(JSON.parse(forecastsCached).data);
+      setResolutions(JSON.parse(resolutionsCached).data);
     } else {
       Promise.all([
         fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=True`),

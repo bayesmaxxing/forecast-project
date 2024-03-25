@@ -20,7 +20,7 @@ function SummaryScores() {
       const resolutionsDataValid = resolutionsCache && now - JSON.parse(resolutionsCache).timestamp < CACHE_DURATION;
       // Try to load data from cache
       if (resolutionsDataValid) {
-        setResolutions(JSON.parse(resolutionsCache));
+        setResolutions(JSON.parse(resolutionsCache).data);
       } else {
         // Fetch the list of resolutions from the API if cache is empty
         fetch('https://forecast-project-backend.vercel.app/forecaster/api/resolutions')
