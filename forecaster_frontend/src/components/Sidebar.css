@@ -37,3 +37,13 @@
 .sidebarMenu a {
     color: black;
 }
+
+.sidebarMenu .searchInput {
+    margin-left: 20px; /* Align with ul li */
+    padding: 5px 10px; /* Adjust for better input size, optional */
+    margin-top: 10px; /* Space from the previous element */
+    margin-bottom: 20px; /* Space before the next element */
+    width: calc(100% - 40px); /* Adjust width to fit inside sidebar, considering the margin */
+    box-sizing: border-box; /* Ensure padding and border are included in width calculation */
+    font-size: 11px;
+}

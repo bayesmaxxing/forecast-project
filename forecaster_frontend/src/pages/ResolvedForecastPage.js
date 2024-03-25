@@ -6,6 +6,8 @@ import Sidebar from '../components/Sidebar';
 function ResolvedForecastPage() {
   const [forecasts, setForecasts] = useState([]);
   const [resolutions, setResolutions] = useState([]);
+  const [searchQuery, setsearchQuery] = useState('');
+
   useEffect(() => {
     const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
     const now = new Date().getTime(); // Current time
@@ -35,8 +37,8 @@ function ResolvedForecastPage() {
       .then(([forecastDataJson, resDataJson]) => {
         setForecasts(forecastDataJson);
         setResolutions(resDataJson);
-        localStorage.setItem(forecastsCacheKey, JSON.stringify(forecastDataJson));
-        localStorage.setItem(resolutionsCacheKey, JSON.stringify(resDataJson));
+        localStorage.setItem('forecasts_resolved', JSON.stringify({data: forecastDataJson, timestamp: now}));
+        localStorage.setItem('resolutions', JSON.stringify({data: resDataJson, timestamp: now}));
       })
       .catch(error => console.error('Error fetching data: ', error));
     }
@@ -58,7 +60,19 @@ function ResolvedForecastPage() {
     return { Res, brier, log2, logn };
   };
   
-  const sortedForecasts = [...forecasts].sort((a, b)=>{
+
+  const handleSearchChange = (e) => {
+    setsearchQuery(e.target.value.toLowerCase());
+  };
+
+  const filteredForecasts = forecasts.filter(forecast => 
+    forecast.question.toLowerCase().includes(searchQuery) ||
+    forecast.short_question.toLowerCase().includes(searchQuery) ||
+    forecast.category.toLowerCase().includes(searchQuery) ||
+    forecast.resolution_criteria.toLowerCase().includes(searchQuery)
+    );
+
+  const sortedForecasts = [...filteredForecasts].sort((a, b)=>{
     return b.id - a.id;
   });
 
@@ -66,7 +80,7 @@ function ResolvedForecastPage() {
 
   return (
     <div>
-      <Sidebar></Sidebar>
+      <Sidebar onSearchChange={handleSearchChange}/>
       <ul className="forecast-list">
         {sortedForecasts.map(forecast => (
           <li key={forecast.id} className="forecast-item">
