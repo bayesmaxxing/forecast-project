@@ -29,8 +29,16 @@ function ForecastPage() {
       } else {
         // Fetch the list of forecasts from the API if cache is empty or expired
         Promise.all([
-          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=False`),
-          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/`)
+          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=False`, {
+            headers : {
+              'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+            }
+          }),
+          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/`, {
+            headers : {
+              'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+            }
+          })
         ])
         .then(async ([forecastData, pointsData]) => {
           const forecastDataJson = await forecastData.json();
