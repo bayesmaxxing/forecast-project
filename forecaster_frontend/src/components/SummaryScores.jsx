@@ -23,7 +23,7 @@ function SummaryScores() {
         setResolutions(JSON.parse(resolutionsCache).data);
       } else {
         // Fetch the list of resolutions from the API if cache is empty
-        fetch('https://forecast-project-backend.vercel.app/forecaster/api/resolutions', {
+        fetch('https://forecast-project-backend.vercel.app/forecaster/api/resolutions/', {
             headers : {
               'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
             }

@@ -26,7 +26,7 @@ function ResolvedForecastPage() {
       setResolutions(JSON.parse(resolutionsCached).data);
     } else {
       Promise.all([
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=True`, {
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=True/`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }

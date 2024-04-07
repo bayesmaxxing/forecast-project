@@ -34,7 +34,7 @@ function ForecastPage() {
       } else {
         // Fetch the list of forecasts from the API
         Promise.all([
-          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?category=${category}&resolved=False`, {
+          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?category=${category}&resolved=False/`, {
             headers : {
               'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
             }
