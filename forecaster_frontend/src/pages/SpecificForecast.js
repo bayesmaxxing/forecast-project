@@ -14,7 +14,7 @@ function SpecificForecast() {
     useEffect(() => {
       
       Promise.all([
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/${id}/`, {
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/${id}`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
