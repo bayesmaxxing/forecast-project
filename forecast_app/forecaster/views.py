@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework import viewsets
-from .models import Forecasts, ForecastPoints, Resolutions
-from .serializers import forecasts_serializer, forecast_points_serializer, resolutions_serializer
+from .models import Forecasts, ForecastPoints, Resolutions, Blogposts
+from .serializers import forecasts_serializer, forecast_points_serializer, resolutions_serializer, blogposts_serializer
 
 class ForecastsViewSet(viewsets.ModelViewSet):
     serializer_class = forecasts_serializer
@@ -42,3 +42,12 @@ class ResolutionsViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(forecast=forecast)
         return queryset
 
+class BlogpostsViewSet(viewsets.ModelViewSet):
+    serializer_class = blogposts_serializer
+
+    def get_queryset(self):
+        queryset = Blogposts.objects.all()
+        slug = self.request.query_params.get('slug', None)
+        if slug is not None:
+            queryset=queryset.filter(slug=slug)
+        return queryset

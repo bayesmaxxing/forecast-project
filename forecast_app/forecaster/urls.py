@@ -23,6 +23,7 @@ router = DefaultRouter()
 router.register(r'forecasts', views.ForecastsViewSet, basename='forecasts')
 router.register(r'forecast_points', views.ForecastPointsViewSet, basename='forecast_points')
 router.register(r'resolutions', views.ResolutionsViewSet, basename='resolutions')
+router.register(r'blogposts',views.BlogpostsViewSet, basename='blogposts')
 
 
 urlpatterns = [

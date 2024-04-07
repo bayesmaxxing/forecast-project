@@ -43,8 +43,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
+    'corsheaders',
     'forecaster',
     'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -76,9 +79,16 @@ TEMPLATES = [
     },
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    'http://samuelsforecasts.com',
+]
 WSGI_APPLICATION = 'forecast_app.wsgi.application'
 
-
+REST_FRAMEWORK = {
+   'DEFAULT_AUTHENTICATION_CLASSES': [
+      'rest_framework.authentication.TokenAuthentication',
+      ],
+}
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 

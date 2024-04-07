@@ -14,8 +14,16 @@ function SpecificForecast() {
     useEffect(() => {
       
       Promise.all([
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/${id}/`),
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/?forecast=${id}`)
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/${id}/`, {
+          headers : {
+            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+          }
+        }),
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/?forecast=${id}`, {
+          headers : {
+            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+          }
+        })
       ])
       .then(async ([idData, pointsData]) => {
         if (!idData.ok || !pointsData.ok) {
