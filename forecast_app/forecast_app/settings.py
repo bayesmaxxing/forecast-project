@@ -81,6 +81,7 @@ TEMPLATES = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://samuelsforecasts.com',
+    'https://www.samuelsforecasts.com/',
 ]
 WSGI_APPLICATION = 'forecast_app.wsgi.application'
 
