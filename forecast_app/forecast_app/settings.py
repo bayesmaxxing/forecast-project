@@ -44,13 +44,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
-    'django-cors-headers',
+    'corsheaders',
     'forecaster',
     'rest_framework',
     'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'forecaster.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -80,9 +81,10 @@ TEMPLATES = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://samuelsforecasts.com',
+    'https://samuelsforecasts.com',
     'https://www.samuelsforecasts.com/',
 ]
+
 WSGI_APPLICATION = 'forecast_app.wsgi.application'
 
 REST_FRAMEWORK = {
