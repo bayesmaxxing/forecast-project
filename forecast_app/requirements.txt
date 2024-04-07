@@ -9,7 +9,7 @@ backcall
 bottleneck
 click
 comm
-debugpy
+# debugpy
 decorator
 django
 django-cors-headers
@@ -19,10 +19,10 @@ et_xmlfile
 executing
 gunicorn
 intel-openmp
-ipykernel
-ipython
-jupyter_client
-jupyter_core
+#ipykernel
+#ipython
+#jupyter_client
+#jupyter_core
 krb5
 
 matplotlib-inline
@@ -33,12 +33,12 @@ mkl_random
 
 nest-asyncio
 numexpr
-numpy
+#numpy
 
 openpyxl
 
 packaging
-pandas
+#pandas
 parso
 pexpect
 pickleshare
