@@ -19,7 +19,7 @@ function SpecificForecast() {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
         }),
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/?forecast=${id}/`, {
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/?forecast=${id}`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
