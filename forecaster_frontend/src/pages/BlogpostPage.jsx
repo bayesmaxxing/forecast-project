@@ -16,14 +16,14 @@ function BlogpostPage() {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
         })
-      .then(async ([blogpostData]) => {
+      .then( blogpostData => {
         if (!blogpostData.ok) {
           throw new Error('Error fetching data');
         }
-        const blogpostJson = await blogpostData.json();
-        return [blogpostJson];
+        const blogpostJson =blogpostData.json()
+        return blogpostJson;
       })
-      .then(([blogpostJson]) => {
+      .then(blogpostJson => {
         setBlogpost(blogpostJson);
         setLoading(false);
       })
@@ -37,32 +37,24 @@ function BlogpostPage() {
     if (error) return <div>Error loading the forecast: {error.message}</div>;
 
     return (
-        <div>
-          <div>
-          <div className='question-header'>{forecastData.question}</div>
-          </div>
-          <div className='chart-box'>
-          <ForecastGraph data = {chartData} options={chartOptions} />
-          </div>
-          <div className='info-box'>
-            <div className='info-header'>Resolution Criteria</div>
-            <div className='info-item'>{forecastData.resolution_criteria}</div>
-          </div>
-          <div className='updates-box'>
-            <ul className='update-list'>
-            {[...forecastPoints].reverse().map(forecast => (
-                <li className='update-item'>
-                  <div className="update-container">
-                    <div className='info-header'>Update to {(forecast.point_forecast * 100).toFixed(1)}% on {formatDate(forecast.date_added)}:</div>
-                    <div className='info-item'>{forecast.reason}</div>
-                </div>
-                
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-    );
+      <div>
+          {blogpost ? ( // Check if the blogpost object is not null
+              <article>
+                  <header>
+                      <h1 className="blogpost-title">{blogpost.title}</h1>
+                      <div className="blogpost-meta">
+                      </div>
+                  </header>
+                  <section className="blogpost-content">
+                      <p>{blogpost.post}</p> {/* Assuming 'content' is a field in your blogpost object */}
+                  </section>
+              </article>
+          ) : (
+              <div>Blog post not found.</div>
+          )}
+      </div>
+  );
+  
 }
 
-export default SpecificForecast;
+export default BlogpostPage;
