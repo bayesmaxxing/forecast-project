@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { marked } from 'marked';
+import Markdown from 'marked-react';
+import './BlogPage.css';
 
 function BlogPosts() {
     const [blogposts, setBlogposts] = useState([]);
@@ -41,18 +42,16 @@ function BlogPosts() {
 
     return (
         <div>
-          <h1>Blogposts</h1>
-          <ul className="forecast-list">
+          <ul className="blogpost-list">
             {sortedBlogposts.map(blogposts => (
-              <li key={blogposts.slug} className="forecast-item">
-                <div className="question-container">
-                <Link to={`/blog/${blogposts.slug}`} className="question-link">
-                    {blogposts.title}
+              <li key={blogposts.slug} className="blog-item">
+                <div className="blog-container">
+                <Link to={`/blog/${blogposts.slug}`} className="blog-link">
+                    <Markdown>{blogposts.title}</Markdown>
                   </Link>
                 </div>
                 <div>
-                  <p>{blogposts.summary}</p>
-                  <p>Created: {formatDate(blogposts.created_date)}</p>
+                <p>{blogposts.summary}</p>
                 </div>
               </li>
             ))}

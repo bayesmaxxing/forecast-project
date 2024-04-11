@@ -43,7 +43,7 @@ function BlogpostPage() {
       <div>
               <article>
                   <header>
-                      <h1 className="blogpost-title">ASSASAS {blogpost.title}</h1>
+                      <Markdown>{blogpost.title}</Markdown>
                   </header>
                   <section className="blogpost-content">
                       <Markdown>{blogpost.post}</Markdown>
