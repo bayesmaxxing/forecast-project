@@ -38,7 +38,15 @@ function BlogPosts() {
         return b.post_id - a.post_id;
       });
   
-      const formatDate = (dateString) => dateString.split('T')[0];
+    const formatDate = (dateString) => dateString.split('T')[0];
+    
+    const truncatePostContent = (content, wordLimit) => {
+      const wordsArray = content.split(' ');
+      if (wordsArray.length > wordLimit) {
+        return wordsArray.slice(0, wordLimit).join(' ') + '...';
+      }
+      return content;
+    };
 
     return (
         <div>
@@ -49,9 +57,7 @@ function BlogPosts() {
                 <Link to={`/blog/${blogposts.slug}`} className="blog-link">
                     <Markdown>{blogposts.title}</Markdown>
                   </Link>
-                </div>
-                <div>
-                <p>{blogposts.summary}</p>
+                  <Markdown>{truncatePostContent(blogposts.post, 80)}</Markdown>
                 </div>
               </li>
             ))}
