@@ -1,5 +1,3 @@
-### The Fermi Paradox, Grabby Aliens, and Reasoning
-
 *i. Where are they? Or the Fermi Paradox*
 
 Arguably, some of the questions that seem most interesting to kids seem to involve aliens and intergalactic space travel. At the very least that has been the case for many years, and it hopefully continues with the recent advancements made in our ability to travel in space, i.e SpaceX’s as well as NASA’s recent achievements.
@@ -56,11 +54,11 @@ The model used in the paper only has three free model parameters.
 
 *The rate at which grabby civilizations are born.* The assumption here is that we have a non-zero chance of becoming a grabby civilization and that our chance of becoming one is space-time representative. These assumptions combined with the fact that we have no evidence of being in changed alien volume allows the authors to estimate this parameter to withing a factor of two. 
 
-*The speed at which grabby civilizations expand.* The model predicts that at typical grabby origin dates, a third to a half of the universe is within grabby-controlled volumes. Which means that if the expansion speed were low, grabby-controlled volumes would be noticeable from Earth. If the expansion speed instead were within ­­­­~25% of lightspeed, then a selection effect implies that we would be more likely to not see than to see any such volumes. 
+*The speed at which grabby civilizations expand.* The model predicts that at typical grabby origin dates, a third to a half of the universe is within grabby-controlled volumes. Which means that if the expansion speed were low, grabby-controlled volumes would be noticeable from Earth. If the expansion speed instead were within ­­­­~25\% of lightspeed, then a selection effect implies that we would be more likely to not see than to see any such volumes. 
 
 *The number of hard steps in the Great Filter.* The chance of the entire process completing within a time duration goes as that duration raised to the power of the number of hard (i.e take-very-long) steps in that evolutionary process. Using data on Earth history durations, a literature estimates an Earth-duration-based power to lie roughly in the range 3-9.
 
-Through this model the authors show that humans do appear early in the universe. This is further shown in another model in which the hard-steps power law (see pt. 3 above) is applied to planets, while allowing stars to form at different dates and to last for different durations. That model produces time distributions for when advanced life should appear, and according to the model less than 10% of this distribution appears before today’s date. 
+Through this model the authors show that humans do appear early in the universe. This is further shown in another model in which the hard-steps power law (see pt. 3 above) is applied to planets, while allowing stars to form at different dates and to last for different durations. That model produces time distributions for when advanced life should appear, and according to the model less than 10\% of this distribution appears before today’s date. 
 
 The model thus resolves the question of where the aliens are by embodying the assumption that grabby aliens have an effect on the chances that others are born at later dates. Hence, a selection effect appears. Grabby aliens will grab all the universe volume, which sets a deadline by which others must be born, if they are not to be born in an alien volume. 
 

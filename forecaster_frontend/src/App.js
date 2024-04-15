@@ -6,6 +6,8 @@ import ResolvedForecastPage from './pages/ResolvedForecastPage';
 import SpecificForecast from './pages/SpecificForecast';
 import HomePage from './pages/HomePage';
 import FaqPage from './pages/faqPage';
+import BlogPage from './pages/BlogPage';
+import BlogpostPage from './pages/BlogpostPage';
 import Header from './components/header';
 import './App.css';
 
@@ -21,6 +23,8 @@ function App() {
           <Route path="/questions/category/:category" element={<FilteredForecastPage />}/>
           <Route path="/questions/resolved" element={<ResolvedForecastPage />}/>
           <Route path="/faq" element={<FaqPage />}/>
+          <Route path='/blog' element={<BlogPage />}/>
+          <Route path='/blog/:slug' element={<BlogpostPage />}/>
         </Routes>
       </div>
     </BrowserRouter>
