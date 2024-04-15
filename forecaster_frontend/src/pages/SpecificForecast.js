@@ -7,6 +7,7 @@ import './SpecificForecast.css';
 function SpecificForecast() {
     const [forecastData, setForecastData] = useState(null);
     const [forecastPoints, setForecastPoints] = useState(null);
+    const [resolutionData, setResolution] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     let { id } = useParams();
@@ -23,19 +24,26 @@ function SpecificForecast() {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
+        }),
+        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/resolutions/?forecast=${id}`, {
+          headers : {
+            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+          }
         })
       ])
-      .then(async ([idData, pointsData]) => {
+      .then(async ([idData, pointsData, resData]) => {
         if (!idData.ok || !pointsData.ok) {
           throw new Error('Error fetching data');
         }
         const idJson = await idData.json();
         const pointsJson = await pointsData.json();
-        return [idJson, pointsJson];
+        const resJson = await resData.json();
+        return [idJson, pointsJson, resJson];
       })
-      .then(([idJson, pointsJson]) => {
+      .then(([idJson, pointsJson, resJson]) => {
         setForecastData(idJson);
         setForecastPoints(pointsJson);
+        setResolution(resJson[0]);
         setLoading(false);
       })
       .catch(error => {
@@ -69,14 +77,28 @@ function SpecificForecast() {
       },
 
     };
+    
     const formatDate = (dateString) => dateString.split('T')[0];
+
     return (
         <div>
           <div>
           <div className='question-header'>{forecastData.question}</div>
+          <div>
+            {resolutionData != null ? (
+            <div className='question-header'>Resolved as: {resolutionData.resolution === "1" ? "Yes":"No"}</div>): (null)}
+          </div>
           </div>
           <div className='chart-box'>
           <ForecastGraph data = {chartData} options={chartOptions} />
+          </div>
+          <div>
+            {resolutionData != null ? (
+            <div className='info-box'>
+            <div className='info-header'>Question resolved as: {resolutionData.resolution === "1" ? "Yes" : "No"}</div>
+            <div className='info-item'>It resolved on {formatDate(resolutionData.resolution_date)} and it resulted in a 
+            Brier score of {resolutionData.brier_score}.</div>
+            </div>): (null)}
           </div>
           <div className='info-box'>
             <div className='info-header'>Resolution Criteria</div>
