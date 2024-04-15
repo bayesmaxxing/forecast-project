@@ -39,6 +39,7 @@ class Resolutions(models.Model):
     brier_score = models.FloatField(blank=True, null=True)
     logn_score = models.FloatField(blank=True, null=True)
     log2_score = models.FloatField(blank=True, null=True)
+    comment = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = 'resolutions'
