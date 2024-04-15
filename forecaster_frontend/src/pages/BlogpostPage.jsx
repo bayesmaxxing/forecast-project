@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Markdown from 'marked-react';
 import './BlogpostPage.css';
+import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
+
 
 
 function BlogpostPage() {
@@ -39,6 +42,9 @@ function BlogpostPage() {
     
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading the forecast: {error.message}</div>;
+    
+    
+
     return (
       <div>
               <article>
