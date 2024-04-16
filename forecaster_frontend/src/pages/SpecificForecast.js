@@ -99,7 +99,7 @@ function SpecificForecast() {
             <div className='info-item'>It resolved on {formatDate(resolutionData.resolution_date)} and it resulted in a 
             Brier score of {resolutionData.brier_score}.</div>
             </div>): (null)}
-          </div>
+          </div> //add the possibility to display resolutionData.comment
           <div className='info-box'>
             <div className='info-header'>Resolution Criteria</div>
             <div className='info-item'>{forecastData.resolution_criteria}</div>
