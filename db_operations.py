@@ -42,7 +42,7 @@ def update_forecast(forecast_id, point_forecast, upper_ci, lower_ci, reason, dat
 
 
 # Function to resolve a question
-def resolve_forecast(forecast_id, resolution, resolution_date):
+def resolve_forecast(forecast_id, resolution, resolution_date, comment):
     with psycopg2.connect(dbname=db_name,user=db_user,password=db_pass,host=db_host) as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT point_forecast FROM forecast_points WHERE forecast_id=(%s)', (forecast_id, ))
@@ -57,8 +57,8 @@ def resolve_forecast(forecast_id, resolution, resolution_date):
     with psycopg2.connect(dbname=db_name,user=db_user,password=db_pass,host=db_host) as conn:
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO resolutions (forecast_id, resolution, resolution_date
-                        , brier_score, logn_score, log2_score) VALUES (%s,%s,%s,%s,%s,%s)''',
-                        (forecast_id, resolution, resolution_date, brier, logn, log2))
+                        , brier_score, logn_score, log2_score, comment) VALUES (%s,%s,%s,%s,%s,%s,%s)''',
+                        (forecast_id, resolution, resolution_date, brier, logn, log2,comment))
 
 # Function to get information from the forecast table only
 def get_forecast_question(forecast_id):

@@ -26,6 +26,7 @@ while True:
     elif action == "resolve":
         forecast_id2 = int(input("Enter the forecast ID: "))
         res = input("Did the question resolve as 'yes' or 'no': ")
+        comment = input("Do you have a comment on the resolution?: ")
         if res == "yes":
             resolution = 1
         elif res == "no":
@@ -33,7 +34,7 @@ while True:
         else:
             print("Invalid input. Try again")
             break
-        resolve_forecast(forecast_id2, resolution, creation_date)
+        resolve_forecast(forecast_id2, resolution, creation_date, comment)
     elif action == "exit":
         break
     else:
