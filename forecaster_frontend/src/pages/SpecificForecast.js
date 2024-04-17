@@ -98,8 +98,12 @@ function SpecificForecast() {
             <div className='info-header'>Question resolved as: {resolutionData.resolution === "1" ? "Yes" : "No"}</div>
             <div className='info-item'>It resolved on {formatDate(resolutionData.resolution_date)} and it resulted in a 
             Brier score of {resolutionData.brier_score}.</div>
+            {resolutionData.comment != null ? (
+              <div className='info-item'>Comment: {resolutionData.comment} </div>
+            ) : (null)
+            }
             </div>): (null)}
-          </div> //add the possibility to display resolutionData.comment
+          </div> 
           <div className='info-box'>
             <div className='info-header'>Resolution Criteria</div>
             <div className='info-item'>{forecastData.resolution_criteria}</div>
