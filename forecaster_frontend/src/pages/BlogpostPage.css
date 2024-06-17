@@ -23,7 +23,7 @@
     .blogpost-content {
       max-width: 300px; /* Adjust the width of each box as needed */
       width: 100%;
-      text-align: left; /* Center the text inside the box */
+      text-align: justify; /* Center the text inside the box */
       border-radius: 5px;
     }
   }
