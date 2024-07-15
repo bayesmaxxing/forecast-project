@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoginForm from '../components/LoginForm';
 import AddForecast from '../components/AddForecast'
 
 const AdminPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  const checkLoginStatus = () => {
+    const expirationTime = localStorage.getItem('adminLoginExpiration');
+    if (expirationTime && new Date().getTime() < parseInt(expirationTime, 10)) {
+      setIsLoggedIn(true);
+    } else {
+      localStorage.removeItem('adminLoginExpiration');
+      setIsLoggedIn(false);
+    }
+  };
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
