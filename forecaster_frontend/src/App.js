@@ -9,6 +9,7 @@ import FaqPage from './pages/faqPage';
 import BlogPage from './pages/BlogPage';
 import BlogpostPage from './pages/BlogpostPage';
 import Header from './components/header';
+import AdminPage from './pages/AdminPage'
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
           <Route path="/faq" element={<FaqPage />}/>
           <Route path='/blog' element={<BlogPage />}/>
           <Route path='/blog/:slug' element={<BlogpostPage />}/>
+          <Route path='/admin' element={<AdminPage />}/>
         </Routes>
       </div>
     </BrowserRouter>
