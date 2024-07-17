@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 const UpdateForecast = () => {
+    let { id } = useParams();
     const [updateData, setUpdateData] = useState({
         point_forecast: '',
         upper_ci: '',
@@ -11,33 +12,45 @@ const UpdateForecast = () => {
     const [submitStatus,setSubmitStatus] = useState('');
 
     const handleChange = (e) => {
-        const {name,value} = e.target;
-        setForecastData(prevState => ({
-            ...prevState, 
-            [name]: name === 'point_forecast' || name === 'upper_ci' 
-            || name === 'lower_ci' ? parseFloat(value): value
-        }));
+        const { name, value } = e.target;
+        if (['point_forecast', 'upper_ci', 'lower_ci'].includes(name)) {
+            // Allow numbers, one decimal point, and handle leading decimal
+            const regex = /^-?\d*\.?\d*$/;
+            if (value === '' || regex.test(value)) {
+                setUpdateData(prevState => ({
+                    ...prevState,
+                    [name]: value
+                }));
+            }
+        } else {
+            setUpdateData(prevState => ({
+                ...prevState,
+                [name]: value
+            }));
+        }
     };
 
     const getDate = () => {
         const currentDate = new Date();
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth()+1).padStart(2,'0');
-        const day = String(currentDate.getDate()).padStart(2,'0');
-        return `${year}-${month}-${day} 00:00:00`;
-    };
+        return currentDate.toISOString().split('T')[0] + ' 00:00:00'
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitStatus('Submitting update...');
 
         const dataToSubmit = {
-            ...ForecastData,
-            creation_date: getDate()
+            ...updateData,
+            point_forecast: parseFloat(updateData.point_forecast),
+            upper_ci: parseFloat(updateData.upper_ci),
+            lower_ci: parseFloat(updateData.lower_ci),  
+            reason: updateData.reason,          
+            date_added: getDate(),
+            forecast: parseInt(id)
         };
 
         try {
-            const response = await fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/`, {
+            const response = await fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/?forecast=${id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -48,8 +61,8 @@ const UpdateForecast = () => {
             
             if (response.ok) {
                 setSubmitStatus('Update added');
-                setForecastData({question: '', short_question:'',
-                    category: '',resolution_criteria: ''
+                setUpdateData({point_forecast: '', upper_ci:'',
+                    lower_ci: '',reason: ''
                 });
             } else {
                 setSubmitStatus('Update not added. Try again.');    
@@ -64,43 +77,44 @@ const UpdateForecast = () => {
         <div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label>Question</label>
+              <label>Point forecast</label>
               <input
                 type="text"
-                id="question"
-                name="question"
-                value={ForecastData.question}
+                id="point_forecast"
+                name="point_forecast"
+                value={updateData.point_forecast}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <label>Short Question</label>
+              <label>Upper confidence interval</label>
               <input
                 type="text"
-                id="short_question"
-                name="short_question"
-                value={ForecastData.short_question}
+                id="upper_ci"
+                name="upper_ci"
+                value={updateData.upper_ci}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <label>Category</label>
+              <label>Lower confidence interval</label>
               <input
-                id="category"
-                name="category"
-                value={ForecastData.category}
+                type="text"
+                id="lower_ci"
+                name="lower_ci"
+                value={updateData.lower_ci}
                 onChange={handleChange}
                 required
               ></input>
             </div>
             <div>
-              <label >Resolution Criteria</label>
+              <label >Reason for update</label>
               <textarea
-                id="resolution_criteria"
-                name="resolution_criteria"
-                value={ForecastData.resolution_criteria}
+                id="reason"
+                name="reason"
+                value={updateData.reason}
                 onChange={handleChange}
                 required
                 rows="3"
@@ -116,4 +130,4 @@ const UpdateForecast = () => {
         </div>
       );
     };
-}
+    export default UpdateForecast;

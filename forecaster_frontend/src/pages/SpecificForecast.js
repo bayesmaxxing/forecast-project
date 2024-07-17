@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import ForecastGraph from '../components/ForecastGraph';
 import './SpecificForecast.css';
+import UpdateForecast from '../components/UpdateForecast';
 
 
 function SpecificForecast() {
@@ -10,6 +11,7 @@ function SpecificForecast() {
     const [resolutionData, setResolution] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
     let { id } = useParams();
   
     useEffect(() => {
@@ -50,8 +52,15 @@ function SpecificForecast() {
         setError(error);
         setLoading(false);
       });
+      const checkAdminStatus = () => {
+        const expirationTime = localStorage.getItem('adminLoginExpiration');
+        setIsAdmin(expirationTime && new Date().getTime() < parseInt(expirationTime, 10));
+      };
+
+      checkAdminStatus();
     }, [id]);
-  
+    
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading the forecast: {error.message}</div>;
 
@@ -121,6 +130,7 @@ function SpecificForecast() {
               ))}
             </ul>
           </div>
+          {isAdmin && <UpdateForecast />}
         </div>
     );
 }

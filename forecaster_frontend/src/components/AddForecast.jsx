@@ -19,11 +19,8 @@ const AddForecast = () => {
 
     const getDate = () => {
         const currentDate = new Date();
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth()+1).padStart(2,'0');
-        const day = String(currentDate.getDate()).padStart(2,'0');
-        return `${year}-${month}-${day} 00:00:00`;
-    };
+        return currentDate.toISOString().split('T')[0] + ' 00:00:00'
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
