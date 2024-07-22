@@ -64,13 +64,14 @@ function SpecificForecast() {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading the forecast: {error.message}</div>;
 
-
+    const forecastPointArray = forecastPoints.map(point => point.point_forecast)
+    
     const chartData = {
       labels: forecastPoints.map(point => new Date(point.date_added).toLocaleDateString('en-CA')),
       datasets: [
           {
               label: 'Prediction',
-              data: forecastPoints.map(point => point.point_forecast),
+              data: forecastPointArray,
               fill: false,
               borderColor: 'rgb(75, 192, 192)',
               tension: 0.1
@@ -101,6 +102,7 @@ function SpecificForecast() {
           <div className='chart-box'>
           <ForecastGraph data = {chartData} options={chartOptions} />
           </div>
+          {isAdmin && <UpdateForecast forecastPoints={forecastPointArray} />}
           <div>
             {resolutionData != null ? (
             <div className='info-box'>
