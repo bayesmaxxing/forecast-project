@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 
 const getScores = (forecastPoints, resolution) => {
-        const epsilon = 1e-15
+        const epsilon = 1e-15;
+        const resolutionInt = resolution === "1" ? 1 : 0;
         
         const brierScore = forecastPoints.reduce((sum, currentValue) => sum + (currentValue - resolution) ** 2, 0) / forecastPoints.length;
         
@@ -85,12 +86,23 @@ const ResolveForecast = ({ forecastPoints }) => {
             <div>
               <label>Resolution</label>
               <input
-                type="text"
-                id="resolution"
+                type="radio"
+                id="resolution-yes"
                 name="resolution"
-                value={resolveData.resolution}
+                value="1"
+                checked={resolveData.resolution==="1"}
                 onChange={handleChange}
-                required
+              />
+            </div>
+            <div>
+              <label>Resolution</label>
+              <input
+                type="radio"
+                id="resolution-no"
+                name="resolution"
+                value="0"
+                checked={resolveData.resolution==="0"}
+                onChange={handleChange}
               />
             </div>
             <div>
