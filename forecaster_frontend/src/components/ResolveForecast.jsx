@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 const getScores = (forecastPoints, resolution) => {
         const epsilon = 1e-15;
         const resolutionInt = resolution === "1" ? 1 : 0;
         
-        const brierScore = forecastPoints.reduce((sum, currentValue) => sum + (currentValue - resolution) ** 2, 0) / forecastPoints.length;
+        const brierScore = forecastPoints.reduce((sum, currentValue) => sum + (currentValue - resolutionInt) ** 2, 0) / forecastPoints.length;
         
         const logNScore = forecastPoints.reduce((sum, currentValue) => 
-          sum + (resolution * Math.log(Math.max(currentValue, epsilon)) 
-              + (1-resolution) * Math.log(Math.max(1-currentValue, epsilon))),0) / forecastPoints.length;
+          sum + (resolutionInt * Math.log(Math.max(currentValue, epsilon)) 
+              + (1-resolutionInt) * Math.log(Math.max(1-currentValue, epsilon))),0) / forecastPoints.length;
         
         const log2Score = forecastPoints.reduce((sum, currentValue) => 
-          sum + (resolution * Math.log2(Math.max(currentValue, epsilon)) 
-              + (1-resolution) * Math.log2(Math.max(1-currentValue, epsilon))),0) / forecastPoints.length;
+          sum + (resolutionInt * Math.log2(Math.max(currentValue, epsilon)) 
+              + (1-resolutionInt) * Math.log2(Math.max(1-currentValue, epsilon))),0) / forecastPoints.length;
         
-        return { brierScore, lognScore, log2Score };
+        return { brierScore, logNScore, log2Score };
 };
 
 const getDate = () => {
@@ -37,14 +38,13 @@ const ResolveForecast = ({ forecastPoints }) => {
                 ...prevState,
                 [name]: value
             }));
-        }
-  };
-
-  const scores = getScores(forecastPoints, resolution)
+        };
 
   const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitStatus('Submitting update...');
+
+        const scores = getScores(forecastPoints, resolveData.resolution);
 
         const dataToSubmit = {
             ...resolveData,
@@ -78,13 +78,13 @@ const ResolveForecast = ({ forecastPoints }) => {
             console.error('Error:',error)
             setSubmitStatus('An error occurred. Try again.')
         }
-    };
+      };
      
     return (
         <div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label>Resolution</label>
+              <label>Resolved as Yes</label>
               <input
                 type="radio"
                 id="resolution-yes"
@@ -95,7 +95,7 @@ const ResolveForecast = ({ forecastPoints }) => {
               />
             </div>
             <div>
-              <label>Resolution</label>
+              <label>Resolved as No</label>
               <input
                 type="radio"
                 id="resolution-no"

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import ForecastGraph from '../components/ForecastGraph';
 import './SpecificForecast.css';
 import UpdateForecast from '../components/UpdateForecast';
+import ResolveForecast from '../components/ResolveForecast';
 
 
 function SpecificForecast() {
@@ -102,7 +103,7 @@ function SpecificForecast() {
           <div className='chart-box'>
           <ForecastGraph data = {chartData} options={chartOptions} />
           </div>
-          {isAdmin && <UpdateForecast forecastPoints={forecastPointArray} />}
+          {isAdmin && resolutionData == null && <ResolveForecast forecastPoints={forecastPointArray} />}
           <div>
             {resolutionData != null ? (
             <div className='info-box'>
@@ -132,7 +133,7 @@ function SpecificForecast() {
               ))}
             </ul>
           </div>
-          {isAdmin && <UpdateForecast />}
+          {isAdmin && resolutionData == null && <UpdateForecast />}
         </div>
     );
 }
