@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import ForecastGraph from '../components/ForecastGraph';
 import './SpecificForecast.css';
+import UpdateForecast from '../components/UpdateForecast';
+import ResolveForecast from '../components/ResolveForecast';
 
 
 function SpecificForecast() {
@@ -10,6 +12,7 @@ function SpecificForecast() {
     const [resolutionData, setResolution] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
     let { id } = useParams();
   
     useEffect(() => {
@@ -50,18 +53,26 @@ function SpecificForecast() {
         setError(error);
         setLoading(false);
       });
+      const checkAdminStatus = () => {
+        const expirationTime = localStorage.getItem('adminLoginExpiration');
+        setIsAdmin(expirationTime && new Date().getTime() < parseInt(expirationTime, 10));
+      };
+
+      checkAdminStatus();
     }, [id]);
-  
+    
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading the forecast: {error.message}</div>;
 
-
+    const forecastPointArray = forecastPoints.map(point => point.point_forecast)
+    
     const chartData = {
       labels: forecastPoints.map(point => new Date(point.date_added).toLocaleDateString('en-CA')),
       datasets: [
           {
               label: 'Prediction',
-              data: forecastPoints.map(point => point.point_forecast),
+              data: forecastPointArray,
               fill: false,
               borderColor: 'rgb(75, 192, 192)',
               tension: 0.1
@@ -92,6 +103,7 @@ function SpecificForecast() {
           <div className='chart-box'>
           <ForecastGraph data = {chartData} options={chartOptions} />
           </div>
+          {isAdmin && resolutionData == null && <ResolveForecast forecastPoints={forecastPointArray} />}
           <div>
             {resolutionData != null ? (
             <div className='info-box'>
@@ -121,6 +133,7 @@ function SpecificForecast() {
               ))}
             </ul>
           </div>
+          {isAdmin && resolutionData == null && <UpdateForecast />}
         </div>
     );
 }
