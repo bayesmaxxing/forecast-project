@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 const UpdateForecast = () => {
@@ -74,10 +74,10 @@ const UpdateForecast = () => {
     };
      
     return (
-        <div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label>Point forecast</label>
+        <div className="form-container">
+          <form onSubmit={handleSubmit} className="forecast-form">
+            <div className="form-group">
+              <label htmlFor="point_forecast">Point forecast</label>
               <input
                 type="text"
                 id="point_forecast"
@@ -87,8 +87,8 @@ const UpdateForecast = () => {
                 required
               />
             </div>
-            <div>
-              <label>Upper confidence interval</label>
+            <div className="form-group">
+              <label hmtlFor="upper_ci">Upper confidence interval</label>
               <input
                 type="text"
                 id="upper_ci"
@@ -98,8 +98,8 @@ const UpdateForecast = () => {
                 required
               />
             </div>
-            <div>
-              <label>Lower confidence interval</label>
+            <div className="form-group">
+              <label htmlFor="lower_ci">Lower confidence interval</label>
               <input
                 type="text"
                 id="lower_ci"
@@ -109,8 +109,8 @@ const UpdateForecast = () => {
                 required
               ></input>
             </div>
-            <div>
-              <label >Reason for update</label>
+            <div className="form-group">
+              <label htmlFor="reason">Reason for update</label>
               <textarea
                 id="reason"
                 name="reason"
@@ -120,9 +120,7 @@ const UpdateForecast = () => {
                 rows="3"
               ></textarea>
             </div>
-            <button
-              type="submit"
-            >
+            <button type="submit" className="submit-button">
               Submit
             </button>
           </form>

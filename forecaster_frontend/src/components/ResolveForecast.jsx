@@ -81,10 +81,10 @@ const ResolveForecast = ({ forecastPoints }) => {
       };
      
     return (
-        <div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label>Resolved as Yes</label>
+        <div className="form-container">
+          <form onSubmit={handleSubmit} className="forecast-form">
+            <div className="form-group">
+              <label htmlFor="resolution-yes">Resolved as Yes</label>
               <input
                 type="radio"
                 id="resolution-yes"
@@ -94,8 +94,8 @@ const ResolveForecast = ({ forecastPoints }) => {
                 onChange={handleChange}
               />
             </div>
-            <div>
-              <label>Resolved as No</label>
+            <div className="form-group">
+              <label htmlFor="resolution-no">Resolved as No</label>
               <input
                 type="radio"
                 id="resolution-no"
@@ -105,8 +105,8 @@ const ResolveForecast = ({ forecastPoints }) => {
                 onChange={handleChange}
               />
             </div>
-            <div>
-              <label >Comment on resolution</label>
+            <div className="form-group">
+              <label htmlFor="comment">Comment on resolution</label>
               <textarea
                 id="comment"
                 name="comment"
@@ -116,9 +116,7 @@ const ResolveForecast = ({ forecastPoints }) => {
                 rows="3"
               ></textarea>
             </div>
-            <button
-              type="submit"
-            >
+            <button type="submit" className="submit-button">
               Submit
             </button>
           </form>

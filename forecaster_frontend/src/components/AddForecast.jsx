@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './ForecastForms.css';
 
 const AddForecast = () => {
     const [ForecastData, setForecastData] = useState({
@@ -56,10 +57,10 @@ const AddForecast = () => {
     };
      
     return (
-        <div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label>Question</label>
+        <div className="form-container">
+          <form onSubmit={handleSubmit} className="forecast-form">
+            <div className="form-group">
+              <label htmlFor="question">Question</label>
               <input
                 type="text"
                 id="question"
@@ -69,8 +70,8 @@ const AddForecast = () => {
                 required
               />
             </div>
-            <div>
-              <label>Short Question</label>
+            <div className="form-group">
+              <label htmlFor="short_question">Short Question</label>
               <input
                 type="text"
                 id="short_question"
@@ -80,8 +81,8 @@ const AddForecast = () => {
                 required
               />
             </div>
-            <div>
-              <label>Category</label>
+            <div className="form-group">
+              <label htmlFor="category">Category</label>
               <input
                 id="category"
                 name="category"
@@ -90,8 +91,8 @@ const AddForecast = () => {
                 required
               ></input>
             </div>
-            <div>
-              <label >Resolution Criteria</label>
+            <div className="form-group">
+              <label htmlFor="resolution_criteria">Resolution Criteria</label>
               <textarea
                 id="resolution_criteria"
                 name="resolution_criteria"
@@ -101,9 +102,7 @@ const AddForecast = () => {
                 rows="3"
               ></textarea>
             </div>
-            <button
-              type="submit"
-            >
+            <button type="submit" className="submit-button">
               Submit
             </button>
           </form>
