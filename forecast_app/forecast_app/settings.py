@@ -14,6 +14,7 @@ from pathlib import Path
 import environ
 from dotenv import load_dotenv
 import os
+import ast
 
 load_dotenv('/Users/samuelsvensson/Documents/forecasting_project/forecast_app/.env')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,7 +32,7 @@ SECRET_KEY =  os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG',default=False)
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ast.literal_eval(os.getenv('ALLOWED_HOSTS'))
 
 
 # Application definition
