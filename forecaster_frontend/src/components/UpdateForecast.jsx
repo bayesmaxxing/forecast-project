@@ -50,7 +50,7 @@ const UpdateForecast = () => {
         };
 
         try {
-            const response = await fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/?forecast=${id}`, {
+            const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecast_points/?forecast=${id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

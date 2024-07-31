@@ -33,7 +33,7 @@ const AddForecast = () => {
         };
 
         try {
-            const response = await fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/`, {
+            const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
