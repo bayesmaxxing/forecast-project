@@ -18,17 +18,17 @@ function SpecificForecast() {
     useEffect(() => {
       
       Promise.all([
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/${id}/`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/${id}/`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
         }),
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/?forecast=${id}`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecast_points/?forecast=${id}`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
         }),
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/resolutions/?forecast=${id}`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/resolutions/?forecast=${id}`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }

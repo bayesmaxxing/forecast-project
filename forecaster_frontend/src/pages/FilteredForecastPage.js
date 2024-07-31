@@ -34,12 +34,12 @@ function ForecastPage() {
       } else {
         // Fetch the list of forecasts from the API
         Promise.all([
-          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?category=${category}&resolved=False`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/?category=${category}&resolved=False`, {
             headers : {
               'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
             }
           }),
-          fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecast_points/`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecast_points/`, {
             headers : {
               'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
             }
