@@ -26,12 +26,12 @@ function ResolvedForecastPage() {
       setResolutions(JSON.parse(resolutionsCached).data);
     } else {
       Promise.all([
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/forecasts/?resolved=True`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/?resolved=True`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
         }),
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/resolutions/`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/resolutions/`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }

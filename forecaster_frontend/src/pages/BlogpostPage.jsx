@@ -14,7 +14,7 @@ function BlogpostPage() {
     let { slug } = useParams();
   
     useEffect(() => {
-        fetch(`https://forecast-project-backend.vercel.app/forecaster/api/blogposts/?slug=${slug}`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/blogposts/?slug=${slug}`, {
           headers : {
             'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
           }
