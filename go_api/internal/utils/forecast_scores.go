@@ -11,7 +11,7 @@ type ForecastScores struct {
 	LogNScore  float64
 }
 
-func calcForecastScores(probabilities []float64, outcome bool) (ForecastScores, error) {
+func CalcForecastScores(probabilities []float64, outcome bool) (ForecastScores, error) {
 	if len(probabilities) == 0 {
 		return ForecastScores{}, errors.New("no probabilities provided")
 	}

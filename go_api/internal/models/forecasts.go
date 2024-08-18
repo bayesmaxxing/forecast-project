@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+	"go_api/internal/utils"
 	"time"
 )
 
@@ -23,12 +25,30 @@ func (f *Forecast) IsResolved() bool {
 	return f.ResolvedAt != nil
 }
 
-func (f *Forecast) Resolve(resolution string, comment string) {
+func (f *Forecast) Resolve(resolution string, comment string, probabilities []float64) error {
+	if f.ResolvedAt != nil {
+		return errors.New("forecast has already been resolved")
+	}
+
+	if len(probabilities) == 0 {
+		return errors.New("no probabilities supplies")
+	}
+
 	now := time.Now()
 	f.ResolvedAt = &now
 	f.Resolution = &resolution
 	f.ResolutionComment = &comment
 
-	//import brier_score function and log2score and lognscore here
-	// also need to get the forecast_points in here...
+	outcome := resolution == "1"
+
+	scores, err := utils.CalcForecastScores(probabilities, outcome)
+
+	if err != nil {
+		return err
+	}
+
+	f.BrierScore = &scores.BrierScore
+	f.Log2Score = &scores.Log2Score
+	f.LogNScore = &scores.LogNScore
+	return nil
 }
