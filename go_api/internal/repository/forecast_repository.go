@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"go_api/internal/models"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5"
 )
 
 type ForecastRepository struct {
@@ -132,7 +132,7 @@ func (r *ForecastRepository) ListOpenForecastsWithCategory(ctx context.Context, 
 				WHERE resolved is not null
 				AND category like (%$1%)`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, category)
 	if err != nil {
 		return nil, err
 	}
