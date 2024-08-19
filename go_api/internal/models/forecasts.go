@@ -12,12 +12,12 @@ type Forecast struct {
 	Category           string     `json:"category"`
 	CreatedAt          time.Time  `json:"created"`
 	ResolutionCriteria string     `json:"resolution_criteria"`
-	Resolution         *string    `json:"resolution"`
-	ResolvedAt         *time.Time `json:"resolved"`
-	BrierScore         *float64   `json:"brier_score"`
-	Log2Score          *float64   `json:"log2_score"`
-	LogNScore          *float64   `json:"logn_score"`
-	ResolutionComment  *string    `json:"comment"`
+	Resolution         *string    `json:"resolution,omitempty"`
+	ResolvedAt         *time.Time `json:"resolved,omitempty"`
+	BrierScore         *float64   `json:"brier_score,omitempty"`
+	Log2Score          *float64   `json:"log2_score,omitempty"`
+	LogNScore          *float64   `json:"logn_score,omitempty"`
+	ResolutionComment  *string    `json:"comment,omitempty"`
 }
 
 // Check if forecast has resolved
