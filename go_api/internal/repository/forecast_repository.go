@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"go_api/internal/models"
+	"strings"
 
 	_ "github.com/jackc/pgx/v5"
 )
@@ -81,23 +82,7 @@ func (r *ForecastRepository) ListOpenForecasts(ctx context.Context) ([]*models.F
 				FROM forecasts
 				WHERE resolved is null`
 
-	rows, err := r.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	var forecasts []*models.Forecast
-	for rows.Next() {
-		var f models.Forecast
-		if err := rows.Scan(&f.ID, &f.Question, &f.Category, &f.CreatedAt, &f.ResolutionCriteria, &f.Resolution,
-			&f.ResolvedAt, &f.BrierScore, &f.Log2Score, &f.LogNScore, &f.ResolutionComment); err != nil {
-			return nil, err
-		}
-		forecasts = append(forecasts, &f)
-	}
-	return forecasts, rows.Err()
+	return r.queryForecasts(ctx, query)
 }
 
 func (r *ForecastRepository) ListResolvedForecasts(ctx context.Context) ([]*models.Forecast, error) {
@@ -106,33 +91,31 @@ func (r *ForecastRepository) ListResolvedForecasts(ctx context.Context) ([]*mode
 				FROM forecasts
 				WHERE resolved is not null`
 
-	rows, err := r.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	var forecasts []*models.Forecast
-	for rows.Next() {
-		var f models.Forecast
-		if err := rows.Scan(&f.ID, &f.Question, &f.Category, &f.CreatedAt, &f.ResolutionCriteria, &f.Resolution,
-			&f.ResolvedAt, &f.BrierScore, &f.Log2Score, &f.LogNScore, &f.ResolutionComment); err != nil {
-			return nil, err
-		}
-		forecasts = append(forecasts, &f)
-	}
-	return forecasts, rows.Err()
+	return r.queryForecasts(ctx, query)
 }
 
 func (r *ForecastRepository) ListOpenForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
 	query := `SELECT id, question, category, created, resolution_criteria, resolution, resolved, brier_score,
 				log2_score, logn_score, comment 
 				FROM forecasts
+				WHERE resolved is null
+				AND category like (%$1%)`
+
+	return r.queryForecasts(ctx, query, category)
+}
+
+func (r *ForecastRepository) ListResolvedForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
+	query := `SELECT id, question, category, created, resolution_criteria, resolution, resolved, brier_score,
+				log2_score, logn_score, comment 
+				FROM forecasts
 				WHERE resolved is not null
 				AND category like (%$1%)`
 
-	rows, err := r.db.QueryContext(ctx, query, category)
+	return r.queryForecasts(ctx, query, category)
+}
+
+func (r *ForecastRepository) queryForecasts(ctx context.Context, query string, args ...interface{}) ([]*models.Forecast, error) {
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -140,10 +123,17 @@ func (r *ForecastRepository) ListOpenForecastsWithCategory(ctx context.Context, 
 	defer rows.Close()
 
 	var forecasts []*models.Forecast
+
 	for rows.Next() {
 		var f models.Forecast
-		if err := rows.Scan(&f.ID, &f.Question, &f.Category, &f.CreatedAt, &f.ResolutionCriteria, &f.Resolution,
-			&f.ResolvedAt, &f.BrierScore, &f.Log2Score, &f.LogNScore, &f.ResolutionComment); err != nil {
+		var err error
+		if strings.Contains(query, "resolved is null") {
+			err = rows.Scan(&f.ID, &f.Question, &f.Category, &f.CreatedAt, &f.ResolutionCriteria)
+		} else {
+			err = rows.Scan(&f.ID, &f.Question, &f.Category, &f.CreatedAt, &f.ResolutionCriteria, &f.Resolution,
+				&f.ResolvedAt, &f.BrierScore, &f.Log2Score, &f.LogNScore, &f.ResolutionComment)
+		}
+		if err != nil {
 			return nil, err
 		}
 		forecasts = append(forecasts, &f)
