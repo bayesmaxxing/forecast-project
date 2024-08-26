@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"go_api/internal/models"
 	"go_api/internal/repository"
 )
@@ -24,6 +25,10 @@ func (s *ForecastService) GetForecastByID(ctx context.Context, id int64) (*model
 
 func (s *ForecastService) CreateForecast(ctx context.Context, f *models.Forecast) error {
 	return s.repo.CreateForecast(ctx, f)
+}
+
+func (s *ForecastService) DeleteForecast(ctx context.Context, id int64) error {
+	return s.repo.DeleteForecast(ctx, id)
 }
 
 func (s *ForecastService) ResolveForecast(ctx context.Context,
@@ -50,4 +55,21 @@ func (s *ForecastService) ResolveForecast(ctx context.Context,
 	}
 
 	return s.repo.UpdateForecast(ctx, forecast)
+}
+
+func (s *ForecastService) ForecastList(ctx context.Context, listType string, category string) ([]*models.Forecast, error) {
+	switch listType {
+	case "open":
+		if category != "" {
+			return s.repo.ListOpenForecastsWithCategory(ctx, category)
+		}
+		return s.repo.ListOpenForecasts(ctx)
+	case "resolved":
+		if category != "" {
+			return s.repo.ListResolvedForecastsWithCategory(ctx, category)
+		}
+		return s.repo.ListResolvedForecasts(ctx)
+	default:
+		return nil, errors.New("invalid resolved status")
+	}
 }
