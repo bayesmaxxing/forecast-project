@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go_api/internal/models"
 	"go_api/internal/repository"
+	"go_api/internal/utils"
 )
 
 type ForecastService struct {
@@ -43,9 +44,7 @@ func (s *ForecastService) ResolveForecast(ctx context.Context,
 		return err
 	}
 
-	var probabilities []float64
-
-	probabilities = make([]float64, len(points))
+	probabilities := make([]float64, len(points))
 	for i, point := range points {
 		probabilities[i] = point.PointForecast
 	}
@@ -72,4 +71,29 @@ func (s *ForecastService) ForecastList(ctx context.Context, listType string, cat
 	default:
 		return nil, errors.New("invalid resolved status")
 	}
+}
+
+func (s *ForecastService) GetAggregatedScores(ctx context.Context, category string) (*utils.AggScores, error) {
+	forecasts, err := s.repo.ListResolvedForecasts(ctx)
+
+	if err != nil {
+		return &utils.AggScores{}, err
+	}
+
+	scores := make([]utils.ForecastScores, len(forecasts))
+	for i, forecast := range forecasts {
+		scores[i] = utils.ForecastScores{
+			BrierScore: *forecast.BrierScore,
+			Log2Score:  *forecast.Log2Score,
+			LogNScore:  *forecast.LogNScore,
+		}
+
+	}
+
+	aggScores, err := utils.CalculateAggregateScores(scores)
+	if err != nil {
+		return &utils.AggScores{}, err
+	}
+
+	return &aggScores, nil
 }

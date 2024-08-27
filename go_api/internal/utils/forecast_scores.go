@@ -11,6 +11,12 @@ type ForecastScores struct {
 	LogNScore  float64
 }
 
+type AggScores struct {
+	AggBrierScore float64
+	AggLog2Score  float64
+	AggLogNScore  float64
+}
+
 func CalcForecastScores(probabilities []float64, outcome bool) (ForecastScores, error) {
 	if len(probabilities) == 0 {
 		return ForecastScores{}, errors.New("no probabilities provided")
@@ -39,5 +45,26 @@ func CalcForecastScores(probabilities []float64, outcome bool) (ForecastScores, 
 		BrierScore: brierSum / points,
 		Log2Score:  log2Sum / points,
 		LogNScore:  logNSum / points,
+	}, nil
+}
+
+func CalculateAggregateScores(scores []ForecastScores) (AggScores, error) {
+	if len(scores) == 0 {
+		return AggScores{}, errors.New("no scores provided")
+	}
+
+	var brierSum, log2Sum, logNSum float64
+	totalResolved := float64(len(scores))
+
+	for _, score := range scores {
+		brierSum += score.BrierScore
+		logNSum += score.LogNScore
+		log2Sum += score.Log2Score
+	}
+
+	return AggScores{
+		AggBrierScore: brierSum / totalResolved,
+		AggLog2Score:  log2Sum / totalResolved,
+		AggLogNScore:  logNSum / totalResolved,
 	}, nil
 }
