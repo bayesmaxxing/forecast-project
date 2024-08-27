@@ -74,7 +74,14 @@ func (s *ForecastService) ForecastList(ctx context.Context, listType string, cat
 }
 
 func (s *ForecastService) GetAggregatedScores(ctx context.Context, category string) (*utils.AggScores, error) {
-	forecasts, err := s.repo.ListResolvedForecasts(ctx)
+	var forecasts []*models.Forecast
+	var err error
+
+	if category == "" {
+		forecasts, err = s.repo.ListResolvedForecasts(ctx)
+	} else {
+		forecasts, err = s.repo.ListResolvedForecastsWithCategory(ctx, category)
+	}
 
 	if err != nil {
 		return &utils.AggScores{}, err
@@ -90,7 +97,7 @@ func (s *ForecastService) GetAggregatedScores(ctx context.Context, category stri
 
 	}
 
-	aggScores, err := utils.CalculateAggregateScores(scores)
+	aggScores, err := utils.CalculateAggregateScores(scores, category)
 	if err != nil {
 		return &utils.AggScores{}, err
 	}
