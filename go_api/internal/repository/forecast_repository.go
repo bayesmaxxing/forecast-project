@@ -114,6 +114,27 @@ func (r *ForecastRepository) ListResolvedForecastsWithCategory(ctx context.Conte
 	return r.queryForecasts(ctx, query, category)
 }
 
+func (r *ForecastRepository) ListResolvedWithScoresAndCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
+	query := `SELECT id, question, category, created, resolution_criteria, resolution, resolved, brier_score,
+				log2_score, logn_score, comment 
+				FROM forecasts
+				WHERE resolved is not null
+				AND brier_score is not null
+				AND category like (%$1%)`
+
+	return r.queryForecasts(ctx, query, category)
+}
+
+func (r *ForecastRepository) ListResolvedWithScores(ctx context.Context) ([]*models.Forecast, error) {
+	query := `SELECT id, question, category, created, resolution_criteria, resolution, resolved, brier_score,
+				log2_score, logn_score, comment 
+				FROM forecasts
+				WHERE resolved is not null
+				AND brier_score is not null`
+
+	return r.queryForecasts(ctx, query)
+}
+
 func (r *ForecastRepository) queryForecasts(ctx context.Context, query string, args ...interface{}) ([]*models.Forecast, error) {
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {

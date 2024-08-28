@@ -78,16 +78,16 @@ func (s *ForecastService) GetAggregatedScores(ctx context.Context, category stri
 	var err error
 
 	if category == "" {
-		forecasts, err = s.repo.ListResolvedForecasts(ctx)
+		forecasts, err = s.repo.ListResolvedWithScores(ctx)
 	} else {
-		forecasts, err = s.repo.ListResolvedForecastsWithCategory(ctx, category)
+		forecasts, err = s.repo.ListResolvedWithScoresAndCategory(ctx, category)
 	}
 
 	if err != nil {
 		return &utils.AggScores{}, err
 	}
 
-	scores := make([]utils.ForecastScores, len(forecasts))
+	scores := make([]utils.ForecastScores, 0, len(forecasts))
 	for i, forecast := range forecasts {
 		scores[i] = utils.ForecastScores{
 			BrierScore: *forecast.BrierScore,

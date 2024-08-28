@@ -39,6 +39,10 @@ func (f *Forecast) Resolve(resolution string, comment string, probabilities []fl
 	f.Resolution = &resolution
 	f.ResolutionComment = &comment
 
+	if resolution == "-" {
+		return nil
+	}
+
 	outcome := resolution == "1"
 
 	scores, err := utils.CalcForecastScores(probabilities, outcome)
