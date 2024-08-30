@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"database/sql"
+	"go_api/internal/database"
 	"go_api/internal/models"
 	"strings"
 
@@ -10,10 +10,10 @@ import (
 )
 
 type ForecastRepository struct {
-	db *sql.DB
+	db *database.DB
 }
 
-func NewForecastRepository(db *sql.DB) *ForecastRepository {
+func NewForecastRepository(db *database.DB) *ForecastRepository {
 	return &ForecastRepository{db: db}
 }
 

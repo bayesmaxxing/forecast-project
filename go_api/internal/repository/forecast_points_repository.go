@@ -2,17 +2,17 @@ package repository
 
 import (
 	"context"
-	"database/sql"
+	"go_api/internal/database"
 	"go_api/internal/models"
 
 	_ "github.com/jackc/pgx/v5"
 )
 
 type ForecastPointRepository struct {
-	db *sql.DB
+	db *database.DB
 }
 
-func NewForecastPointRepository(db *sql.DB) *ForecastPointRepository {
+func NewForecastPointRepository(db *database.DB) *ForecastPointRepository {
 	return &ForecastPointRepository{db: db}
 }
 

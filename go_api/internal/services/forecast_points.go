@@ -10,7 +10,7 @@ type ForecastPointService struct {
 	repo *repository.ForecastPointRepository
 }
 
-func NewForecastPointRepository(repo *repository.ForecastPointRepository) *ForecastPointService {
+func NewForecastPointService(repo *repository.ForecastPointRepository) *ForecastPointService {
 	return &ForecastPointService{repo: repo}
 }
 

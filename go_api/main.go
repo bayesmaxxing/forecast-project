@@ -1,41 +1,53 @@
 package main
 
 import (
+	"go_api/internal/database"
+	"go_api/internal/handlers"
+	"go_api/internal/repository"
+	"go_api/internal/services"
+	"log"
 	"net/http"
+
+	_ "github.com/jackc/pgx/v5"
 )
 
-type App struct {
-	router *http.ServeMux
-	// more here
+func setupRoutes(mux *http.ServeMux, db *database.DB) {
+	forecastRepo := repository.NewForecastRepository(db)
+	forecastPointRepo := repository.NewForecastPointRepository(db)
+	forecastService := services.NewForecastService(forecastRepo, forecastPointRepo)
+	forecastHandler := handlers.NewForecastHandler(forecastService)
+
+	mux.HandleFunc("GET /forecasts", forecastHandler.ListForecasts)
+	mux.HandleFunc("GET /forecasts/{id}", forecastHandler.GetForecast)
+	mux.HandleFunc("POST /forecasts", forecastHandler.CreateForecast)
+	mux.HandleFunc("DELETE /forecasts/{id}", forecastHandler.DeleteForecast)
+	mux.HandleFunc("GET /scores", forecastHandler.GetAggregatedScores)
+
+	forecastPointService := services.NewForecastPointService(forecastPointRepo)
+	forecastPointHandler := handlers.NewForecastPointHandler(forecastPointService)
+
+	mux.HandleFunc("GET /forecast-points/{id}", forecastPointHandler.ListForecastPointsbyID)
+	mux.HandleFunc("GET /forecast-points", forecastPointHandler.ListAllForecastPoints)
+	mux.HandleFunc("POST /forecast-points", forecastPointHandler.CreateForecastPoint)
 }
 
-func NewApp() *App {
-	app := &App{
-		router: http.NewServeMux(),
+func main() {
+	db, err := database.NewDB("connection_string")
+	if err != nil {
+		log.Fatalf("Error opening database: %v", err)
 	}
-	app.routes()
-	return app
-}
+	defer db.Close()
 
-func (a *App) routes() {
-	// Forecast methods, all forecasts
-	a.router.HandleFunc("GET /forecasts", a.getForecasts)
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Error connecting to the database: %v", err)
+	}
 
-	// Specific forecast methods
-	a.router.HandleFunc("POST /forecasts", a.createForecast)
-	a.router.HandleFunc("GET /forecasts/{id}", a.getForecast)
-	a.router.HandleFunc("PUT /forecasts", a.resolveForecast)
+	mux := http.NewServeMux()
+	setupRoutes(mux, db)
 
-	//Aggregate methods
-	a.router.HandleFunc("GET /forecasts/scores")
+	log.Println("Starting server on :8080")
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Fatalf("Error starting server: %v", err)
+	}
 
-	// Forecast point methods
-	a.router.HandleFunc("GET /forecast_points", a.getForecastPoints)
-	a.router.HandleFunc("POST /forecast_points", a.createForecastPoint)
-	a.router.HandleFunc("GET /forecast_points", a.handleForecastPoints)
-
-}
-
-func (a *App) getForecasts(w http.ResponseWriter, r *http.Request) {
-	// implement get forecasts logic
 }
