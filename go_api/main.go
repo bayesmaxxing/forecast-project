@@ -7,6 +7,7 @@ import (
 	"go_api/internal/services"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/jackc/pgx/v5"
 )
@@ -32,7 +33,8 @@ func setupRoutes(mux *http.ServeMux, db *database.DB) {
 }
 
 func main() {
-	db, err := database.NewDB("connection_string")
+	db_connection := os.Getenv(DB_CONNECTION_STRING)
+	db, err := database.NewDB(db_connection)
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
 	}
