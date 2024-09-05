@@ -5,6 +5,7 @@ import (
 	"go_api/internal/database"
 	"go_api/internal/models"
 	"strings"
+	"time"
 
 	_ "github.com/jackc/pgx/v5"
 )
@@ -36,6 +37,8 @@ func (r *ForecastRepository) GetForecastByID(ctx context.Context, id int64) (*mo
 }
 
 func (r *ForecastRepository) CreateForecast(ctx context.Context, f *models.Forecast) error {
+	f.CreatedAt = time.Now()
+
 	query := `INSERT INTO forecast_v2 (question, category, created, resolution_criteria, 
 				resolution, resolved, brier_score, log2_score, logn_score, comment)
 				VALUES ($1, $2, $3, $4) RETURNING id`

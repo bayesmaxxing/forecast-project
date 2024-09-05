@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"go_api/internal/models"
+	"time"
 )
 
 type BlogpostRepository struct {
@@ -48,4 +49,15 @@ func (r *BlogpostRepository) GetBlogpostBySlug(ctx context.Context, slug string)
 		return nil, err
 	}
 	return &b, nil
+}
+
+func (r *BlogpostRepository) CreateBlogpost(ctx context.Context, post *models.Blogpost) error {
+	post.CreatedAt = time.Now()
+
+	query := `INSERT INTO blogposts (title, post, created_date, summary, slug, related_forecasts)
+				VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+
+	err := r.db.QueryRowContext(ctx, query, post.Title, post.Post, post.CreatedAt, post.Summary, post.Slug,
+		post.RelatedForecasts).Scan(&post.ID)
+	return err
 }

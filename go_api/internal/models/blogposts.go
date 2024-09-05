@@ -9,6 +9,7 @@ type Blogpost struct {
 	Title            string    `json:"title"`
 	Post             string    `json:"post"`
 	CreatedAt        time.Time `json:"created"`
+	Summary          string    `json:"summary"`
 	Slug             string    `json:"slug"`
 	RelatedForecasts []int64   `json:"related_forecasts"`
 }
