@@ -2,16 +2,16 @@ package repository
 
 import (
 	"context"
-	"database/sql"
+	"go_api/internal/database"
 	"go_api/internal/models"
 	"time"
 )
 
 type BlogpostRepository struct {
-	db *sql.DB
+	db *database.DB
 }
 
-func NewBlogpostRepository(db *sql.DB) *BlogpostRepository {
+func NewBlogpostRepository(db *database.DB) *BlogpostRepository {
 	return &BlogpostRepository{db: db}
 }
 

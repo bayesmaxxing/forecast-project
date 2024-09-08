@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	_ "github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func setupRoutes(mux *http.ServeMux, db *database.DB) {
@@ -30,10 +30,30 @@ func setupRoutes(mux *http.ServeMux, db *database.DB) {
 	mux.HandleFunc("GET /forecast-points/{id}", forecastPointHandler.ListForecastPointsbyID)
 	mux.HandleFunc("GET /forecast-points", forecastPointHandler.ListAllForecastPoints)
 	mux.HandleFunc("POST /forecast-points", forecastPointHandler.CreateForecastPoint)
+
+	blogpostRepo := repository.NewBlogpostRepository(db)
+	blogpostService := services.NewBlogpostService(blogpostRepo)
+	blogpostHandler := handlers.NewBlogpostHandler(blogpostService)
+
+	mux.HandleFunc("GET /blogposts", blogpostHandler.ListBlogposts)
+	mux.HandleFunc("GET /blogposts/{slug}", blogpostHandler.GetBlogpostBySlug)
+	mux.HandleFunc("POST /blogposts", blogpostHandler.CreateBlogpost)
+}
+
+func getDBConnectionString() string {
+	dbName := os.Getenv("DB_CONNECTION_STRING")
+
+	// Debug logging
+	log.Printf("DB_NAME: %s", dbName)
+	// Don't log the password
+
+	return dbName
 }
 
 func main() {
-	db_connection := os.Getenv(DB_CONNECTION_STRING)
+	db_connection := getDBConnectionString()
+	log.Printf("Attempting to connect using: %s", db_connection)
+
 	db, err := database.NewDB(db_connection)
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)

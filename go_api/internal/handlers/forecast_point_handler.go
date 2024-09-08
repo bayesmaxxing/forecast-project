@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"go_api/internal/models"
 	"go_api/internal/services"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type ForecastPointHandler struct {
@@ -17,7 +19,15 @@ func NewForecastPointHandler(s *services.ForecastPointService) *ForecastPointHan
 }
 
 func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *http.Request) {
-	forecastIDStr := r.URL.Query().Get("forecast_id")
+
+	path := strings.TrimPrefix(r.URL.Path, "/forecast-points/")
+	forecastIDStr := strings.TrimSuffix(path, "/")
+
+	if forecastIDStr == "" {
+		http.Error(w, "Forecast ID is required", http.StatusBadRequest)
+		return
+	}
+
 	forecastID, err := strconv.ParseInt(forecastIDStr, 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid forecast ID", http.StatusBadRequest)
@@ -26,7 +36,17 @@ func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *
 
 	points, err := h.service.GetForecastPointsByForecastID(r.Context(), forecastID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err == sql.ErrNoRows {
+			http.Error(w, "No forecast points found for this ID", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if len(points) == 0 {
+		http.Error(w, "No forecast points found for this ID", http.StatusNotFound)
 		return
 	}
 

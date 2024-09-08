@@ -87,19 +87,27 @@ func (s *ForecastService) GetAggregatedScores(ctx context.Context, category stri
 		return &utils.AggScores{}, err
 	}
 
+	if len(forecasts) == 0 {
+		return nil, errors.New("no forecasts fetched")
+	}
 	scores := make([]utils.ForecastScores, 0, len(forecasts))
-	for i, forecast := range forecasts {
-		scores[i] = utils.ForecastScores{
+	for _, forecast := range forecasts {
+		if forecast.BrierScore == nil {
+			continue
+		}
+		scores = append(scores, utils.ForecastScores{
 			BrierScore: *forecast.BrierScore,
 			Log2Score:  *forecast.Log2Score,
 			LogNScore:  *forecast.LogNScore,
-		}
-
+		})
+	}
+	if len(scores) == 0 {
+		return nil, errors.New("no scores found")
 	}
 
 	aggScores, err := utils.CalculateAggregateScores(scores, category)
 	if err != nil {
-		return &utils.AggScores{}, err
+		return nil, err
 	}
 
 	return &aggScores, nil

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type DB struct {
@@ -12,7 +12,7 @@ type DB struct {
 }
 
 func NewDB(dataSourceName string) (*DB, error) {
-	db, err := sql.Open("postgres", dataSourceName)
+	db, err := sql.Open("pgx", dataSourceName)
 	if err != nil {
 		return nil, fmt.Errorf("error opening the database: %w", err)
 	}
