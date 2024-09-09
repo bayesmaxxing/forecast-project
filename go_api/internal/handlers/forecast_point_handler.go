@@ -79,3 +79,12 @@ func (h *ForecastPointHandler) ListAllForecastPoints(w http.ResponseWriter, r *h
 
 	respondJSON(w, http.StatusOK, points)
 }
+
+func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r *http.Request) {
+	latestForecastPoints, err := h.service.GetLatestForecastPoints(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	respondJSON(w, http.StatusOK, latestForecastPoints)
+}

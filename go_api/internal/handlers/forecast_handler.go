@@ -78,6 +78,30 @@ func (h *ForecastHandler) DeleteForecast(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request) {
+	var resolution struct {
+		ID         int64
+		Resolution string
+		Comment    string
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&resolution); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.ResolveForecast(r.Context(),
+		resolution.ID,
+		resolution.Resolution,
+		resolution.Comment); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	message := "forecast resolved"
+	respondJSON(w, http.StatusOK, message)
+}
+
 func (h *ForecastHandler) GetAggregatedScores(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 

@@ -33,7 +33,7 @@ func (s *ForecastService) DeleteForecast(ctx context.Context, id int64) error {
 }
 
 func (s *ForecastService) ResolveForecast(ctx context.Context,
-	f *models.Forecast, id int64, resolution string, comment string) error {
+	id int64, resolution string, comment string) error {
 	forecast, err := s.repo.GetForecastByID(ctx, id)
 	if err != nil {
 		return err
@@ -44,9 +44,13 @@ func (s *ForecastService) ResolveForecast(ctx context.Context,
 		return err
 	}
 
+	if len(points) == 0 {
+		return errors.New("no forecast points found")
+	}
+
 	probabilities := make([]float64, len(points))
-	for i, point := range points {
-		probabilities[i] = point.PointForecast
+	for _, point := range points {
+		probabilities = append(probabilities, point.PointForecast)
 	}
 
 	if err := forecast.Resolve(resolution, comment, probabilities); err != nil {

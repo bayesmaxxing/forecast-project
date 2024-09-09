@@ -25,3 +25,7 @@ func (f *ForecastPointService) CreateForecastPoint(ctx context.Context, fp *mode
 func (f *ForecastPointService) GetAllForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
 	return f.repo.GetAllForecastPoints(ctx)
 }
+
+func (f *ForecastPointService) GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
+	return f.repo.GetLatestForecastPoints(ctx)
+}
