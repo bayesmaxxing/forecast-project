@@ -83,17 +83,16 @@ func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forec
 			 WHERE id = $10`
 
 	_, err := r.db.ExecContext(ctx, query,
-		f.ID,
 		f.Question,
 		f.Category,
-		f.CreatedAt,
 		f.ResolutionCriteria,
 		f.Resolution,
 		f.ResolvedAt,
 		f.BrierScore,
 		f.Log2Score,
 		f.LogNScore,
-		f.ResolutionComment)
+		f.ResolutionComment,
+		f.ID)
 	return err
 }
 

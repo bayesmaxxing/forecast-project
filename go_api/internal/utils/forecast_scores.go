@@ -27,7 +27,7 @@ func CalcForecastScores(probabilities []float64, outcome bool) (ForecastScores, 
 	points := float64(len(probabilities))
 
 	for _, prob := range probabilities {
-		if prob <= 0 || prob >= 1 {
+		if prob <= 0.0 || prob >= 1.0 {
 			return ForecastScores{}, errors.New("probs must be within 0 and 1")
 		}
 

@@ -6,6 +6,7 @@ import (
 	"go_api/internal/models"
 	"go_api/internal/repository"
 	"go_api/internal/utils"
+	"log"
 )
 
 type ForecastService struct {
@@ -48,15 +49,15 @@ func (s *ForecastService) ResolveForecast(ctx context.Context,
 		return errors.New("no forecast points found")
 	}
 
-	probabilities := make([]float64, len(points))
+	probabilities := make([]float64, 0, len(points))
 	for _, point := range points {
 		probabilities = append(probabilities, point.PointForecast)
 	}
-
+	log.Printf("Probabilities supplied: %f", probabilities[0])
 	if err := forecast.Resolve(resolution, comment, probabilities); err != nil {
 		return err
 	}
-
+	log.Printf("Forecast resolved")
 	return s.repo.UpdateForecast(ctx, forecast)
 }
 

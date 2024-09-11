@@ -44,18 +44,11 @@ func setupRoutes(mux *http.ServeMux, db *database.DB) {
 
 func getDBConnectionString() string {
 	dbName := os.Getenv("DB_CONNECTION_STRING")
-
-	// Debug logging
-	log.Printf("DB_NAME: %s", dbName)
-	// Don't log the password
-
 	return dbName
 }
 
 func main() {
 	db_connection := getDBConnectionString()
-	log.Printf("Attempting to connect using: %s", db_connection)
-
 	db, err := database.NewDB(db_connection)
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
