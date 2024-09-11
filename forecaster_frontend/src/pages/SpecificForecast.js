@@ -18,19 +18,14 @@ function SpecificForecast() {
     useEffect(() => {
       
       Promise.all([
-        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/${id}/`, {
+        fetch(`http://localhost:8080/forecasts/${id}/`, {
           headers : {
-            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+            "Accept": "application/json"
           }
         }),
-        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecast_points/?forecast=${id}`, {
+        fetch(`http://localhost:8080/forecast-points/${id}`, {
           headers : {
-            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
-          }
-        }),
-        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/resolutions/?forecast=${id}`, {
-          headers : {
-            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+            "Accept": "application/json"
           }
         })
       ])

@@ -34,14 +34,14 @@ function ForecastPage() {
       } else {
         // Fetch the list of forecasts from the API
         Promise.all([
-          fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/?category=${category}&resolved=False`, {
+          fetch(`http://localhost:8080/forecasts?category=${category}&type=open`, {
             headers : {
-              'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+              "Accept": "application/json"
             }
           }),
-          fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecast_points/`, {
+          fetch(`http://localhost:8080/forecast-points/latest`, {
             headers : {
-              'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+              "Accept": "application/json"
             }
           })
         ])

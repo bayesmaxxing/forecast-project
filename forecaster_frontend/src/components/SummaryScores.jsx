@@ -23,7 +23,7 @@ function SummaryScores() {
         setResolutions(JSON.parse(resolutionsCache).data);
       } else {
         // Fetch the list of resolutions from the API if cache is empty
-        fetch('https://forecasting-389105.ey.r.appspot.com/forecaster/api/resolutions/', {
+        fetch('http://localhost:8080/scores', {
             headers : {
               'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
             }

@@ -26,16 +26,11 @@ function ResolvedForecastPage() {
       setResolutions(JSON.parse(resolutionsCached).data);
     } else {
       Promise.all([
-        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/?resolved=True`, {
+        fetch(`http:/localhost:8080/forecasts?type=resolved`, {
           headers : {
-            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+            "Accept": "application/json"
           }
-        }),
-        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/resolutions/`, {
-          headers : {
-            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
-          }
-        }) 
+        })
       ])
       .then(async ([forecastData, resData]) => {
         const forecastDataJson = await forecastData.json();

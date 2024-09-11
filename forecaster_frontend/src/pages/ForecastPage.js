@@ -29,14 +29,14 @@ function ForecastPage() {
       } else {
         // Fetch the list of forecasts from the API if cache is empty or expired
         Promise.all([
-          fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/?resolved=False`, {
+          fetch(`http://localhost:8080/forecasts?type=resolved`, {
             headers : {
-              'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+              "Accept": "application/json"
             }
           }),
-          fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecast_points/`, {
+          fetch(`http://localhost:8080/forecast-points`, {
             headers : {
-              'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+              "Accept": "application/json"
             }
           })
         ])
