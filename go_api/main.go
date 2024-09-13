@@ -47,6 +47,24 @@ func getDBConnectionString() string {
 	return dbName
 }
 
+// CORS middleware
+func CORSMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // Replace with your frontend's origin
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight requests
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	db_connection := getDBConnectionString()
 	db, err := database.NewDB(db_connection)
@@ -61,9 +79,10 @@ func main() {
 
 	mux := http.NewServeMux()
 	setupRoutes(mux, db)
+	handler := CORSMiddleware(mux)
 
 	log.Println("Starting server on :8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8080", handler); err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}
 

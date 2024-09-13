@@ -107,7 +107,7 @@ func (r *ForecastPointRepository) CreateForecastPoint(ctx context.Context, fp *m
 }
 
 func (r *ForecastPointRepository) GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
-	query := `SELECT 
+	query := `SELECT distinct on (forecast_id)
 				update_id
 				, forecast_id
 				, point_forecast
@@ -116,7 +116,7 @@ func (r *ForecastPointRepository) GetLatestForecastPoints(ctx context.Context) (
 				, created
 				, reason
 				FROM forecast_points
-				QUALIFY row_number() over (partition by forecast_id order by created desc) = 1`
+				ORDER BY forecast_id, created DESC;`
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {

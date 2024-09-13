@@ -18,7 +18,7 @@ function SpecificForecast() {
     useEffect(() => {
       
       Promise.all([
-        fetch(`http://localhost:8080/forecasts/${id}/`, {
+        fetch(`http://localhost:8080/forecasts/${id}`, {
           headers : {
             "Accept": "application/json"
           }
