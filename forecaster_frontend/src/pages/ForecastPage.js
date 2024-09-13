@@ -9,32 +9,29 @@ function ForecastPage() {
     const [forecasts, setForecasts] = useState([]);
     const [forecastpoints, setForecastPoints] = useState([]);
     const [searchQuery, setsearchQuery] = useState('');
+    const [combinedForecasts, setCombinedForecasts] = useState([]);
 
     useEffect(() => {
       const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
       const now = new Date().getTime(); // Current time
       
-      // Get data from local cache
       const forecastsCache = localStorage.getItem('forecasts');
-      const forecastPointsCache = localStorage.getItem('forecastPoints');
+      const forecastPointsCache = localStorage.getItem('latestForecastPoints');
       
-      // Check if the cache is older than 5 minutes
       const forecastsDataValid = forecastsCache && now - JSON.parse(forecastsCache).timestamp < CACHE_DURATION;
       const forecastPointsDataValid = forecastPointsCache && now - JSON.parse(forecastPointsCache).timestamp < CACHE_DURATION;
       
-      // Try to load data from cache if it's valid
       if (forecastsDataValid && forecastPointsDataValid) {
         setForecasts(JSON.parse(forecastsCache).data);
         setForecastPoints(JSON.parse(forecastPointsCache).data);
       } else {
-        // Fetch the list of forecasts from the API if cache is empty or expired
         Promise.all([
-          fetch(`http://localhost:8080/forecasts?type=resolved`, {
+          fetch(`http://localhost:8080/forecasts?type=open`, {
             headers : {
               "Accept": "application/json"
             }
           }),
-          fetch(`http://localhost:8080/forecast-points`, {
+          fetch(`http://localhost:8080/forecast-points/latest`, {
             headers : {
               "Accept": "application/json"
             }
@@ -46,11 +43,15 @@ function ForecastPage() {
           return [forecastDataJson, pointsDataJson];
         })
         .then(([forecastDataJson, pointsDataJson]) => {
-          // Update state with fetched data
           setForecasts(forecastDataJson);
           setForecastPoints(pointsDataJson);
+
+          const combined = forecastDataJson.map(forecast => {
+            const matchingPoint = pointsDataJson.find(point => point.forecast_id === forecast.id);
+            return { ...forecast, latestPoint: matchingPoint || null};
+          });
+          setCombinedForecasts(combined)
           
-          // Update cache with new data and current timestamp
           localStorage.setItem('forecasts', JSON.stringify({data: forecastDataJson, timestamp: now}));
           localStorage.setItem('forecastPoints', JSON.stringify({data: pointsDataJson, timestamp: now}));
         })
@@ -58,16 +59,6 @@ function ForecastPage() {
         .catch(error => console.error('Error fetching data: ', error));
       }
     }, []);
-
-    // Get the most recent forecast for each question in forecasts
-    const getRecentForecastPoint = (forecastId) => {
-      const pointsForForecast = forecastpoints.filter(point => point.forecast === forecastId);
-      const mostRecentPoint = pointsForForecast.reduce((maxPoint, currentPoint) => {
-        return currentPoint.date_added > maxPoint.date_added ? currentPoint : maxPoint;
-      }, pointsForForecast[0]);
-  
-      return mostRecentPoint;
-    };
     
     // handler for the query in search field
     const handleSearchChange = (e) => {
@@ -76,7 +67,7 @@ function ForecastPage() {
 
     // Filtering the list of forecasts based on query in search field
     // query can match to question, short_question, category, or resolution criteria.
-    const filteredForecasts = forecasts.filter(forecast => 
+    const filteredForecasts = combinedForecasts.filter(forecast => 
       forecast.question.toLowerCase().includes(searchQuery) ||
       forecast.short_question.toLowerCase().includes(searchQuery) ||
       forecast.category.toLowerCase().includes(searchQuery) ||
@@ -102,12 +93,16 @@ function ForecastPage() {
                   {forecast.question}
                 </Link>
                 <div className="recent-forecast-point">
-                  <p>{(getRecentForecastPoint(forecast.id)?.point_forecast * 100).toFixed(1)}%</p>
+                  {forecast.latestPoint ? (
+                  <p>{(forecast.latestPoint.point_forecast * 100).toFixed(1)}%</p>
+                  ) : (
+                    <p>Not forecasted</p>
+                  )}
                 </div>
               </div>
               <div>
                 <p>Category: {forecast.category}</p>
-                <p>Created: {formatDate(forecast.creation_date)}</p>
+                <p>Created: {formatDate(forecast.created)}</p>
               </div>
             </li>
           ))}
