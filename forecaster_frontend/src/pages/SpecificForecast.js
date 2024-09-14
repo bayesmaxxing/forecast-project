@@ -9,7 +9,6 @@ import ResolveForecast from '../components/ResolveForecast';
 function SpecificForecast() {
     const [forecastData, setForecastData] = useState(null);
     const [forecastPoints, setForecastPoints] = useState(null);
-    const [resolutionData, setResolution] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
@@ -29,19 +28,18 @@ function SpecificForecast() {
           }
         })
       ])
-      .then(async ([idData, pointsData, resData]) => {
+      .then(async ([idData, pointsData]) => {
         if (!idData.ok || !pointsData.ok) {
           throw new Error('Error fetching data');
         }
         const idJson = await idData.json();
         const pointsJson = await pointsData.json();
-        const resJson = await resData.json();
-        return [idJson, pointsJson, resJson];
+        return [idJson, pointsJson];
       })
-      .then(([idJson, pointsJson, resJson]) => {
+      .then(([idJson, pointsJson]) => {
         setForecastData(idJson);
-        setForecastPoints(pointsJson);
-        setResolution(resJson[0]);
+        const sortedPoints = pointsJson.sort((a, b) => new Date(a.created) - new Date(b.created));
+        setForecastPoints(sortedPoints);
         setLoading(false);
       })
       .catch(error => {
@@ -59,15 +57,13 @@ function SpecificForecast() {
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading the forecast: {error.message}</div>;
-
-    const forecastPointArray = forecastPoints.map(point => point.point_forecast)
     
     const chartData = {
-      labels: forecastPoints.map(point => new Date(point.date_added).toLocaleDateString('en-CA')),
+      labels: forecastPoints.map(point => new Date(point.created).toLocaleDateString('en-CA')),
       datasets: [
           {
               label: 'Prediction',
-              data: forecastPointArray,
+              data: forecastPoints.map(point => point.point_forecast),
               fill: false,
               borderColor: 'rgb(75, 192, 192)',
               tension: 0.1
@@ -85,28 +81,29 @@ function SpecificForecast() {
     };
     
     const formatDate = (dateString) => dateString.split('T')[0];
+    const reversedForecastpoints = [...forecastPoints].reverse();
 
     return (
         <div>
           <div>
           <div className='question-header'>{forecastData.question}</div>
           <div>
-            {resolutionData != null ? (
-            <div className='question-header'>Resolved as: {resolutionData.resolution === "1" ? "Yes":"No"}</div>): (null)}
+            {forecastData.resolved != null ? (
+            <div className='question-header'>Resolved as: {forecastData.resolution === "1" ? "Yes":"No"}</div>): (null)}
           </div>
           </div>
           <div className='chart-box'>
           <ForecastGraph data = {chartData} options={chartOptions} />
           </div>
-          {isAdmin && resolutionData == null && <ResolveForecast forecastPoints={forecastPointArray} />}
+          {isAdmin && forecastData.resolved == null && <ResolveForecast forecastPoints={forecastPoints} />}
           <div>
-            {resolutionData != null ? (
+            {forecastData.resolved != null ? (
             <div className='info-box'>
-            <div className='info-header'>Question resolved as: {resolutionData.resolution === "1" ? "Yes" : "No"}</div>
-            <div className='info-item'>It resolved on {formatDate(resolutionData.resolution_date)} and it resulted in a 
-            Brier score of {resolutionData.brier_score}.</div>
-            {resolutionData.comment != null ? (
-              <div className='info-item'>Comment: {resolutionData.comment} </div>
+            <div className='info-header'>Question resolved as: {forecastData.resolution === "1" ? "Yes" : "No"}</div>
+            <div className='info-item'>It resolved on {formatDate(forecastData.resolved)} and it resulted in a 
+            Brier score of {forecastData.brier_score}.</div>
+            {forecastData.comment != null ? (
+              <div className='info-item'>Comment: {forecastData.comment} </div>
             ) : (null)
             }
             </div>): (null)}
@@ -117,10 +114,10 @@ function SpecificForecast() {
           </div>
           <div className='updates-box'>
             <ul className='update-list'>
-            {[...forecastPoints].reverse().map(forecast => (
-                <li className='update-item'>
+            {reversedForecastpoints.map(forecast => (
+                <li key={forecast.forecast_id} className='update-item'>
                   <div className="update-container">
-                    <div className='info-header'>Update to {(forecast.point_forecast * 100).toFixed(1)}% on {formatDate(forecast.date_added)}:</div>
+                    <div className='info-header'>Update to {(forecast.point_forecast * 100).toFixed(1)}% on {formatDate(forecast.created)}:</div>
                     <div className='info-item'>{forecast.reason}</div>
                 </div>
                 
@@ -128,7 +125,7 @@ function SpecificForecast() {
               ))}
             </ul>
           </div>
-          {isAdmin && resolutionData == null && <UpdateForecast />}
+          {isAdmin && forecastData.resolved == null && <UpdateForecast />}
         </div>
     );
 }

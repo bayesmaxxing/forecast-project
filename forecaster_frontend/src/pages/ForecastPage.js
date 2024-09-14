@@ -5,25 +5,19 @@ import Sidebar from '../components/Sidebar';
 
 
 function ForecastPage() {
-    
-    const [forecasts, setForecasts] = useState([]);
-    const [forecastpoints, setForecastPoints] = useState([]);
     const [searchQuery, setsearchQuery] = useState('');
     const [combinedForecasts, setCombinedForecasts] = useState([]);
 
     useEffect(() => {
-      const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
+      const CACHE_DURATION = 5 * 60 * 10; // Cache duration in milliseconds, e.g., 5 minutes
       const now = new Date().getTime(); // Current time
       
-      const forecastsCache = localStorage.getItem('forecasts');
-      const forecastPointsCache = localStorage.getItem('latestForecastPoints');
+      const cachedForecasts = localStorage.getItem('open_w_latest');
       
-      const forecastsDataValid = forecastsCache && now - JSON.parse(forecastsCache).timestamp < CACHE_DURATION;
-      const forecastPointsDataValid = forecastPointsCache && now - JSON.parse(forecastPointsCache).timestamp < CACHE_DURATION;
+      const forecastsDataValid = cachedForecasts && now - JSON.parse(cachedForecasts).timestamp < CACHE_DURATION;
       
-      if (forecastsDataValid && forecastPointsDataValid) {
-        setForecasts(JSON.parse(forecastsCache).data);
-        setForecastPoints(JSON.parse(forecastPointsCache).data);
+      if (forecastsDataValid) {
+        setCombinedForecasts(JSON.parse(cachedForecasts).data);
       } else {
         Promise.all([
           fetch(`http://localhost:8080/forecasts?type=open`, {
@@ -43,22 +37,18 @@ function ForecastPage() {
           return [forecastDataJson, pointsDataJson];
         })
         .then(([forecastDataJson, pointsDataJson]) => {
-          setForecasts(forecastDataJson);
-          setForecastPoints(pointsDataJson);
-
           const combined = forecastDataJson.map(forecast => {
             const matchingPoint = pointsDataJson.find(point => point.forecast_id === forecast.id);
             return { ...forecast, latestPoint: matchingPoint || null};
           });
-          setCombinedForecasts(combined)
+          setCombinedForecasts(combined);
           
-          localStorage.setItem('forecasts', JSON.stringify({data: forecastDataJson, timestamp: now}));
-          localStorage.setItem('forecastPoints', JSON.stringify({data: pointsDataJson, timestamp: now}));
+          localStorage.setItem('open_w_latest', JSON.stringify({data: combinedForecasts, timestamp: now}));
         })
         // If there is some error fetching the data
         .catch(error => console.error('Error fetching data: ', error));
       }
-    }, []);
+    },[]);
     
     // handler for the query in search field
     const handleSearchChange = (e) => {
