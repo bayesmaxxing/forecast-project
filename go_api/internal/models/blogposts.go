@@ -11,5 +11,5 @@ type Blogpost struct {
 	CreatedAt        time.Time `json:"created"`
 	Summary          string    `json:"summary"`
 	Slug             string    `json:"slug"`
-	RelatedForecasts []int64   `json:"related_forecasts"`
+	RelatedForecasts *[]int64  `json:"related_forecasts,omitempty"`
 }

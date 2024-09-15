@@ -22,7 +22,7 @@ func setupRoutes(mux *http.ServeMux, db *database.DB) {
 	mux.HandleFunc("GET /forecasts/{id}", forecastHandler.GetForecast)
 	mux.HandleFunc("POST /forecasts", forecastHandler.CreateForecast)
 	mux.HandleFunc("DELETE /forecasts/{id}", forecastHandler.DeleteForecast)
-	mux.HandleFunc("PUT /forecasts/{id}", forecastHandler.ResolveForecast)
+	mux.HandleFunc("PUT /resolve/{id}", forecastHandler.ResolveForecast)
 	mux.HandleFunc("GET /scores", forecastHandler.GetAggregatedScores)
 
 	forecastPointService := services.NewForecastPointService(forecastPointRepo)
