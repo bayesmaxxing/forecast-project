@@ -14,9 +14,9 @@ function BlogpostPage() {
     let { slug } = useParams();
   
     useEffect(() => {
-        fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/blogposts/?slug=${slug}`, {
+        fetch(`http://localhost:8080/blogposts?slug=${slug}`, {
           headers : {
-            'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+            'Accept': "application/json"
           }
         })
         .then(response => {
