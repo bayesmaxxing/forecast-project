@@ -1,28 +1,6 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-const getScores = (forecastPoints, resolution) => {
-        const epsilon = 1e-15;
-        const resolutionInt = resolution === "1" ? 1 : 0;
-        
-        const brierScore = forecastPoints.reduce((sum, currentValue) => sum + (currentValue - resolutionInt) ** 2, 0) / forecastPoints.length;
-        
-        const logNScore = forecastPoints.reduce((sum, currentValue) => 
-          sum + (resolutionInt * Math.log(Math.max(currentValue, epsilon)) 
-              + (1-resolutionInt) * Math.log(Math.max(1-currentValue, epsilon))),0) / forecastPoints.length;
-        
-        const log2Score = forecastPoints.reduce((sum, currentValue) => 
-          sum + (resolutionInt * Math.log2(Math.max(currentValue, epsilon)) 
-              + (1-resolutionInt) * Math.log2(Math.max(1-currentValue, epsilon))),0) / forecastPoints.length;
-        
-        return { brierScore, logNScore, log2Score };
-};
-
-const getDate = () => {
-        const currentDate = new Date();
-        return currentDate.toISOString().split('T')[0] + ' 00:00:00'
-};
-
 const ResolveForecast = ({ forecastPoints }) => {
   let { id } = useParams();
   const [resolveData, setResolveData] = useState({
@@ -44,25 +22,18 @@ const ResolveForecast = ({ forecastPoints }) => {
         e.preventDefault();
         setSubmitStatus('Submitting update...');
 
-        const scores = getScores(forecastPoints, resolveData.resolution);
-
         const dataToSubmit = {
             ...resolveData,
             resolution: resolveData.resolution,
-            brier_score: scores.brierScore,
-            logn_score: scores.logNScore,
-            log2_score: scores.log2Score,
             comment: resolveData.comment,          
-            resolution_date: getDate(),
-            forecast: parseInt(id)
+            id: parseInt(id)
         };
 
         try {
-            const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/resolutions/?forecast=${id}`, {
-                method: 'POST',
+            const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/resolve/${id}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
                 }, 
                 body: JSON.stringify(dataToSubmit)
             });
@@ -102,6 +73,17 @@ const ResolveForecast = ({ forecastPoints }) => {
                 name="resolution"
                 value="0"
                 checked={resolveData.resolution==="0"}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="resolution-ambiguous">Resolved as Ambiguous</label>
+              <input
+                type="radio"
+                id="resolution-ambiguous"
+                name="resolution"
+                value="-"
+                checked={resolveData.resolution==="-"}
                 onChange={handleChange}
               />
             </div>

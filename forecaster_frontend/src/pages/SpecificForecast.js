@@ -17,12 +17,12 @@ function SpecificForecast() {
     useEffect(() => {
       
       Promise.all([
-        fetch(`http://localhost:8080/forecasts/${id}`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts/${id}`, {
           headers : {
             "Accept": "application/json"
           }
         }),
-        fetch(`http://localhost:8080/forecast-points/${id}`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points/${id}`, {
           headers : {
             "Accept": "application/json"
           }
@@ -82,14 +82,18 @@ function SpecificForecast() {
     
     const formatDate = (dateString) => dateString.split('T')[0];
     const reversedForecastpoints = [...forecastPoints].reverse();
-
+    const resolution = forecastData.resolution === "1" ? "Yes":
+                       forecastData.resolution === "0" ? "No":
+                       "Ambiguous"
+                
     return (
         <div>
           <div>
           <div className='question-header'>{forecastData.question}</div>
           <div>
             {forecastData.resolved != null ? (
-            <div className='question-header'>Resolved as: {forecastData.resolution === "1" ? "Yes":"No"}</div>): (null)}
+            <div className='question-header'>Resolved as: {resolution}</div>
+            ) : null}
           </div>
           </div>
           <div className='chart-box'>
@@ -99,9 +103,9 @@ function SpecificForecast() {
           <div>
             {forecastData.resolved != null ? (
             <div className='info-box'>
-            <div className='info-header'>Question resolved as: {forecastData.resolution === "1" ? "Yes" : "No"}</div>
+            <div className='info-header'>Question resolved as: {resolution}</div>
             <div className='info-item'>It resolved on {formatDate(forecastData.resolved)} and it resulted in a 
-            Brier score of {forecastData.brier_score}.</div>
+            Brier score of {!forecastData.brier_score ? 0: forecastData.brier_score }.</div>
             {forecastData.comment != null ? (
               <div className='info-item'>Comment: {forecastData.comment} </div>
             ) : (null)

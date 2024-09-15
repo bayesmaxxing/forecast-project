@@ -29,12 +29,12 @@ function SummaryScores() {
       } else {
         // Fetch the list of resolutions from the API if cache is empty
         Promise.all([
-        fetch('http://localhost:8080/scores', {
+        fetch('https://forecasting-389105.ey.r.appspot.com/scores', {
             headers : {
               'Accept': 'application/json'
             }
           }),
-          fetch('http://localhost:8080/forecasts?type=resolved', {
+          fetch('https://forecasting-389105.ey.r.appspot.com/forecasts?type=resolved', {
             headers : {
               'Accept': 'application/json'
             }

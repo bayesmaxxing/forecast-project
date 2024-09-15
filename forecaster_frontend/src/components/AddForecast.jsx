@@ -18,26 +18,19 @@ const AddForecast = () => {
         }));
     };
 
-    const getDate = () => {
-        const currentDate = new Date();
-        return currentDate.toISOString().split('T')[0] + ' 00:00:00'
-    }
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitStatus('Submitting forecast...');
 
         const dataToSubmit = {
-            ...ForecastData,
-            creation_date: getDate()
+            ...ForecastData
         };
 
         try {
-            const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecasts/`, {
+            const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
+                    'Content-Type': 'application/json'
                 }, 
                 body: JSON.stringify(dataToSubmit)
             });

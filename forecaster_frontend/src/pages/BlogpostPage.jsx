@@ -14,7 +14,7 @@ function BlogpostPage() {
     let { slug } = useParams();
   
     useEffect(() => {
-        fetch(`http://localhost:8080/blogposts?slug=${slug}`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/blogposts?slug=${slug}`, {
           headers : {
             'Accept': "application/json"
           }

@@ -18,7 +18,7 @@ function BlogPosts() {
             setBlogposts(JSON.parse(blogpostsCache).data);
         } else {
         // Fetch the list of resolutions from the API if cache is empty
-        fetch('http://localhost:8080/blogposts/', {
+        fetch('https://forecasting-389105.ey.r.appspot.com/blogposts', {
             headers : {
               "Accept": "application/json"}
             })
@@ -37,8 +37,6 @@ function BlogPosts() {
         return b.post_id - a.post_id;
       });
   
-    const formatDate = (dateString) => dateString.split('T')[0];
-    
     const truncatePostContent = (content, wordLimit) => {
       const wordsArray = content.split(' ');
       if (wordsArray.length > wordLimit) {

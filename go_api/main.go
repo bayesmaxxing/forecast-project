@@ -50,8 +50,8 @@ func getDBConnectionString() string {
 // CORS middleware
 func CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Set CORS headers
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // Replace with your frontend's origin
+
+		w.Header().Set("Access-Control-Allow-Origin", "https://www.samuelsforecasts.com/")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 

@@ -30,11 +30,6 @@ const UpdateForecast = () => {
         }
     };
 
-    const getDate = () => {
-        const currentDate = new Date();
-        return currentDate.toISOString().split('T')[0] + ' 00:00:00'
-    }
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitStatus('Submitting update...');
@@ -44,17 +39,15 @@ const UpdateForecast = () => {
             point_forecast: parseFloat(updateData.point_forecast),
             upper_ci: parseFloat(updateData.upper_ci),
             lower_ci: parseFloat(updateData.lower_ci),  
-            reason: updateData.reason,          
-            date_added: getDate(),
-            forecast: parseInt(id)
+            reason: updateData.reason,         
+            forecast_id: parseInt(id)
         };
 
         try {
-            const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecaster/api/forecast_points/?forecast=${id}`, {
+            const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`
                 }, 
                 body: JSON.stringify(dataToSubmit)
             });

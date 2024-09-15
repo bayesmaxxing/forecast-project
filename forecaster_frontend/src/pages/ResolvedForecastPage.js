@@ -20,7 +20,7 @@ function ResolvedForecastPage() {
     if (forecastsDataValid) {
       setForecasts(JSON.parse(forecastsCached).data);
     } else {
-      fetch(`http://localhost:8080/forecasts?type=resolved`, {
+      fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts?type=resolved`, {
         headers : {
           "Accept" : "application/json"
         }

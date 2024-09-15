@@ -16,7 +16,7 @@ function ForecastPage() {
       const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
       const now = new Date().getTime(); // Current time
 
-      const forecastCatCacheKey = 'forecasts_${category}_w_latest';
+      const forecastCatCacheKey = `forecasts_${category}_w_latest`;
     
       // Try to load data from cache
       const forecastCached = localStorage.getItem(forecastCatCacheKey);
@@ -29,12 +29,12 @@ function ForecastPage() {
       } else {
         // Fetch the list of forecasts from the API
         Promise.all([
-          fetch(`http://localhost:8080/forecasts?category=${category}&type=open`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts?category=${category}&type=open`, {
             headers : {
               "Accept": "application/json"
             }
           }),
-          fetch(`http://localhost:8080/forecast-points/latest`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points/latest`, {
             headers : {
               "Accept": "application/json"
             }
@@ -52,7 +52,7 @@ function ForecastPage() {
           });
           setCombinedForecasts(combined)
 
-          localStorage.setItem(`forecasts_${category}_unresolved`, JSON.stringify({data: combined, timestamp: now}));
+          localStorage.setItem(`forecasts_${category}_w_latest`, JSON.stringify({data: combined, timestamp: now}));
         })
         .catch(error => console.error('Error fetching data: ', error));
       }
