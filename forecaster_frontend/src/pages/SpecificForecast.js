@@ -38,7 +38,12 @@ function SpecificForecast() {
       })
       .then(([idJson, pointsJson]) => {
         setForecastData(idJson);
-        setForecastPoints(pointsJson);
+        if (pointsJson.length > 0) {
+          const sortedPoints = pointsJson.sort((a, b) => new Date(a.created) - new Date(b.created));
+          setForecastPoints(sortedPoints);
+        } else {
+          setForecastPoints([]);
+        }
         setLoading(false);
       })
       .catch(error => {
@@ -57,25 +62,18 @@ function SpecificForecast() {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading the forecast: {error.message}</div>;
     
-    const formatDate = (dateString) => dateString.split('T')[0];
-    const sortedPoints = [...forecastPoints].sort((a, b) => new Date(a.created) - new Date(b.created));
-    const reversedForecastpoints = [...sortedPoints].reverse();
-    const resolution = forecastData.resolution === "1" ? "Yes":
-                       forecastData.resolution === "0" ? "No":
-                       "Ambiguous"
-
-    const chartData = {
-      labels: sortedPoints.map(point => new Date(point.created).toLocaleDateString('en-CA')),
+    const chartData = forecastPoints.length > 0 ? {
+      labels: forecastPoints.map(point => new Date(point.created).toLocaleDateString('en-CA')),
       datasets: [
           {
               label: 'Prediction',
-              data: sortedPoints.map(point => point.point_forecast),
+              data: forecastPoints.map(point => point.point_forecast),
               fill: false,
               borderColor: 'rgb(75, 192, 192)',
               tension: 0.1
           }
       ]
-    };
+    }: null;
     const chartOptions = {
       scales: {
         y: {
@@ -85,7 +83,13 @@ function SpecificForecast() {
       },
 
     };
-               
+    
+    const formatDate = (dateString) => dateString.split('T')[0];
+    const reversedForecastpoints = [...(forecastPoints || [])].reverse();
+    const resolution = forecastData.resolution === "1" ? "Yes":
+                       forecastData.resolution === "0" ? "No":
+                       "Ambiguous"
+                
     return (
         <div>
           <div>
@@ -96,9 +100,11 @@ function SpecificForecast() {
             ) : null}
           </div>
           </div>
+          {chartData && (
           <div className='chart-box'>
           <ForecastGraph data = {chartData} options={chartOptions} />
           </div>
+          )}
           {isAdmin && forecastData.resolved == null && <ResolveForecast forecastPoints={forecastPoints} />}
           <div>
             {forecastData.resolved != null ? (
@@ -116,6 +122,7 @@ function SpecificForecast() {
             <div className='info-header'>Resolution Criteria</div>
             <div className='info-item'>{forecastData.resolution_criteria}</div>
           </div>
+          {forecastPoints.length > 0 ? (
           <div className='updates-box'>
             <ul className='update-list'>
             {reversedForecastpoints.map(forecast => (
@@ -129,6 +136,11 @@ function SpecificForecast() {
               ))}
             </ul>
           </div>
+          ): (
+          <div className='info-box'>
+            <div className='info-item'>No forecast points available yet.</div>
+          </div>
+        )}
           {isAdmin && forecastData.resolved == null && <UpdateForecast />}
         </div>
     );
