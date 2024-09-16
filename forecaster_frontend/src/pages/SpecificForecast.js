@@ -38,7 +38,7 @@ function SpecificForecast() {
       })
       .then(([idJson, pointsJson]) => {
         setForecastData(idJson);
-        if (pointsJson.length > 0) {
+        if (pointsJson) {
           const sortedPoints = pointsJson.sort((a, b) => new Date(a.created) - new Date(b.created));
           setForecastPoints(sortedPoints);
         } else {
@@ -62,7 +62,7 @@ function SpecificForecast() {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading the forecast: {error.message}</div>;
     
-    const chartData = forecastPoints.length > 0 ? {
+    const chartData = forecastPoints && forecastPoints.length > 0 ? {
       labels: forecastPoints.map(point => new Date(point.created).toLocaleDateString('en-CA')),
       datasets: [
           {
@@ -122,7 +122,7 @@ function SpecificForecast() {
             <div className='info-header'>Resolution Criteria</div>
             <div className='info-item'>{forecastData.resolution_criteria}</div>
           </div>
-          {forecastPoints.length > 0 ? (
+          {forecastPoints && forecastPoints.length > 0 ? (
           <div className='updates-box'>
             <ul className='update-list'>
             {reversedForecastpoints.map(forecast => (
