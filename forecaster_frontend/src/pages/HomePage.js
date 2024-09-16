@@ -1,4 +1,5 @@
 import SummaryScores from '../components/SummaryScores';
+import CalibrationChart from '../components/CalibrationChart';
 import './HomePage.css';
 import { Link } from 'react-router-dom';
 
@@ -18,6 +19,13 @@ return (
                 <a href='/faq' className='special-link'> FAQ</a>. Click on a datapoint to see information about the forecast.
             </p>
             <SummaryScores></SummaryScores>
+        </section>
+        <section className='project-info'>
+            <h1>Calibration</h1>
+            <p>Forecasts are not always right, but I aim to have calibrated forecasts. Meaning that when I forecast
+                50% probability, it happens around 50% of the time. Below is my calibration.
+            </p>
+            <CalibrationChart></CalibrationChart>
         </section>
         <h2>Focus Areas</h2>
         <section className='focus-grid'>

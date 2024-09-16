@@ -95,20 +95,24 @@ function SummaryScores() {
       onClick: (event, elements, chart) => {
         if (elements.length > 0) {
           const elementIndex = elements[0].index;
-          const forecastId = resolutions[elementIndex].id; // Ensure this matches your data structure
-          navigate(`/forecast/${forecastId}`); // Adjust the path as needed
+          const forecastId = resolutions[elementIndex].id; 
+          navigate(`/forecast/${forecastId}`);
         }
       },
       scales: {
         x: {
           ticks: {
-            display: false // This will hide the X-axis labels
+            display: false
           },
           grid: {
-            display: false // Optionally, this hides the X-axis grid lines if you want a cleaner look
+            display: false 
           }
         },
         y: {
+          title: {
+            display: true,
+            text: 'Score'
+          },
           beginAtZero: true
         }
       }
