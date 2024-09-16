@@ -38,8 +38,7 @@ function SpecificForecast() {
       })
       .then(([idJson, pointsJson]) => {
         setForecastData(idJson);
-        const sortedPoints = pointsJson.sort((a, b) => new Date(a.created) - new Date(b.created));
-        setForecastPoints(sortedPoints);
+        setForecastPoints(pointsJson);
         setLoading(false);
       })
       .catch(error => {
@@ -58,12 +57,19 @@ function SpecificForecast() {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading the forecast: {error.message}</div>;
     
+    const formatDate = (dateString) => dateString.split('T')[0];
+    const sortedPoints = [...forecastPoints].sort((a, b) => new Date(a.created) - new Date(b.created));
+    const reversedForecastpoints = [...sortedPoints].reverse();
+    const resolution = forecastData.resolution === "1" ? "Yes":
+                       forecastData.resolution === "0" ? "No":
+                       "Ambiguous"
+
     const chartData = {
-      labels: forecastPoints.map(point => new Date(point.created).toLocaleDateString('en-CA')),
+      labels: sortedPoints.map(point => new Date(point.created).toLocaleDateString('en-CA')),
       datasets: [
           {
               label: 'Prediction',
-              data: forecastPoints.map(point => point.point_forecast),
+              data: sortedPoints.map(point => point.point_forecast),
               fill: false,
               borderColor: 'rgb(75, 192, 192)',
               tension: 0.1
@@ -79,13 +85,7 @@ function SpecificForecast() {
       },
 
     };
-    
-    const formatDate = (dateString) => dateString.split('T')[0];
-    const reversedForecastpoints = [...forecastPoints].reverse();
-    const resolution = forecastData.resolution === "1" ? "Yes":
-                       forecastData.resolution === "0" ? "No":
-                       "Ambiguous"
-                
+               
     return (
         <div>
           <div>

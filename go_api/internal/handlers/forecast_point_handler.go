@@ -45,11 +45,6 @@ func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *
 		return
 	}
 
-	if len(points) == 0 {
-		http.Error(w, "No forecast points found for this ID", http.StatusNotFound)
-		return
-	}
-
 	respondJSON(w, http.StatusOK, points)
 }
 
