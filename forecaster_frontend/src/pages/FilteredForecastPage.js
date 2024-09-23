@@ -30,18 +30,18 @@ function ForecastPage() {
       } else {
         // Fetch the list of forecasts from the API
         Promise.all([
-          fetch(`http://localhost:8080/forecasts?category=${category}&type=open`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts?category=${category}&type=open`, {
             headers : {
               "Accept": "application/json"
             }
             // s://forecasting-389105.ey.r.appspot.com
           }),
-          fetch(`http://localhost:8080/forecast-points/latest`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points/latest`, {
             headers : {
               "Accept": "application/json"
             }
           }), 
-          fetch(`http://localhost:8080/scores?category=${category}`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/scores?category=${category}`, {
             headers : {
               "Accept": "application/json"
             }

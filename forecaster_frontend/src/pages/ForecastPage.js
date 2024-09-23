@@ -7,6 +7,7 @@ import Sidebar from '../components/Sidebar';
 function ForecastPage() {
     const [searchQuery, setsearchQuery] = useState('');
     const [combinedForecasts, setCombinedForecasts] = useState([]);
+    const [scores, setScores] = useState([]);
 
     useEffect(() => {
       const CACHE_DURATION = 5 * 60 * 10; // Cache duration in milliseconds, e.g., 5 minutes
@@ -29,19 +30,26 @@ function ForecastPage() {
             headers : {
               "Accept": "application/json"
             }
+          }), 
+          fetch(`https://forecasting-389105.ey.r.appspot.com/scores`, {
+            headers: {
+              "Accept": "application/json"
+            }
           })
         ])
-        .then(async ([forecastData, pointsData]) => {
+        .then(async ([forecastData, pointsData, scoresData]) => {
           const forecastDataJson = await forecastData.json();
           const pointsDataJson = await pointsData.json();
-          return [forecastDataJson, pointsDataJson];
+          const scoresDataJson = await scoresData.json();
+          return [forecastDataJson, pointsDataJson, scoresDataJson];
         })
-        .then(([forecastDataJson, pointsDataJson]) => {
+        .then(([forecastDataJson, pointsDataJson, scoresDataJson]) => {
           const combined = forecastDataJson.map(forecast => {
             const matchingPoint = pointsDataJson.find(point => point.forecast_id === forecast.id);
             return { ...forecast, latestPoint: matchingPoint || null};
           });
           setCombinedForecasts(combined);
+          setScores(scoresDataJson);
           
           localStorage.setItem('open_w_latest', JSON.stringify({data: combinedForecasts, timestamp: now}));
         })
@@ -55,8 +63,6 @@ function ForecastPage() {
       setsearchQuery(e.target.value.toLowerCase());
     };
 
-    // Filtering the list of forecasts based on query in search field
-    // query can match to question, short_question, category, or resolution criteria.
     const filteredForecasts = combinedForecasts.filter(forecast => 
       forecast.question.toLowerCase().includes(searchQuery) ||
       forecast.short_question.toLowerCase().includes(searchQuery) ||
@@ -75,6 +81,11 @@ function ForecastPage() {
       <div>
         <Sidebar onSearchChange={handleSearchChange}/>
         <h1>ALL QUESTIONS</h1>
+        {scores && scores.AggBrierScore > 0.0 ? (
+                <p>Brier score: {(scores.AggBrierScore).toFixed(4)}</p>
+            ) : (
+                <p>No Brier score available.</p>
+            )}
         <ul className="forecast-list">
           {sortedForecasts.map(forecast => (
             <li key={forecast.id} className="forecast-item">
