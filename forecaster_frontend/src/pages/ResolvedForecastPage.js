@@ -47,7 +47,7 @@ function ResolvedForecastPage() {
 
   const sortedForecasts = [...filteredForecasts].sort((a, b)=>{
     return b.id - a.id;
-  });
+  })
 
   const formatDate = (dateString) => dateString.split('T')[0];
   const getResolution = (resolution) => {
@@ -76,7 +76,11 @@ function ResolvedForecastPage() {
             </div>
             <div> 
                 <p>Resolved on: {formatDate(forecast.resolved)}</p>
+                {forecast.brier_score ? (
                 <p>Brier score: {forecast.brier_score.toFixed(3)}</p>
+              ) : (
+                <p>No scores on Ambiguous forecasts.</p>
+              )}
             </div>
           </li>
         ))}
