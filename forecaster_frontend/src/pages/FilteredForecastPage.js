@@ -8,6 +8,7 @@ import Sidebar from '../components/Sidebar';
 function ForecastPage() {
     const [searchQuery, setsearchQuery] = useState('');
     const [combinedForecasts, setCombinedForecasts] = useState([]);
+    const [scores, setScores] = useState([]);
 
     // set category based on URL
     let { category } = useParams()
@@ -29,28 +30,36 @@ function ForecastPage() {
       } else {
         // Fetch the list of forecasts from the API
         Promise.all([
-          fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts?category=${category}&type=open`, {
+          fetch(`http://localhost:8080/forecasts?category=${category}&type=open`, {
             headers : {
               "Accept": "application/json"
             }
+            // s://forecasting-389105.ey.r.appspot.com
           }),
-          fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points/latest`, {
+          fetch(`http://localhost:8080/forecast-points/latest`, {
+            headers : {
+              "Accept": "application/json"
+            }
+          }), 
+          fetch(`http://localhost:8080/scores?category=${category}`, {
             headers : {
               "Accept": "application/json"
             }
           })
         ])
-        .then(async ([forecastData, pointsData]) => {
+        .then(async ([forecastData, pointsData, scoresData]) => {
           const forecastDataJson = await forecastData.json();
           const pointsDataJson = await pointsData.json();
-          return [forecastDataJson, pointsDataJson];
+          const scoresDataJson = await scoresData.json();
+          return [forecastDataJson, pointsDataJson, scoresDataJson];
         })
-        .then(([forecastDataJson, pointsDataJson]) => {
+        .then(([forecastDataJson, pointsDataJson, scoresDataJson]) => {
           const combined = forecastDataJson.map(forecast => {
             const matchingPoint = pointsDataJson.find(point => point.forecast_id === forecast.id);
             return { ...forecast, latestPoint: matchingPoint || null};
           });
           setCombinedForecasts(combined)
+          setScores(scoresDataJson)
 
           localStorage.setItem(`forecasts_${category}_w_latest`, JSON.stringify({data: combined, timestamp: now}));
         })
@@ -79,6 +88,11 @@ function ForecastPage() {
     <div>
       <Sidebar onSearchChange={handleSearchChange}/>
       <h1 style={{ textTransform: 'uppercase' }}>{category}</h1>
+      {scores && scores.AggBrierScore > 0.0 ? (
+                <p>Brier score in this category: {(scores.AggBrierScore).toFixed(4)}</p>
+            ) : (
+                <p>No Brier score available for this category</p>
+            )}
       <ul className="forecast-list">
         {sortedForecasts.map(forecast => (
           <li key={forecast.id} className="forecast-item">
