@@ -93,8 +93,14 @@ func (s *ForecastService) GetAggregatedScores(ctx context.Context, category stri
 	}
 
 	if len(forecasts) == 0 {
-		return nil, errors.New("no forecasts fetched")
+		return &utils.AggScores{
+			AggBrierScore: 0,
+			AggLog2Score:  0,
+			AggLogNScore:  0,
+			Category:      category,
+		}, nil
 	}
+
 	scores := make([]utils.ForecastScores, 0, len(forecasts))
 	for _, forecast := range forecasts {
 		if forecast.BrierScore == nil {
@@ -107,7 +113,12 @@ func (s *ForecastService) GetAggregatedScores(ctx context.Context, category stri
 		})
 	}
 	if len(scores) == 0 {
-		return nil, errors.New("no scores found")
+		return &utils.AggScores{
+			AggBrierScore: 0,
+			AggLog2Score:  0,
+			AggLogNScore:  0,
+			Category:      category,
+		}, nil
 	}
 
 	aggScores, err := utils.CalculateAggregateScores(scores, category)
