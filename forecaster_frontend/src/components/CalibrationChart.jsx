@@ -24,7 +24,6 @@ ChartJS.register(
 function CalibrationChart() {
     const [resolutions, setResolutions] = useState([]);
     const [calibrationData, setCalibrationData] = useState([]);
-    const [scores, setScores] = useState([]);
 
     useEffect(() => {
         Promise.all([

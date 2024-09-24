@@ -10,17 +10,7 @@ function ForecastPage() {
     const [scores, setScores] = useState([]);
 
     useEffect(() => {
-      const CACHE_DURATION = 5 * 60 * 10; // Cache duration in milliseconds, e.g., 5 minutes
-      const now = new Date().getTime(); // Current time
-      
-      const cachedForecasts = localStorage.getItem('open_w_latest');
-      
-      const forecastsDataValid = cachedForecasts && now - JSON.parse(cachedForecasts).timestamp < CACHE_DURATION;
-      
-      if (forecastsDataValid) {
-        setCombinedForecasts(JSON.parse(cachedForecasts).data);
-      } else {
-        Promise.all([
+       Promise.all([
           fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts?type=open`, {
             headers : {
               "Accept": "application/json"
@@ -50,12 +40,9 @@ function ForecastPage() {
           });
           setCombinedForecasts(combined);
           setScores(scoresDataJson);
-          
-          localStorage.setItem('open_w_latest', JSON.stringify({data: combinedForecasts, timestamp: now}));
         })
         // If there is some error fetching the data
         .catch(error => console.error('Error fetching data: ', error));
-      }
     },[]);
     
     // handler for the query in search field

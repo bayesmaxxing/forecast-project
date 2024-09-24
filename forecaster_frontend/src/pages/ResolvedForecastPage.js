@@ -8,18 +8,6 @@ function ResolvedForecastPage() {
   const [searchQuery, setsearchQuery] = useState('');
 
   useEffect(() => {
-    const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
-    const now = new Date().getTime(); // Current time
-
-    const forecastsCacheKey = 'forecasts_resolved';
-
-    const forecastsCached = localStorage.getItem(forecastsCacheKey);
-
-    const forecastsDataValid = forecastsCached && now - JSON.parse(forecastsCached).timestamp < CACHE_DURATION;
-  
-    if (forecastsDataValid) {
-      setForecasts(JSON.parse(forecastsCached).data);
-    } else {
       fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts?type=resolved`, {
         headers : {
           "Accept" : "application/json"
@@ -28,10 +16,8 @@ function ResolvedForecastPage() {
       .then(response => response.json())
       .then(data => {
         setForecasts(data);
-        localStorage.setItem('forecasts_resolved', JSON.stringify({data: data, timestamp: now}));
       })
       .catch(error => console.error('Error fetching data: ', error));
-    }
   }, []);
 
   const handleSearchChange = (e) => {

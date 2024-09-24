@@ -14,20 +14,7 @@ function SummaryScores() {
     const navigate = useNavigate();
 
     useEffect(() => {
-      const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
-      const now = new Date().getTime(); // Current time
-
-      const forecastsCache = localStorage.getItem('forecasts_resolved');
-      const scoresCache = localStorage.getItem('scores');
-      
-
-      const forecastDataValid = forecastsCache && now - JSON.parse(forecastsCache).timestamp < CACHE_DURATION;
-      // Try to load data from cache
-      if (forecastDataValid) {
-        setResolutions(JSON.parse(forecastsCache).data);
-        setScores(JSON.parse(scoresCache).data);
-      } else {
-        // Fetch the list of resolutions from the API if cache is empty
+       // Fetch the list of resolutions from the API if cache is empty
         Promise.all([
         fetch('https://forecasting-389105.ey.r.appspot.com/scores', {
             headers : {
@@ -48,12 +35,8 @@ function SummaryScores() {
           .then(([scoreDataJson, forecastDataJson]) => {
             setScores(scoreDataJson);
             setResolutions(forecastDataJson);
-
-            localStorage.setItem('scores', JSON.stringify({data:scoreDataJson, timestamp: now}));
-            localStorage.setItem('forecasts_resolved', JSON.stringify({data:forecastDataJson, timestamp: now}));
           })
           .catch(error => console.error('Error fetching data: ', error));
-      }
     }, []);
 
     const getScore = () => {
