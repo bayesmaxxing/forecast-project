@@ -56,9 +56,12 @@ function SummaryScores() {
 
     const avgScore = getScore();
 
+    const sortedResolutions = [...resolutions].sort((a, b)=>{
+      return b.resolved - a.resolved;
+    });
     
-    const metricScores = resolutions.map(resolution => resolution[selectedMetric]);
-    const labels = resolutions.map(resolution => `Forecast ${resolution.id}`);
+    const metricScores = sortedResolutions.map(resolution => resolution[selectedMetric]);
+    const labels = sortedResolutions.map(resolution => `Forecast ${resolution.id}`);
 
   
     const data = {
