@@ -70,6 +70,7 @@ function CalibrationChart() {
                 const binIndex = Math.min(Math.floor(prediction * 10), 9);
                 if (item.resolution != "-") {
                     bins[binIndex].predictions++;
+                }
                 if (item.resolution === "1") { 
                     bins[binIndex].occurrences++;
                 }
