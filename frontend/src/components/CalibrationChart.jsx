@@ -103,8 +103,6 @@ function CalibrationChart() {
         ]
     };
 
-    const predictionCounts = calibrationData ? calibrationData.map(bin => bin.predictions) : [];
-
     const chartOptions = {
         scales: {
             x: {
@@ -127,14 +125,7 @@ function CalibrationChart() {
                 display: true,
                 text: 'Calibration Chart'
             },
-            tooltip: {
-              callbacks: {
-                afterBody: function(context) {
-                  return `Predictions in bin: ${predictionCounts[context[0].dataIndex]}`;
-                }
-              }
-            }
-          }
+         }
     };
 
     return (
