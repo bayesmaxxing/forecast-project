@@ -68,7 +68,8 @@ function CalibrationChart() {
             if (item.latestPoint && item.latestPoint.point_forecast !== null) {
                 const prediction = item.latestPoint.point_forecast;
                 const binIndex = Math.min(Math.floor(prediction * 10), 9);
-                bins[binIndex].predictions++;
+                if (item.resolution != "-") {
+                    bins[binIndex].predictions++;
                 if (item.resolution === "1") { 
                     bins[binIndex].occurrences++;
                 }
@@ -102,6 +103,8 @@ function CalibrationChart() {
         ]
     };
 
+    const predictionCounts = calibrationData ? calibrationData.map(bin => bin.predictions) : [];
+
     const chartOptions = {
         scales: {
             x: {
@@ -123,8 +126,15 @@ function CalibrationChart() {
             title: {
                 display: true,
                 text: 'Calibration Chart'
+            },
+            tooltip: {
+              callbacks: {
+                afterBody: function(context) {
+                  return `Predictions in bin: ${predictionCounts[context[0].dataIndex]}`;
+                }
+              }
             }
-        }
+          }
     };
 
     return (

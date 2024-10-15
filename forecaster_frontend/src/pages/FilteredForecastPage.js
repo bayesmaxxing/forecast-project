@@ -57,7 +57,6 @@ function ForecastPage() {
 
   const filteredForecasts = combinedForecasts.filter(forecast => 
     forecast.question.toLowerCase().includes(searchQuery) ||
-    forecast.short_question.toLowerCase().includes(searchQuery) ||
     forecast.category.toLowerCase().includes(searchQuery) ||
     forecast.resolution_criteria.toLowerCase().includes(searchQuery)
     );
