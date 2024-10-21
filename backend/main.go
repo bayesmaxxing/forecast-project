@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/internal/cache"
 	"backend/internal/database"
 	"backend/internal/handlers"
 	"backend/internal/repository"
@@ -13,10 +14,12 @@ import (
 )
 
 func setupRoutes(mux *http.ServeMux, db *database.DB) {
+	cacheInstance := cache.NewCache()
+
 	forecastRepo := repository.NewForecastRepository(db)
 	forecastPointRepo := repository.NewForecastPointRepository(db)
 	forecastService := services.NewForecastService(forecastRepo, forecastPointRepo)
-	forecastHandler := handlers.NewForecastHandler(forecastService)
+	forecastHandler := handlers.NewForecastHandler(forecastService, cacheInstance)
 
 	mux.HandleFunc("GET /forecasts", forecastHandler.ListForecasts)
 	mux.HandleFunc("GET /forecasts/{id}", forecastHandler.GetForecast)
@@ -26,7 +29,7 @@ func setupRoutes(mux *http.ServeMux, db *database.DB) {
 	mux.HandleFunc("GET /scores", forecastHandler.GetAggregatedScores)
 
 	forecastPointService := services.NewForecastPointService(forecastPointRepo)
-	forecastPointHandler := handlers.NewForecastPointHandler(forecastPointService)
+	forecastPointHandler := handlers.NewForecastPointHandler(forecastPointService, cacheInstance)
 
 	mux.HandleFunc("GET /forecast-points/{id}", forecastPointHandler.ListForecastPointsbyID)
 	mux.HandleFunc("GET /forecast-points", forecastPointHandler.ListAllForecastPoints)
@@ -51,7 +54,7 @@ func getDBConnectionString() string {
 func CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		w.Header().Set("Access-Control-Allow-Origin", "https://www.samuelsforecasts.com")
+		w.Header().Set("Access-Control-Allow-Origin", "https://samuelsforecasts.com")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
