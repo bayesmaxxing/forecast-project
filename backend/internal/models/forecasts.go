@@ -2,7 +2,7 @@ package models
 
 import (
 	"errors"
-	"go_api/internal/utils"
+	"backend/internal/utils"
 	"time"
 )
 

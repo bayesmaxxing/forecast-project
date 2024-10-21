@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"go_api/internal/database"
-	"go_api/internal/models"
+	"backend/internal/database"
+	"backend/internal/models"
 	"time"
 
 	_ "github.com/jackc/pgx/v5"

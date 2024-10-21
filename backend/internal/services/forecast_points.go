@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"go_api/internal/models"
-	"go_api/internal/repository"
+	"backend/internal/models"
+	"backend/internal/repository"
 )
 
 type ForecastPointService struct {

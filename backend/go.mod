@@ -1,4 +1,4 @@
-module go_api
+module backend
 
 go 1.22.5
 

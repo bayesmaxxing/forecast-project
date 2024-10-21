@@ -3,9 +3,9 @@ package services
 import (
 	"context"
 	"errors"
-	"go_api/internal/models"
-	"go_api/internal/repository"
-	"go_api/internal/utils"
+	"backend/internal/models"
+	"backend/internal/repository"
+	"backend/internal/utils"
 	"log"
 )
 
