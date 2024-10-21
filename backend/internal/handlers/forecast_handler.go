@@ -2,29 +2,39 @@ package handlers
 
 import (
 	"encoding/json"
-	"go_api/internal/models"
-	"go_api/internal/services"
+	"backend/internal/models"
+	"backend/internal/services"
+  "backend/internal/cache"
 	"net/http"
 	"strconv"
 )
 
 type ForecastHandler struct {
 	service *services.ForecastService
+  cache *cache.Cache
 }
 
-func NewForecastHandler(s *services.ForecastService) *ForecastHandler {
-	return &ForecastHandler{service: s}
+func NewForecastHandler(s *services.ForecastService, c *cache.Cache) *ForecastHandler {
+  return &ForecastHandler{service: s, cache: c}
 }
 
 func (h *ForecastHandler) ListForecasts(w http.ResponseWriter, r *http.Request) {
 	listType := r.URL.Query().Get("type")
 	category := r.URL.Query().Get("category")
+ 
+  cacheKey := fmt.Sprintf("forecasts_%s_%s", listType, category)
 
+  if cachedList, found := h.cache.Get(cacheKey) ; found {
+    respondJSON(w, http.StatusOk, cachedList)
+    return
+  }
 	forecasts, err := h.service.ForecastList(r.Context(), listType, category)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+  h.cache.Set(cacheKey, forecasts, 24*time.Hour)
 
 	respondJSON(w, http.StatusOK, forecasts)
 }
@@ -105,11 +115,20 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 func (h *ForecastHandler) GetAggregatedScores(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 
+  cacheKey := fmt.Sprintf("scores_%s", category)
+
+  if cachedScores, found := h.cache.Get(cacheKey); found {
+    respondJSON(w, http.StatusOK, cachedScores)
+    return
+  }
+
 	scores, err := h.service.GetAggregatedScores(r.Context(), category)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+  h.cache.Set(cacheKey, scores, 24*time.Hour)
 
 	respondJSON(w, http.StatusOK, scores)
 }
