@@ -3,6 +3,7 @@ package cache
 import (
   "sync"
   "time"
+	"strings"
 )
 
 type CacheItem struct {
@@ -21,8 +22,8 @@ func NewCache() *Cache {
   }
 }
 
-func (c *Cache) Set(key string, value interface{}, duration time.duration) {
-  c.mu.lock()
+func (c *Cache) Set(key string, value interface{}, duration time.Duration) {
+  c.mu.Lock()
   defer c.mu.Unlock()
 
   expiration := time.Now().Add(duration).UnixNano()
@@ -33,7 +34,7 @@ func (c *Cache) Set(key string, value interface{}, duration time.duration) {
 }
 
 func (c *Cache) Get(key string) (interface{}, bool) {
-  c.mu.Rlock()
+  c.mu.RLock()
   defer c.mu.RUnlock()
 
   item, found := c.items[key]
@@ -53,4 +54,15 @@ func (c *Cache) Delete(key string) {
   defer c.mu.Unlock()
 
   delete(c.items, key)
+}
+
+func (c *Cache) DeleteByPrefix(prefix string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for key := range c.items {
+		if strings.HasPrefix(key, prefix) {
+			delete(c.items, key)
+		}
+	}
 }
