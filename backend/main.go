@@ -1,10 +1,10 @@
 package main
 
 import (
-	"go_api/internal/database"
-	"go_api/internal/handlers"
-	"go_api/internal/repository"
-	"go_api/internal/services"
+	"backend/internal/database"
+	"backend/internal/handlers"
+	"backend/internal/repository"
+	"backend/internal/services"
 	"log"
 	"net/http"
 	"os"

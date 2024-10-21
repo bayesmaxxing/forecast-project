@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"go_api/internal/models"
-	"go_api/internal/services"
+	"backend/internal/models"
+	"backend/internal/services"
 	"net/http"
 )
 
