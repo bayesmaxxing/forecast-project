@@ -7,6 +7,8 @@ import (
   "backend/internal/cache"
 	"net/http"
 	"strconv"
+	"fmt"
+	"time"
 )
 
 type ForecastHandler struct {
@@ -25,7 +27,7 @@ func (h *ForecastHandler) ListForecasts(w http.ResponseWriter, r *http.Request) 
   cacheKey := fmt.Sprintf("forecasts_%s_%s", listType, category)
 
   if cachedList, found := h.cache.Get(cacheKey) ; found {
-    respondJSON(w, http.StatusOk, cachedList)
+    respondJSON(w, http.StatusOK, cachedList)
     return
   }
 	forecasts, err := h.service.ForecastList(r.Context(), listType, category)
@@ -68,6 +70,9 @@ func (h *ForecastHandler) CreateForecast(w http.ResponseWriter, r *http.Request)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+  h.cache.DeleteByPrefix("forecasts")
+
 	message := "forecast created"
 	respondJSON(w, http.StatusCreated, message)
 }
@@ -108,6 +113,8 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+  h.cache.DeleteByPrefix("forecasts")
+
 	message := "forecast resolved"
 	respondJSON(w, http.StatusOK, message)
 }
@@ -115,7 +122,7 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 func (h *ForecastHandler) GetAggregatedScores(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 
-  cacheKey := fmt.Sprintf("scores_%s", category)
+  cacheKey := fmt.Sprintf("forecasts_scores_%s", category)
 
   if cachedScores, found := h.cache.Get(cacheKey); found {
     respondJSON(w, http.StatusOK, cachedScores)
@@ -137,4 +144,8 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
+}
+
+func (h *ForecastHandler) invalidateCaches(prefix string) {
+  h.cache.DeleteByPrefix(prefix)
 }

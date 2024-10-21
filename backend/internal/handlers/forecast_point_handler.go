@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"backend/internal/models"
 	"backend/internal/services"
+	"backend/internal/cache"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ForecastPointHandler struct {
@@ -61,6 +63,9 @@ func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *htt
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+  h.cache.DeleteByPrefix("latest")
+
 	message := "Forecast point created"
 
 	respondJSON(w, http.StatusCreated, message)
@@ -77,9 +82,9 @@ func (h *ForecastPointHandler) ListAllForecastPoints(w http.ResponseWriter, r *h
 }
 
 func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r *http.Request) {
-  cachedPoints, found := h.cache.Get("latest"); found {
+  if cachedPoints, found := h.cache.Get("latest"); found {
     respondJSON(w, http.StatusOK, cachedPoints)
-    return
+		return
   }
 
 	latestForecastPoints, err := h.service.GetLatestForecastPoints(r.Context())
@@ -91,4 +96,8 @@ func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r
   h.cache.Set("latest", latestForecastPoints, 24*time.Hour)
 
 	respondJSON(w, http.StatusOK, latestForecastPoints)
+}
+
+func (h *ForecastPointHandler) invalidateCaches(prefix string) {
+  h.cache.DeleteByPrefix(prefix)
 }
