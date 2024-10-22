@@ -102,7 +102,7 @@ function ForecastPage() {
            sortedForecasts.map(forecast => (
             <li key={forecast.id} className="forecast-item">
               <div className="question-container">
-                <Link to={`/forecast/${forecast.id}`} className="question-link">\
+                <Link to={`/forecast/${forecast.id}`} className="question-link"> 
                   {forecast.question}
                 </Link>
                 <div className="recent-forecast-point">
