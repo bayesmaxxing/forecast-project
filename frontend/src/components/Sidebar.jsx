@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar( {onSearchChange} ) {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const toggleMenu = () => {
+      setIsMenuOpen(!isMenuOpen);
+    };
+
     return (
-        <div className='sidebarMenu'>
-            <h2>Categories</h2>
+      <>
+        <button
+          onClick={toggleMenu}
+          className="mobile-menu-button"
+          aria-label="Toggle menu"
+        >
+          <div className={`hamburger ${isMenuOpen ? 'open' : ''}`}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </button>
+        <div className={`sidebarMenu ${isMenuOpen ? 'open' : ''}`}>
+          <h2>Categories</h2>
             <ul>
                 <li><Link to='/questions'>All Questions</Link></li>
                 <li><Link to='/questions/category/ai'>AI</Link></li>
@@ -25,10 +43,18 @@ function Sidebar( {onSearchChange} ) {
             <input
                 type="text"
                 placeholder="Search forecasts"
-                onChange={onSearchChange} // Invoke the passed function on input change
+                onChange={onSearchChange}
                 className="searchInput"
             />
         </div>
-    );
+        
+        {isMenuOpen && (
+          <div 
+            className="sidebar-overlay"
+            onClick={toggleMenu}
+          />
+        )}
+      </>
+   );
 };
 export default Sidebar;

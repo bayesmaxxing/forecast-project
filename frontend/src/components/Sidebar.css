@@ -1,49 +1,139 @@
 .sidebarMenu {
-    
-    position: fixed; /* Or absolute */
-    left: 10;
-    top: 70;
-    max-width: 150px; /* Adjust as needed */
-    width: 100%;
-    height: 100%;
-    background-color: white; /* Adjust as needed */
+    position: fixed;
+    left: 0;
+    top: 101px;
+    width: 150px;
+    height: calc(100% - 70px);
+    background-color: white;
     text-align: left;
-    /* Add more styles as needed */
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
 }
 
-@media(max-width:600px) {
+/* Mobile styles */
+@media (max-width: 600px) {
     .sidebarMenu {
-        display:none;
-        
+        transform: translateX(-100%);
+        width: 250px; /* Wider on mobile */
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebarMenu.open {
+        transform: translateX(0);
     }
 }
+
+/* Hamburger button styles */
+.mobile-menu-button {
+    display: none;
+    position: fixed;
+    top: 100px;
+    left: 20px;
+    z-index: 1001;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+}
+
+@media (max-width: 600px) {
+    .mobile-menu-button {
+        display: block;
+    }
+}
+
+/* Hamburger icon */
+.hamburger {
+    width: 24px;
+    height: 20px;
+    position: relative;
+}
+
+.hamburger span {
+    display: block;
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background: black;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.hamburger span:nth-child(1) {
+    top: 0;
+}
+
+.hamburger span:nth-child(2) {
+    top: 9px;
+}
+
+.hamburger span:nth-child(3) {
+    bottom: 0;
+}
+
+/* Hamburger animation */
+.hamburger.open span:nth-child(1) {
+    transform: rotate(45deg);
+    top: 9px;
+}
+
+.hamburger.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+    transform: rotate(-45deg);
+    bottom: 9px;
+}
+
+/* Overlay */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+@media (max-width: 600px) {
+    .sidebar-overlay {
+        display: block;
+    }
+}
+
+/* Keep your existing styles */
 .sidebarMenu ul {
-    list-style-type: none; /* Removes bullets */
-    padding: 0; /* Removes default padding */
+    list-style-type: none;
+    padding: 0;
 }
 
 .sidebarMenu ul li {
-    margin-left: 20px; /* Adjusts margin to the left, increase as needed */
-    padding-left: 10px; /* Adds padding to the left, optional */
+    margin-left: 20px;
+    padding-left: 10px;
     margin-bottom: 5px;
     font-size: large;
-    
 }
 
 .sidebarMenu h2 {
     margin-left: 28px;
+    margin-top: 30px;
+    padding-top: 20px;
 }
 
 .sidebarMenu a {
     color: black;
+    text-decoration: none;
 }
 
 .sidebarMenu .searchInput {
-    margin-left: 20px; /* Align with ul li */
-    padding: 5px 10px; /* Adjust for better input size, optional */
-    margin-top: 10px; /* Space from the previous element */
-    margin-bottom: 20px; /* Space before the next element */
-    width: calc(100% - 40px); /* Adjust width to fit inside sidebar, considering the margin */
-    box-sizing: border-box; /* Ensure padding and border are included in width calculation */
+    margin-left: 20px;
+    padding: 5px 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    width: calc(100% - 40px);
+    box-sizing: border-box;
     font-size: 11px;
 }
