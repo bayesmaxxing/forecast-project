@@ -9,6 +9,7 @@ function ForecastPage() {
     const [searchQuery, setsearchQuery] = useState('');
     const [combinedForecasts, setCombinedForecasts] = useState([]);
     const [scores, setScores] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     // set category based on URL
     let { category } = useParams()
@@ -20,7 +21,6 @@ function ForecastPage() {
             headers : {
               "Accept": "application/json"
             }
-            // s://forecasting-389105.ey.r.appspot.com
           }),
           fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points/latest`, {
             headers : {
@@ -46,7 +46,7 @@ function ForecastPage() {
           });
           setCombinedForecasts(combined)
           setScores(scoresDataJson)
-
+          setLoading(false)
         })
         .catch(error => console.error('Error fetching data: ', error));
     }, [category]);
@@ -71,35 +71,58 @@ function ForecastPage() {
     <div>
       <Sidebar onSearchChange={handleSearchChange}/>
       <h1 style={{ textTransform: 'uppercase' }}>{category}</h1>
-      {scores && scores.AggBrierScore > 0.0 ? (
-                <p>Brier score in this category: {(scores.AggBrierScore).toFixed(4)}</p>
-            ) : (
-                <p>No Brier score available for this category</p>
-            )}
+
+      {loading ? (
+        <p>Brier score: loading...</p>
+      ) : (
+        scores && scores.AggBrierScore > 0.0 ? (
+          <p>Brier score: {(scores.AggBrierScore).toFixed(4)}</p>
+        ) : (
+          <p>No Brier score available.</p>
+        )
+      )}
+
       <ul className="forecast-list">
-        {sortedForecasts.map(forecast => (
-          <li key={forecast.id} className="forecast-item">
-            <div className="question-container">
-              <Link to={`/forecast/${forecast.id}`} className="question-link">
-                {forecast.question}
-              </Link>
-              <div className="recent-forecast-point">
-                {forecast.latestPoint ? (
-                <p>{(forecast.latestPoint.point_forecast * 100).toFixed(1)}%</p>
-                ) : ( 
-                  <p>Not forecasted</p>
-                )}
+        {loading ? (
+          [...Array(5)].map((_, index) => (
+            <li key={index} className="forecast-item">
+              <div className="question-container">
+                <div className="placeholder-text">Loading forecast...</div>
+                <div className="recent-forecast-point">
+                  <span>--%</span>
+                </div>
               </div>
-            </div>
-            <div>
+              <div>
+                <p>Category: --</p>
+                <p>Created: --</p>
+              </div>
+            </li>
+          ))
+        ) : (
+           sortedForecasts.map(forecast => (
+            <li key={forecast.id} className="forecast-item">
+              <div className="question-container">
+                <Link to={`/forecast/${forecast.id}`} className="question-link">\
+                  {forecast.question}
+                </Link>
+                <div className="recent-forecast-point">
+                  {forecast.latestPoint ? (
+                    <p>{(forecast.latestPoint.point_forecast * 100).toFixed(1)}%</p>
+                  ) : (
+                    <p>Not forecasted</p>
+                  )}
+                </div>
+              </div>
+              <div>
                 <p>Category: {forecast.category}</p>
                 <p>Created: {formatDate(forecast.created)}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+              </div>
+            </li>
+          ))
+          )}
+        </ul>
+      </div>
+    );
 };
   
   export default ForecastPage;
