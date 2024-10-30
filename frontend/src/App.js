@@ -12,7 +12,6 @@ import BlogPage from './pages/BlogPage';
 import BlogpostPage from './pages/BlogpostPage';
 import Header from './components/header';
 import AdminPage from './pages/AdminPage';
-import './App.css';
 
 function App() {
   return (
