@@ -27,12 +27,12 @@ function SpecificForecast() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`http://localhost:8080/forecasts/${id}`, {
+      fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts/${id}`, {
         headers: {
           "Accept": "application/json"
         }
       }),
-      fetch(`http://localhost:8080/forecast-points/${id}`, {
+      fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points/${id}`, {
         headers: {
           "Accept": "application/json"
         }
