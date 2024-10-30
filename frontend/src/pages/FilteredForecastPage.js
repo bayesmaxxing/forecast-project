@@ -24,11 +24,9 @@ function ForecastPage() {
     const [scores, setScores] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // set category based on URL
     let { category } = useParams()
 
     useEffect(() => {
-       // Fetch the list of forecasts from the API
         Promise.all([
           fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts?category=${category}&type=open`, {
             headers : {

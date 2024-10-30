@@ -25,17 +25,17 @@ function ForecastPage() {
 
     useEffect(() => {
        Promise.all([
-          fetch(`http://localhost:8080/forecasts?type=open`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts?type=open`, {
             headers : {
               "Accept": "application/json"
             }
           }),
-          fetch(`http://localhost:8080/forecast-points/latest`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points/latest`, {
             headers : {
               "Accept": "application/json"
             }
           }), 
-          fetch(`http://localhost:8080/scores`, {
+          fetch(`https://forecasting-389105.ey.r.appspot.com/scores`, {
             headers: {
               "Accept": "application/json"
             }

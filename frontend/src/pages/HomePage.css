@@ -2,6 +2,7 @@
     max-width: 700px;
     margin: 0 auto;
     padding: 20px;
+    padding-top: 60px;
   }
   
   .project-info, .forecast-scores {
@@ -20,24 +21,23 @@
   .cat-link {
     display:block;
     text-decoration: none;
-    color: #333; /* Change the color as needed */
+    color: #AFDDE5; 
     font-weight: bold;
     font-size: large;
-    margin-right: 20px; /* Adjust as needed for spacing */
+    margin-right: 20px; 
     margin-top: 10px;
   }
 
   .text-link {
     text-decoration: none;
-    color: #333; /* Change the color as needed */
+    color: #AFDDE5; 
     font-weight: bold;
     font-size: small;
     margin-bottom: 10px;
-     /* Adjust as needed for spacing */
   }
 
   .special-link {
-    color: #007bff; /* Blue color for the link */
+    color: #AFDDE5; 
     text-decoration: underline;
   }
   

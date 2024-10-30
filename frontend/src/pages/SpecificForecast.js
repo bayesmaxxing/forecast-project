@@ -152,7 +152,7 @@ function SpecificForecast() {
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>Resolution Details</Typography>
           <Typography variant="body1" paragraph>
-            Resolved on {formatDate(forecastData.resolved)} with a Brier score of {!forecastData.brier_score ? 0 : forecastData.brier_score}.
+            Resolved on {formatDate(forecastData.resolved)} with a Brier score of {!forecastData.brier_score ? 0 : (forecastData.brier_score).toFixed(4)}.
           </Typography>
           {forecastData.comment && (
             <Typography variant="body1" paragraph>
