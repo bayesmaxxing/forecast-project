@@ -2,19 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Markdown from 'marked-react';
 import './BlogpostPage.css';
-import { InlineMath, BlockMath } from 'react-katex';
-import 'katex/dist/katex.min.css';
 
 
 
 function BlogpostPage() {
-    const [blogpost, setBlogpost] = useState({});
+    const [blogpost, setBlogpost] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     let { slug } = useParams();
   
     useEffect(() => {
-        fetch(`https://forecasting-389105.ey.r.appspot.com/blogposts?slug=${slug}`, {
+        fetch(`https://forecasting-389105.ey.r.appspot.com/blogposts/${slug}`, {
           headers : {
             'Accept': "application/json"
           }
@@ -26,11 +24,7 @@ function BlogpostPage() {
           return response.json(); 
         })
         .then(data => { 
-          if (data.length > 0) {
-            setBlogpost(data[0]); 
-          } else {
-            throw new Error('No blog posts found');
-          }
+          setBlogpost(data); 
           setLoading(false);
         })
         .catch(error => {
@@ -58,6 +52,6 @@ function BlogpostPage() {
       </div>
   );
   
-}
+};
 
 export default BlogpostPage;

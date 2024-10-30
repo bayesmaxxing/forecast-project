@@ -5,32 +5,33 @@ import './BlogPage.css';
 
 function BlogPosts() {
     const [blogposts, setBlogposts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     
     useEffect(() => {
-        const CACHE_DURATION = 5 * 60 * 1000; // Cache duration in milliseconds, e.g., 5 minutes
-        const now = new Date().getTime(); // Current time
-    
-        const blogpostsCache = localStorage.getItem('blogposts');
-    
-        const blogpostsDataValid = blogpostsCache && now - JSON.parse(blogpostsCache).timestamp < CACHE_DURATION;
-        // Try to load data from cache
-        if (blogpostsDataValid) {
-            setBlogposts(JSON.parse(blogpostsCache).data);
-        } else {
-        // Fetch the list of resolutions from the API if cache is empty
-        fetch('https://forecasting-389105.ey.r.appspot.com/blogposts', {
-            headers : {
-              "Accept": "application/json"}
-            })
-            .then(response => response.json())
-            .then(data => {
-            // Update state with fetched data
-            setBlogposts(data);
-            // Update cache with new data
-            localStorage.setItem('blogposts', JSON.stringify({data: data, timestamp: now}));
-            })
-            .catch(error => console.error('Error fetching data: ', error));
+      fetch('https://forecasting-389105.ey.r.appspot.com/blogposts', {
+        headers : {
+          "Accept": "application/json"
         }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error fetching data');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.length > 0) {
+          setBlogposts(data);
+        } else {
+          throw new Error('No blogposts found');
+        }
+        setLoading(false);
+      })
+      .catch(error => {
+        setError(error);
+        setLoading(false);
+      });
     }, []);
 
     const sortedBlogposts = [...blogposts].sort((a, b)=>{

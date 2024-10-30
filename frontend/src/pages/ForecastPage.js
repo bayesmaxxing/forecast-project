@@ -1,10 +1,26 @@
 import React, {useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
-import './ForecastPage.css';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Skeleton,
+  Chip,
+  Grid,
+  Paper,
+  InputAdornment,
+  useTheme,
+  useMediaQuery
+} from '@mui/material';
+import { Search as SearchIcon } from '@mui/icons-material';
 import Sidebar from '../components/Sidebar';
 
 
 function ForecastPage() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [searchQuery, setsearchQuery] = useState('');
     const [combinedForecasts, setCombinedForecasts] = useState([]);
     const [scores, setScores] = useState([]);
@@ -65,62 +81,149 @@ function ForecastPage() {
     const formatDate = (dateString) => dateString.split('T')[0];
 
     return (
-      <div>
-        <Sidebar onSearchChange={handleSearchChange}/>
-        <h1>ALL QUESTIONS</h1>
+    <Box sx={{ display: 'flex' }}>
+      <Sidebar />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: { sm: `calc(100% - 240px)` },
+          ml: { sm: '240px' },
+          mt: '64px',                    
+        }}
+      >
+        <Grid container spacing={3}>
+          {/* Search and Header Section */}
+          <Grid item xs={12}>
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h4" sx={{ color: 'primary.light', mb: 2 }}>
+                ALL QUESTIONS
+              </Typography>
+              
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Search forecasts..."
+                onChange={handleSearchChange}
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'background.paper',
+                    '& fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'primary.light',
+                    },
+                  },
+                  '& input': {
+                    color: 'primary.light',
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: 'primary.main' }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-        {loading ? (
-          <p>Brier score: loading...</p>
-        ) : (
-          scores && scores.AggBrierScore > 0.0 ? (
-            <p>Brier score: {(scores.AggBrierScore).toFixed(4)}</p>
-          ) : (
-            <p>No Brier score available.</p>
-          )
-        )}
+              <Paper sx={{ p: 2, backgroundColor: 'background.paper', mb: 3 }}>
+                {loading ? (
+                  <Skeleton width={200} height={24} />
+                ) : (
+                  scores && scores.AggBrierScore > 0.0 ? (
+                    <Typography variant="h6" sx={{ color: 'primary.light' }}>
+                      Brier score: {(scores.AggBrierScore).toFixed(4)}
+                    </Typography>
+                  ) : (
+                    <Typography variant="h6" sx={{ color: 'primary.light' }}>
+                      No Brier score available.
+                    </Typography>
+                  )
+                )}
+              </Paper>
+            </Box>
+          </Grid>
 
-        <ul className="forecast-list">
+          {/* Forecasts Grid */}
           {loading ? (
-            [...Array(5)].map((_, index) => (
-              <li key={index} className="forecast-item">
-                <div className="question-container">
-                  <div className="placeholder-text">Loading forecast...</div>
-                  <div className="recent-forecast-point">
-                    <span>--%</span>
-                  </div>
-                </div>
-                <div>
-                  <p>Category: --</p>
-                  <p>Created: --</p>
-                </div>
-              </li>
+            [...Array(6)].map((_, index) => (
+              <Grid item xs={12} md={6} lg={4} key={index}>
+                <Card sx={{ 
+                  backgroundColor: 'background.paper',
+                  height: '100%',
+                }}>
+                  <CardContent>
+                    <Skeleton variant="text" height={60} />
+                    <Skeleton variant="text" width="40%" />
+                    <Box sx={{ mt: 2 }}>
+                      <Skeleton variant="text" width="30%" />
+                      <Skeleton variant="text" width="40%" />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
             ))
           ) : (
             sortedForecasts.map(forecast => (
-              <li key={forecast.id} className="forecast-item">
-                <div className="question-container">
-                  <Link to={`/forecast/${forecast.id}`} className="question-link">
-                    {forecast.question}
-                  </Link>
-                  <div className="recent-forecast-point">
-                    {forecast.latestPoint ? (
-                      <p>{(forecast.latestPoint.point_forecast * 100).toFixed(1)}%</p>
-                    ) : (
-                      <p>Not forecasted</p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <p>Category: {forecast.category}</p>
-                  <p>Created: {formatDate(forecast.created)}</p>
-                </div>
-              </li>
+              <Grid item xs={12} md={6} lg={4} key={forecast.id}>
+                <Card sx={{ 
+                  backgroundColor: 'background.paper',
+                  height: '100%',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                  }
+                }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography
+                        component={Link}
+                        to={`/forecast/${forecast.id}`}
+                        sx={{
+                          color: 'primary.light',
+                          textDecoration: 'none',
+                          '&:hover': {
+                            color: 'primary.main',
+                          }
+                        }}
+                        variant="h6"
+                      >
+                        {forecast.question}
+                      </Typography>
+                      <Chip
+                        label={forecast.latestPoint ? 
+                          `${(forecast.latestPoint.point_forecast * 100).toFixed(1)}%` : 
+                          'Not forecasted'
+                        }
+                        sx={{
+                          backgroundColor: forecast.latestPoint ? 'primary.main' : 'secondary.main',
+                          color: 'primary.light',
+                          ml: 2,
+                          minWidth: '90px'
+                        }}
+                      />
+                    </Box>
+                    <Box sx={{ mt: 'auto' }}>
+                      <Typography sx={{ color: 'primary.light', opacity: 0.8 }}>
+                        Category: {forecast.category}
+                      </Typography>
+                      <Typography sx={{ color: 'primary.light', opacity: 0.8 }}>
+                        Created: {formatDate(forecast.created)}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
             ))
           )}
-        </ul>
-      </div>
-    );
-};
+        </Grid>
+      </Box>
+    </Box>
+  );
+}
 
-  
-  export default ForecastPage;
+export default ForecastPage;
