@@ -64,12 +64,15 @@ function ResolvedForecastPage() {
 
   return (
     <Box sx={{ display: 'flex' }}>
+      <Sidebar />
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           p: 3,
-          pt: 10,
+          width: { sm: `calc(100%-240px)` },
+          ml: { sm: '240px' },
+          mt: { xs: '104px', sm: '64px' },
         }}
       >
         <Typography variant="h4" sx={{ color: 'primary.light', mb: 3 }}>

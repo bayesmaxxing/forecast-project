@@ -79,7 +79,18 @@ function ForecastPage() {
   const formatDate = (dateString) => dateString.split('T')[0];
 
   return (
-    <Box sx={{ p: 3, pt: 10 }}>
+    <Box sx={{ display: 'flex' }}>
+      <Sidebar />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: { sm: `calc(100%-240px)` },
+          ml: { sm: '240px' },
+          mt: '64px',
+        }}
+      >
       <Grid container spacing={3}>
         {/* Search and Header Section */}
         <Grid item xs={12}>
@@ -208,6 +219,7 @@ function ForecastPage() {
           ))
         )}
       </Grid>
+    </Box>
     </Box>
   );
 };
