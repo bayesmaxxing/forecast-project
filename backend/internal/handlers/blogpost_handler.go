@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"encoding/json"
 	"backend/internal/models"
 	"backend/internal/services"
+	"encoding/json"
 	"net/http"
 )
 
@@ -26,7 +26,7 @@ func (h *BlogpostHandler) ListBlogposts(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *BlogpostHandler) GetBlogpostBySlug(w http.ResponseWriter, r *http.Request) {
-	slug := r.URL.Query().Get("slug")
+	slug := r.PathValue("slug")
 
 	blogpost, err := h.service.GetBlogpostBySlug(r.Context(), slug)
 	if err != nil {

@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"context"
 	"backend/internal/database"
 	"backend/internal/models"
+	"context"
 	"time"
 )
 
@@ -50,10 +50,10 @@ func (r *BlogpostRepository) GetBlogpostBySlug(ctx context.Context, slug string)
 				, created
 				, slug
 				FROM blogposts 
-				WHERE slug like (%$1%)`
-
+				WHERE slug like $1`
+	slugPattern := "%" + slug + "%"
 	var b models.Blogpost
-	err := r.db.QueryRowContext(ctx, query, slug).Scan(&b.ID, &b.Title, &b.Post, &b.Slug, &b.CreatedAt)
+	err := r.db.QueryRowContext(ctx, query, slugPattern).Scan(&b.ID, &b.Title, &b.Post, &b.CreatedAt, &b.Slug)
 
 	if err != nil {
 		return nil, err
