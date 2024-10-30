@@ -70,16 +70,17 @@ function ResolvedForecastPage() {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100%-240px)` },
+          width: { sm: '100%' },
           ml: { sm: '240px' },
           mt: { xs: '104px', sm: '64px' },
+          overflowX: 'hidden',
         }}
       >
         <Typography variant="h4" sx={{ color: 'primary.light', mb: 3 }}>
           RESOLVED QUESTIONS
         </Typography>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
           {loading ? (
             [...Array(6)].map((_, index) => (
               <Grid item xs={12} md={6} lg={4} key={index}>
