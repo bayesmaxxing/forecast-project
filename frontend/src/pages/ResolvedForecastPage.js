@@ -71,7 +71,6 @@ function ResolvedForecastPage() {
           flexGrow: 1,
           p: 3,
           width: { sm: '100%' },
-          ml: { sm: '240px' },
           mt: { xs: '104px', sm: '64px' },
           overflowX: 'hidden',
         }}
