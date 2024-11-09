@@ -30,6 +30,7 @@ import {
   SportsBasketball,
   Dangerous,
   Timeline,
+  TimesOneMobileData,
   Add
 } from '@mui/icons-material';
 
@@ -56,6 +57,7 @@ const Sidebar = () => {
     { text: 'X-risk', path: '/questions/category/x-risk', icon: <Dangerous /> },
     { text: 'Sports', path: '/questions/category/sports', icon: <SportsBasketball /> },
     { text: 'Personal', path: '/questions/category/personal', icon: <Category /> },
+    { text: 'One-shot', path: '/questions/category/one-shot', icon: <TimesOneMobileData />}
     { text: 'Other', path: '/questions/category/other', icon: <Category /> },
     { text: 'Resolved', path: '/questions/resolved', icon: <Timeline /> } 
   ];
