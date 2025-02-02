@@ -1,8 +1,8 @@
 package models
 
 import (
-	"errors"
 	"backend/internal/utils"
+	"errors"
 	"time"
 )
 
@@ -11,12 +11,10 @@ type Forecast struct {
 	Question           string     `json:"question"`
 	Category           string     `json:"category"`
 	CreatedAt          time.Time  `json:"created"`
+	UserID             int64      `json:"user_id"`
 	ResolutionCriteria string     `json:"resolution_criteria"`
 	Resolution         *string    `json:"resolution,omitempty"`
 	ResolvedAt         *time.Time `json:"resolved,omitempty"`
-	BrierScore         *float64   `json:"brier_score,omitempty"`
-	Log2Score          *float64   `json:"log2_score,omitempty"`
-	LogNScore          *float64   `json:"logn_score,omitempty"`
 	ResolutionComment  *string    `json:"comment,omitempty"`
 }
 
