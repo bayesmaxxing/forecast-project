@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"context"
 	"backend/internal/database"
 	"backend/internal/models"
+	"context"
 	"time"
 
 	_ "github.com/jackc/pgx/v5"
@@ -26,6 +26,7 @@ func (r *ForecastPointRepository) GetAllForecastPoints(ctx context.Context) ([]*
 				, lower_ci
 				, reason
 				, created
+				, user_id
 				FROM forecast_points `
 
 	rows, err := r.db.QueryContext(ctx, query)
@@ -45,7 +46,8 @@ func (r *ForecastPointRepository) GetAllForecastPoints(ctx context.Context) ([]*
 			&fp.UpperCI,
 			&fp.LowerCI,
 			&fp.Reason,
-			&fp.CreatedAt); err != nil {
+			&fp.CreatedAt,
+			&fp.UserID); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)
@@ -62,6 +64,7 @@ func (r *ForecastPointRepository) GetForecastPointsByForecastID(ctx context.Cont
 				, lower_ci
 				, reason
 				, created
+				, user_id
 				FROM forecast_points 
 				WHERE forecast_id = $1`
 
@@ -81,7 +84,47 @@ func (r *ForecastPointRepository) GetForecastPointsByForecastID(ctx context.Cont
 			&fp.UpperCI,
 			&fp.LowerCI,
 			&fp.Reason,
-			&fp.CreatedAt); err != nil {
+			&fp.CreatedAt,
+			&fp.UserID); err != nil {
+			return nil, err
+		}
+		forecast_points = append(forecast_points, &fp)
+	}
+	return forecast_points, rows.Err()
+}
+
+func (r *ForecastPointRepository) GetForecastPointsByForecastIDAndUser(ctx context.Context, id int64, user_id int64) ([]*models.ForecastPoint, error) {
+	query := `SELECT 
+				update_id
+				, forecast_id
+				, point_forecast
+				, upper_ci
+				, lower_ci
+				, reason
+				, created
+				, user_id
+				FROM forecast_points 
+				WHERE forecast_id = $1
+				AND user_id = $2`
+
+	rows, err := r.db.QueryContext(ctx, query, id, user_id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var forecast_points []*models.ForecastPoint
+	for rows.Next() {
+		var fp models.ForecastPoint
+		if err := rows.Scan(&fp.ID,
+			&fp.ForecastID,
+			&fp.PointForecast,
+			&fp.UpperCI,
+			&fp.LowerCI,
+			&fp.Reason,
+			&fp.CreatedAt,
+			&fp.UserID); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)
@@ -97,12 +140,13 @@ func (r *ForecastPointRepository) CreateForecastPoint(ctx context.Context, fp *m
 											, upper_ci
 											, lower_ci
 											, created
-											, reason)
-				VALUES ($1, $2, $3, $4, $5, $6)
+											, reason
+											, user_id)
+				VALUES ($1, $2, $3, $4, $5, $6, $7)
 				RETURNING update_id`
 
 	err := r.db.QueryRowContext(ctx, query, fp.ForecastID, fp.PointForecast, fp.UpperCI,
-		fp.LowerCI, fp.CreatedAt, fp.Reason).Scan(&fp.ID)
+		fp.LowerCI, fp.CreatedAt, fp.Reason, fp.UserID).Scan(&fp.ID)
 	return err
 }
 
@@ -115,6 +159,7 @@ func (r *ForecastPointRepository) GetLatestForecastPoints(ctx context.Context) (
 				, lower_ci
 				, created
 				, reason
+				, user_id
 				FROM forecast_points
 				ORDER BY forecast_id, created DESC;`
 
@@ -134,7 +179,47 @@ func (r *ForecastPointRepository) GetLatestForecastPoints(ctx context.Context) (
 			&fp.UpperCI,
 			&fp.LowerCI,
 			&fp.CreatedAt,
-			&fp.Reason); err != nil {
+			&fp.Reason,
+			&fp.UserID); err != nil {
+			return nil, err
+		}
+		forecast_points = append(forecast_points, &fp)
+	}
+	return forecast_points, rows.Err()
+}
+
+func (r *ForecastPointRepository) GetLatestForecastPointsByUser(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
+	query := `SELECT distinct on (forecast_id)
+				update_id
+				, forecast_id
+				, point_forecast
+				, upper_ci
+				, lower_ci
+				, created
+				, reason
+				, user_id
+				FROM forecast_points
+				WHERE user_id = $1
+				ORDER BY forecast_id, created DESC;`
+
+	rows, err := r.db.QueryContext(ctx, query, user_id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var forecast_points []*models.ForecastPoint
+	for rows.Next() {
+		var fp models.ForecastPoint
+		if err := rows.Scan(&fp.ID,
+			&fp.ForecastID,
+			&fp.PointForecast,
+			&fp.UpperCI,
+			&fp.LowerCI,
+			&fp.CreatedAt,
+			&fp.Reason,
+			&fp.UserID); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)

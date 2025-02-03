@@ -12,4 +12,5 @@ type ForecastPoint struct {
 	LowerCI       float64   `json:"lower_ci"`
 	Reason        string    `json:"reason"`
 	CreatedAt     time.Time `json:"created"`
+	UserID        int64     `json:"user_id"`
 }
