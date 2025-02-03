@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"context"
 	"backend/internal/database"
 	"backend/internal/models"
+	"context"
 	"time"
 
 	_ "github.com/jackc/pgx/v5"
@@ -23,12 +23,10 @@ func (r *ForecastRepository) GetForecastByID(ctx context.Context, id int64) (*mo
 					, question
 					, category
 					, created
+					, user_id
 					, resolution_criteria
 					, resolution
 					, resolved
-					, brier_score
-					, log2_score
-					, logn_score
 					, comment
 				FROM forecast_v2 
 				WHERE id = $1`
@@ -42,9 +40,6 @@ func (r *ForecastRepository) GetForecastByID(ctx context.Context, id int64) (*mo
 		&f.ResolutionCriteria,
 		&f.Resolution,
 		&f.ResolvedAt,
-		&f.BrierScore,
-		&f.Log2Score,
-		&f.LogNScore,
 		&f.ResolutionComment)
 
 	if err != nil {
@@ -60,9 +55,10 @@ func (r *ForecastRepository) CreateForecast(ctx context.Context, f *models.Forec
 				question
 				, category
 				, created
+				, user_id
 				, resolution_criteria
 				)
-				VALUES ($1, $2, $3, $4) 
+				VALUES ($1, $2, $3, $4, $5, $6) 
 				RETURNING id`
 
 	err := r.db.QueryRowContext(ctx, query, f.Question, f.Category, f.CreatedAt, f.ResolutionCriteria).Scan(&f.ID)
@@ -76,9 +72,6 @@ func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forec
 				, resolution_criteria = $3
 				, resolution = $4
 				, resolved = $5
-				, brier_score = $6
-				, log2_score = $7
-				, logn_score = $8
 				, comment = $9
 			 WHERE id = $10`
 
@@ -88,9 +81,6 @@ func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forec
 		f.ResolutionCriteria,
 		f.Resolution,
 		f.ResolvedAt,
-		f.BrierScore,
-		f.Log2Score,
-		f.LogNScore,
 		f.ResolutionComment,
 		f.ID)
 	return err
@@ -124,12 +114,10 @@ func (r *ForecastRepository) ListOpenForecasts(ctx context.Context) ([]*models.F
 				, question
 				, category
 				, created
+				, user_id
 				, resolution_criteria
 				, resolution
 				, resolved
-				, brier_score
-				,log2_score
-				, logn_score
 				, comment 
 				FROM forecast_v2
 				WHERE resolved is null`
@@ -143,12 +131,10 @@ func (r *ForecastRepository) ListResolvedForecasts(ctx context.Context) ([]*mode
 				, question
 				, category
 				, created
+				, user_id
 				, resolution_criteria
 				, resolution
 				, resolved
-				, brier_score
-				, log2_score
-				, logn_score
 				, comment 
 				FROM forecast_v2
 				WHERE resolved is not null`
@@ -162,12 +148,10 @@ func (r *ForecastRepository) ListOpenForecastsWithCategory(ctx context.Context, 
 				, question
 				, category
 				, created
+				, user_id
 				, resolution_criteria
 				, resolution
 				, resolved
-				, brier_score
-				, log2_score
-				, logn_score
 				, comment 
 				FROM forecast_v2
 				WHERE resolved is null
@@ -183,12 +167,10 @@ func (r *ForecastRepository) ListResolvedForecastsWithCategory(ctx context.Conte
 				, question
 				, category
 				, created
+				, user_id
 				, resolution_criteria
 				, resolution
 				, resolved
-				, brier_score
-				, log2_score
-				, logn_score
 				, comment 
 				FROM forecast_v2
 				WHERE resolved is not null
@@ -196,48 +178,6 @@ func (r *ForecastRepository) ListResolvedForecastsWithCategory(ctx context.Conte
 	categoryPattern := "%" + category + "%"
 
 	return r.queryForecasts(ctx, query, categoryPattern)
-}
-
-func (r *ForecastRepository) ListResolvedWithScoresAndCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
-	query := `SELECT
-				id
-				, question
-				, category
-				, created
-				, resolution_criteria
-				, resolution
-				, resolved
-				, brier_score
-				, log2_score
-				, logn_score
-				, comment 
-				FROM forecast_v2
-				WHERE resolved is not null
-				AND brier_score is not null
-				AND lower(category) like $1`
-	categoryPattern := "%" + category + "%"
-
-	return r.queryForecasts(ctx, query, categoryPattern)
-}
-
-func (r *ForecastRepository) ListResolvedWithScores(ctx context.Context) ([]*models.Forecast, error) {
-	query := `SELECT
-				id
-				, question
-				, category
-				, created
-				, resolution_criteria
-				, resolution
-				, resolved
-				, brier_score
-				, log2_score
-				, logn_score
-				, comment 
-				FROM forecast_v2
-				WHERE resolved is not null
-				AND brier_score is not null`
-
-	return r.queryForecasts(ctx, query)
 }
 
 func (r *ForecastRepository) queryForecasts(ctx context.Context, query string, args ...interface{}) ([]*models.Forecast, error) {
@@ -257,12 +197,10 @@ func (r *ForecastRepository) queryForecasts(ctx context.Context, query string, a
 			&f.Question,
 			&f.Category,
 			&f.CreatedAt,
+			&f.UserID,
 			&f.ResolutionCriteria,
 			&f.Resolution,
 			&f.ResolvedAt,
-			&f.BrierScore,
-			&f.Log2Score,
-			&f.LogNScore,
 			&f.ResolutionComment)
 		if err != nil {
 			return nil, err
