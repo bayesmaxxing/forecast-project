@@ -17,6 +17,7 @@ func NewForecastRepository(db *database.DB) *ForecastRepository {
 	return &ForecastRepository{db: db}
 }
 
+// Methods without user_id filtering
 func (r *ForecastRepository) GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error) {
 	query := `SELECT 
 					id
@@ -63,49 +64,6 @@ func (r *ForecastRepository) CreateForecast(ctx context.Context, f *models.Forec
 
 	err := r.db.QueryRowContext(ctx, query, f.Question, f.Category, f.CreatedAt, f.ResolutionCriteria).Scan(&f.ID)
 	return err
-}
-
-func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forecast) error {
-	query := `UPDATE forecast_v2 SET 
-				question = $1
-				, category = $2
-				, resolution_criteria = $3
-				, resolution = $4
-				, resolved = $5
-				, comment = $9
-			 WHERE id = $10`
-
-	_, err := r.db.ExecContext(ctx, query,
-		f.Question,
-		f.Category,
-		f.ResolutionCriteria,
-		f.Resolution,
-		f.ResolvedAt,
-		f.ResolutionComment,
-		f.ID)
-	return err
-}
-
-func (r *ForecastRepository) DeleteForecast(ctx context.Context, id int64) error {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	defer tx.Rollback()
-	queryForecastPoints := `DELETE FROM forecast_points WHERE forecast_id = $1`
-	_, err = tx.ExecContext(ctx, queryForecastPoints, id)
-	if err != nil {
-		return err
-	}
-
-	queryForecasts := `DELETE FROM forecast_v2 WHERE id = $1`
-	_, err = tx.ExecContext(ctx, queryForecasts, id)
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
 }
 
 func (r *ForecastRepository) ListOpenForecasts(ctx context.Context) ([]*models.Forecast, error) {
@@ -180,6 +138,77 @@ func (r *ForecastRepository) ListResolvedForecastsWithCategory(ctx context.Conte
 	return r.queryForecasts(ctx, query, categoryPattern)
 }
 
+// user_id filtered methods
+func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forecast, user_id int64) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	queryUser := `SELECT id FROM users WHERE id = $1 AND user_id = $2`
+	var forecastID int64
+	err = tx.QueryRowContext(ctx, queryUser, &f.ID, user_id).Scan(&forecastID)
+	if err != nil {
+		return err
+	}
+
+	query := `UPDATE forecast_v2 SET 
+				question = $1
+				, category = $2
+				, resolution_criteria = $3
+				, resolution = $4
+				, resolved = $5
+				, comment = $9
+			 WHERE id = $10`
+
+	_, err = r.db.ExecContext(ctx, query,
+		f.Question,
+		f.Category,
+		f.ResolutionCriteria,
+		f.Resolution,
+		f.ResolvedAt,
+		f.ResolutionComment,
+		f.ID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (r *ForecastRepository) DeleteForecast(ctx context.Context, id int64, user_id int64) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	queryUser := `SELECT id FROM users WHERE id = $1 AND user_id = $2`
+	var forecastID int64
+	err = tx.QueryRowContext(ctx, queryUser, id, user_id).Scan(&forecastID)
+	if err != nil {
+		return err
+	}
+
+	queryForecastPoints := `DELETE FROM forecast_points WHERE forecast_id = $1`
+	_, err = tx.ExecContext(ctx, queryForecastPoints, id)
+	if err != nil {
+		return err
+	}
+
+	queryForecasts := `DELETE FROM forecast_v2 WHERE id = $1`
+	_, err = tx.ExecContext(ctx, queryForecasts, id)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// Helper function to query forecasts
 func (r *ForecastRepository) queryForecasts(ctx context.Context, query string, args ...interface{}) ([]*models.Forecast, error) {
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {

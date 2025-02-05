@@ -1,17 +1,18 @@
 package services
 
 import (
-	"context"
-	"errors"
 	"backend/internal/models"
 	"backend/internal/repository"
 	"backend/internal/utils"
-	"log"
+	"context"
+	"errors"
+	"time"
 )
 
 type ForecastService struct {
 	repo      *repository.ForecastRepository
 	pointRepo *repository.ForecastPointRepository
+	scoreRepo *repository.ScoreRepository
 }
 
 func NewForecastService(repo *repository.ForecastRepository, pointRepo *repository.ForecastPointRepository) *ForecastService {
@@ -29,8 +30,12 @@ func (s *ForecastService) CreateForecast(ctx context.Context, f *models.Forecast
 	return s.repo.CreateForecast(ctx, f)
 }
 
-func (s *ForecastService) DeleteForecast(ctx context.Context, id int64) error {
-	return s.repo.DeleteForecast(ctx, id)
+func (s *ForecastService) DeleteForecast(ctx context.Context, id int64, user_id int64) error {
+	return s.repo.DeleteForecast(ctx, id, user_id)
+}
+
+func (s *ForecastService) UpdateForecast(ctx context.Context, f *models.Forecast, user_id int64) error {
+	return s.repo.UpdateForecast(ctx, f, user_id)
 }
 
 func (s *ForecastService) ResolveForecast(ctx context.Context,
