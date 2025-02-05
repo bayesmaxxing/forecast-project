@@ -14,9 +14,39 @@ type Scores struct {
 	CreatedAt  time.Time `json:"created"`
 }
 
-type AverageScores struct {
-	UserID        int64   `json:"user_id"`
-	AvgBrierScore float64 `json:"avg_brier_score"`
-	AvgLog2Score  float64 `json:"avg_log2_score"`
-	AvgLogNScore  float64 `json:"avg_logn_score"`
+// Base struct for common score fields
+type ScoreMetrics struct {
+	BrierScore float64 `json:"brier_score"`
+	Log2Score  float64 `json:"log2_score"`
+	LogNScore  float64 `json:"logn_score"`
+}
+
+// Overall platform averages
+type OverallScores struct {
+	ScoreMetrics
+	TotalUsers     int `json:"total_users"`
+	TotalForecasts int `json:"total_forecasts"`
+}
+
+// Per-category averages
+type CategoryScores struct {
+	ScoreMetrics
+	Category       string `json:"category"`
+	TotalUsers     int    `json:"total_users"`
+	TotalForecasts int    `json:"total_forecasts"`
+}
+
+// Per-user averages
+type UserScores struct {
+	ScoreMetrics
+	UserID         int64 `json:"user_id"`
+	TotalForecasts int   `json:"total_forecasts"`
+}
+
+// Per-user-per-category averages
+type UserCategoryScores struct {
+	ScoreMetrics
+	UserID         int64  `json:"user_id"`
+	Category       string `json:"category"`
+	TotalForecasts int    `json:"total_forecasts"`
 }
