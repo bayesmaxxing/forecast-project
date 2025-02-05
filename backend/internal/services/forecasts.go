@@ -54,16 +54,52 @@ func (s *ForecastService) ResolveForecast(ctx context.Context,
 		return errors.New("no forecast points found")
 	}
 
-	probabilities := make([]float64, 0, len(points))
+	// Group points by user
+	userPoints := make(map[int64][]float64)
 	for _, point := range points {
-		probabilities = append(probabilities, point.PointForecast)
+		userPoints[point.UserID] = append(userPoints[point.UserID], point.PointForecast)
 	}
-	log.Printf("Probabilities supplied: %f", probabilities[0])
-	if err := forecast.Resolve(resolution, comment, probabilities); err != nil {
+
+	// Update the forecast with resolution status
+	now := time.Now()
+	forecast.ResolvedAt = &now
+	forecast.Resolution = &resolution
+	forecast.ResolutionComment = &comment
+
+	// Update the forecast in the database
+	if err := s.repo.UpdateForecast(ctx, forecast, forecast.UserID); err != nil {
 		return err
 	}
-	log.Printf("Forecast resolved")
-	return s.repo.UpdateForecast(ctx, forecast)
+
+	if resolution == "-" {
+		return nil
+	}
+
+	outcome := resolution == "1"
+	for userID, probabilities := range userPoints {
+		if len(probabilities) == 0 {
+			continue
+		}
+
+		scores, err := utils.CalcForecastScores(probabilities, outcome)
+		if err != nil {
+			return err
+		}
+
+		score := models.Scores{
+			BrierScore: scores.BrierScore,
+			Log2Score:  scores.Log2Score,
+			LogNScore:  scores.LogNScore,
+			UserID:     userID,
+			ForecastID: forecast.ID,
+			CreatedAt:  now,
+		}
+		if err := s.scoreRepo.CreateScore(ctx, &score); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *ForecastService) ForecastList(ctx context.Context, listType string, category string) ([]*models.Forecast, error) {
@@ -81,55 +117,4 @@ func (s *ForecastService) ForecastList(ctx context.Context, listType string, cat
 	default:
 		return nil, errors.New("invalid resolved status")
 	}
-}
-
-func (s *ForecastService) GetAggregatedScores(ctx context.Context, category string) (*utils.AggScores, error) {
-	var forecasts []*models.Forecast
-	var err error
-
-	if category == "" {
-		forecasts, err = s.repo.ListResolvedWithScores(ctx)
-	} else {
-		forecasts, err = s.repo.ListResolvedWithScoresAndCategory(ctx, category)
-	}
-
-	if err != nil {
-		return &utils.AggScores{}, err
-	}
-
-	if len(forecasts) == 0 {
-		return &utils.AggScores{
-			AggBrierScore: 0,
-			AggLog2Score:  0,
-			AggLogNScore:  0,
-			Category:      category,
-		}, nil
-	}
-
-	scores := make([]utils.ForecastScores, 0, len(forecasts))
-	for _, forecast := range forecasts {
-		if forecast.BrierScore == nil {
-			continue
-		}
-		scores = append(scores, utils.ForecastScores{
-			BrierScore: *forecast.BrierScore,
-			Log2Score:  *forecast.Log2Score,
-			LogNScore:  *forecast.LogNScore,
-		})
-	}
-	if len(scores) == 0 {
-		return &utils.AggScores{
-			AggBrierScore: 0,
-			AggLog2Score:  0,
-			AggLogNScore:  0,
-			Category:      category,
-		}, nil
-	}
-
-	aggScores, err := utils.CalculateAggregateScores(scores, category)
-	if err != nil {
-		return nil, err
-	}
-
-	return &aggScores, nil
 }
