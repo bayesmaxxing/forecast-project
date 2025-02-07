@@ -3,7 +3,6 @@ package services
 import (
 	"backend/internal/models"
 	"backend/internal/repository"
-	"backend/internal/utils"
 	"context"
 	"errors"
 	"time"
@@ -81,19 +80,11 @@ func (s *ForecastService) ResolveForecast(ctx context.Context,
 			continue
 		}
 
-		scores, err := utils.CalcForecastScores(probabilities, outcome)
+		score, err := models.CalcForecastScore(probabilities, outcome, userID, forecast.ID)
 		if err != nil {
 			return err
 		}
 
-		score := models.Scores{
-			BrierScore: scores.BrierScore,
-			Log2Score:  scores.Log2Score,
-			LogNScore:  scores.LogNScore,
-			UserID:     userID,
-			ForecastID: forecast.ID,
-			CreatedAt:  now,
-		}
 		if err := s.scoreRepo.CreateScore(ctx, &score); err != nil {
 			return err
 		}
