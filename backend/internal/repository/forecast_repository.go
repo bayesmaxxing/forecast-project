@@ -49,6 +49,17 @@ func (r *ForecastRepository) GetForecastByID(ctx context.Context, id int64) (*mo
 	return &f, nil
 }
 
+func (r *ForecastRepository) CheckForecastOwnership(ctx context.Context, id int64, user_id int64) (bool, error) {
+	query := `SELECT user_id FROM forecast_v2 WHERE id = $1`
+	var forecastUserID int64
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&forecastUserID)
+	if err != nil {
+		return false, err
+	}
+
+	return forecastUserID == user_id, nil
+}
+
 func (r *ForecastRepository) CreateForecast(ctx context.Context, f *models.Forecast) error {
 	f.CreatedAt = time.Now()
 
@@ -138,21 +149,13 @@ func (r *ForecastRepository) ListResolvedForecastsWithCategory(ctx context.Conte
 	return r.queryForecasts(ctx, query, categoryPattern)
 }
 
-// user_id filtered methods
-func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forecast, user_id int64) error {
+func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forecast) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 
 	defer tx.Rollback()
-
-	queryUser := `SELECT id FROM users WHERE id = $1 AND user_id = $2`
-	var forecastID int64
-	err = tx.QueryRowContext(ctx, queryUser, &f.ID, user_id).Scan(&forecastID)
-	if err != nil {
-		return err
-	}
 
 	query := `UPDATE forecast_v2 SET 
 				question = $1
@@ -178,6 +181,7 @@ func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forec
 	return tx.Commit()
 }
 
+// user_id filtered methods
 func (r *ForecastRepository) DeleteForecast(ctx context.Context, id int64, user_id int64) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -185,22 +189,16 @@ func (r *ForecastRepository) DeleteForecast(ctx context.Context, id int64, user_
 	}
 
 	defer tx.Rollback()
-
-	queryUser := `SELECT id FROM users WHERE id = $1 AND user_id = $2`
-	var forecastID int64
-	err = tx.QueryRowContext(ctx, queryUser, id, user_id).Scan(&forecastID)
+	//if this delete fails, due to user_id not owning forecast, return and do not delete forecast points.
+	//also checking this in service, but this adds redundancy since I delete all user forecast points.
+	queryForecasts := `DELETE FROM forecast_v2 WHERE id = $1 and user_id = $2`
+	_, err = tx.ExecContext(ctx, queryForecasts, id, user_id)
 	if err != nil {
 		return err
 	}
 
 	queryForecastPoints := `DELETE FROM forecast_points WHERE forecast_id = $1`
 	_, err = tx.ExecContext(ctx, queryForecastPoints, id)
-	if err != nil {
-		return err
-	}
-
-	queryForecasts := `DELETE FROM forecast_v2 WHERE id = $1`
-	_, err = tx.ExecContext(ctx, queryForecasts, id)
 	if err != nil {
 		return err
 	}

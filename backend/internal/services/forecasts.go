@@ -14,15 +14,21 @@ type ForecastService struct {
 	scoreRepo *repository.ScoreRepository
 }
 
-func NewForecastService(repo *repository.ForecastRepository, pointRepo *repository.ForecastPointRepository) *ForecastService {
+func NewForecastService(repo *repository.ForecastRepository, pointRepo *repository.ForecastPointRepository, scoreRepo *repository.ScoreRepository) *ForecastService {
 	return &ForecastService{
 		repo:      repo,
 		pointRepo: pointRepo,
+		scoreRepo: scoreRepo,
 	}
 }
 
+// individual forecast operations
 func (s *ForecastService) GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error) {
 	return s.repo.GetForecastByID(ctx, id)
+}
+
+func (s *ForecastService) CheckForecastOwnership(ctx context.Context, id int64, user_id int64) (bool, error) {
+	return s.repo.CheckForecastOwnership(ctx, id, user_id)
 }
 
 func (s *ForecastService) CreateForecast(ctx context.Context, f *models.Forecast) error {
@@ -33,8 +39,8 @@ func (s *ForecastService) DeleteForecast(ctx context.Context, id int64, user_id 
 	return s.repo.DeleteForecast(ctx, id, user_id)
 }
 
-func (s *ForecastService) UpdateForecast(ctx context.Context, f *models.Forecast, user_id int64) error {
-	return s.repo.UpdateForecast(ctx, f, user_id)
+func (s *ForecastService) UpdateForecast(ctx context.Context, f *models.Forecast) error {
+	return s.repo.UpdateForecast(ctx, f)
 }
 
 func (s *ForecastService) ResolveForecast(ctx context.Context,
@@ -66,7 +72,7 @@ func (s *ForecastService) ResolveForecast(ctx context.Context,
 	forecast.ResolutionComment = &comment
 
 	// Update the forecast in the database
-	if err := s.repo.UpdateForecast(ctx, forecast, forecast.UserID); err != nil {
+	if err := s.repo.UpdateForecast(ctx, forecast); err != nil {
 		return err
 	}
 
@@ -93,6 +99,7 @@ func (s *ForecastService) ResolveForecast(ctx context.Context,
 	return nil
 }
 
+// aggregate forecast operations
 func (s *ForecastService) ForecastList(ctx context.Context, listType string, category string) ([]*models.Forecast, error) {
 	switch listType {
 	case "open":
