@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/internal/auth"
 	"backend/internal/models"
 	"backend/internal/services"
 	"encoding/json"
@@ -117,4 +118,34 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, user)
+}
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var loginRequest struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.VerifyPassword(r.Context(), loginRequest.Username, loginRequest.Password)
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	// Generate JWT token
+	token, err := auth.GenerateToken(user.ID, user.Username)
+	if err != nil {
+		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"token":    token,
+		"username": user.Username,
+	})
 }
