@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"database/sql"
-	"encoding/json"
+	"backend/internal/cache"
 	"backend/internal/models"
 	"backend/internal/services"
-	"backend/internal/cache"
+	"database/sql"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,11 +14,11 @@ import (
 
 type ForecastPointHandler struct {
 	service *services.ForecastPointService
-  cache *cache.Cache
+	cache   *cache.Cache
 }
 
 func NewForecastPointHandler(s *services.ForecastPointService, c *cache.Cache) *ForecastPointHandler {
-  return &ForecastPointHandler{service: s, cache: c}
+	return &ForecastPointHandler{service: s, cache: c}
 }
 
 func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +64,7 @@ func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *htt
 		return
 	}
 
-  h.cache.DeleteByPrefix("latest")
+	h.cache.DeleteByPrefix("latest")
 
 	message := "Forecast point created"
 
@@ -82,22 +82,18 @@ func (h *ForecastPointHandler) ListAllForecastPoints(w http.ResponseWriter, r *h
 }
 
 func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r *http.Request) {
-  if cachedPoints, found := h.cache.Get("latest"); found {
-    respondJSON(w, http.StatusOK, cachedPoints)
+	if cachedPoints, found := h.cache.Get("latest"); found {
+		respondJSON(w, http.StatusOK, cachedPoints)
 		return
-  }
+	}
 
 	latestForecastPoints, err := h.service.GetLatestForecastPoints(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-  
-  h.cache.Set("latest", latestForecastPoints, 24*time.Hour)
+
+	h.cache.Set("latest", latestForecastPoints, 24*time.Hour)
 
 	respondJSON(w, http.StatusOK, latestForecastPoints)
-}
-
-func (h *ForecastPointHandler) invalidateCaches(prefix string) {
-  h.cache.DeleteByPrefix(prefix)
 }
