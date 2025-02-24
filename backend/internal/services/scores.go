@@ -7,10 +7,10 @@ import (
 )
 
 type ScoreService struct {
-	repo *repository.ScoreRepository
+	repo repository.ScoreRepository
 }
 
-func NewScoreService(repo *repository.ScoreRepository) *ScoreService {
+func NewScoreService(repo repository.ScoreRepository) *ScoreService {
 	return &ScoreService{repo: repo}
 }
 

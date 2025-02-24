@@ -9,12 +9,12 @@ import (
 )
 
 type ForecastService struct {
-	repo      *repository.ForecastRepository
-	pointRepo *repository.ForecastPointRepository
-	scoreRepo *repository.ScoreRepository
+	repo      repository.ForecastRepository
+	pointRepo repository.ForecastPointRepository
+	scoreRepo repository.ScoreRepository
 }
 
-func NewForecastService(repo *repository.ForecastRepository, pointRepo *repository.ForecastPointRepository, scoreRepo *repository.ScoreRepository) *ForecastService {
+func NewForecastService(repo repository.ForecastRepository, pointRepo repository.ForecastPointRepository, scoreRepo repository.ScoreRepository) *ForecastService {
 	return &ForecastService{
 		repo:      repo,
 		pointRepo: pointRepo,

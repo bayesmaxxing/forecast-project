@@ -7,15 +7,24 @@ import (
 	"time"
 )
 
-type BlogpostRepository struct {
+// BlogpostRepository defines the interface for blogpost data operations
+type BlogpostRepository interface {
+	GetBlogposts(ctx context.Context) ([]*models.Blogpost, error)
+	GetBlogpostBySlug(ctx context.Context, slug string) (*models.Blogpost, error)
+	CreateBlogpost(ctx context.Context, post *models.Blogpost) error
+}
+
+// PostgresBlogpostRepository implements the BlogpostRepository interface
+type PostgresBlogpostRepository struct {
 	db *database.DB
 }
 
-func NewBlogpostRepository(db *database.DB) *BlogpostRepository {
-	return &BlogpostRepository{db: db}
+// NewBlogpostRepository creates a new PostgresBlogpostRepository instance
+func NewBlogpostRepository(db *database.DB) BlogpostRepository {
+	return &PostgresBlogpostRepository{db: db}
 }
 
-func (r *BlogpostRepository) GetBlogposts(ctx context.Context) ([]*models.Blogpost, error) {
+func (r *PostgresBlogpostRepository) GetBlogposts(ctx context.Context) ([]*models.Blogpost, error) {
 	query := `SELECT 
 				post_id
 				, title
@@ -42,7 +51,7 @@ func (r *BlogpostRepository) GetBlogposts(ctx context.Context) ([]*models.Blogpo
 	return blogposts, rows.Err()
 }
 
-func (r *BlogpostRepository) GetBlogpostBySlug(ctx context.Context, slug string) (*models.Blogpost, error) {
+func (r *PostgresBlogpostRepository) GetBlogpostBySlug(ctx context.Context, slug string) (*models.Blogpost, error) {
 	query := `SELECT 
 				post_id
 				, title
@@ -61,7 +70,7 @@ func (r *BlogpostRepository) GetBlogpostBySlug(ctx context.Context, slug string)
 	return &b, nil
 }
 
-func (r *BlogpostRepository) CreateBlogpost(ctx context.Context, post *models.Blogpost) error {
+func (r *PostgresBlogpostRepository) CreateBlogpost(ctx context.Context, post *models.Blogpost) error {
 	post.CreatedAt = time.Now()
 
 	query := `INSERT INTO blogposts (title, post, created_date, summary, slug)

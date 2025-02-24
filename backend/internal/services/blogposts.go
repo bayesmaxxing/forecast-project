@@ -7,10 +7,10 @@ import (
 )
 
 type BlogpostService struct {
-	repo *repository.BlogpostRepository
+	repo repository.BlogpostRepository
 }
 
-func NewBlogpostService(repo *repository.BlogpostRepository) *BlogpostService {
+func NewBlogpostService(repo repository.BlogpostRepository) *BlogpostService {
 	return &BlogpostService{repo: repo}
 }
 

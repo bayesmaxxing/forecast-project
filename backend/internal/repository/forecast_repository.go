@@ -9,16 +9,31 @@ import (
 	_ "github.com/jackc/pgx/v5"
 )
 
-type ForecastRepository struct {
+// ForecastRepository defines the interface for forecast data operations
+type ForecastRepository interface {
+	GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error)
+	CheckForecastOwnership(ctx context.Context, id int64, userID int64) (bool, error)
+	CreateForecast(ctx context.Context, f *models.Forecast) error
+	ListOpenForecasts(ctx context.Context) ([]*models.Forecast, error)
+	ListResolvedForecasts(ctx context.Context) ([]*models.Forecast, error)
+	ListOpenForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error)
+	ListResolvedForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error)
+	UpdateForecast(ctx context.Context, f *models.Forecast) error
+	DeleteForecast(ctx context.Context, id int64, userID int64) error
+}
+
+// PostgresForecastRepository implements the ForecastRepository interface
+type PostgresForecastRepository struct {
 	db *database.DB
 }
 
-func NewForecastRepository(db *database.DB) *ForecastRepository {
-	return &ForecastRepository{db: db}
+// NewForecastRepository creates a new PostgresForecastRepository instance
+func NewForecastRepository(db *database.DB) ForecastRepository {
+	return &PostgresForecastRepository{db: db}
 }
 
 // Methods without user_id filtering
-func (r *ForecastRepository) GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error) {
+func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error) {
 	query := `SELECT 
 					id
 					, question
@@ -49,7 +64,7 @@ func (r *ForecastRepository) GetForecastByID(ctx context.Context, id int64) (*mo
 	return &f, nil
 }
 
-func (r *ForecastRepository) CheckForecastOwnership(ctx context.Context, id int64, user_id int64) (bool, error) {
+func (r *PostgresForecastRepository) CheckForecastOwnership(ctx context.Context, id int64, user_id int64) (bool, error) {
 	query := `SELECT user_id FROM forecast_v2 WHERE id = $1`
 	var forecastUserID int64
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&forecastUserID)
@@ -60,7 +75,7 @@ func (r *ForecastRepository) CheckForecastOwnership(ctx context.Context, id int6
 	return forecastUserID == user_id, nil
 }
 
-func (r *ForecastRepository) CreateForecast(ctx context.Context, f *models.Forecast) error {
+func (r *PostgresForecastRepository) CreateForecast(ctx context.Context, f *models.Forecast) error {
 	f.CreatedAt = time.Now()
 
 	query := `INSERT INTO forecast_v2 (
@@ -77,7 +92,7 @@ func (r *ForecastRepository) CreateForecast(ctx context.Context, f *models.Forec
 	return err
 }
 
-func (r *ForecastRepository) ListOpenForecasts(ctx context.Context) ([]*models.Forecast, error) {
+func (r *PostgresForecastRepository) ListOpenForecasts(ctx context.Context) ([]*models.Forecast, error) {
 	query := `SELECT 
 				id
 				, question
@@ -94,7 +109,7 @@ func (r *ForecastRepository) ListOpenForecasts(ctx context.Context) ([]*models.F
 	return r.queryForecasts(ctx, query)
 }
 
-func (r *ForecastRepository) ListResolvedForecasts(ctx context.Context) ([]*models.Forecast, error) {
+func (r *PostgresForecastRepository) ListResolvedForecasts(ctx context.Context) ([]*models.Forecast, error) {
 	query := `SELECT 
 				id
 				, question
@@ -111,7 +126,7 @@ func (r *ForecastRepository) ListResolvedForecasts(ctx context.Context) ([]*mode
 	return r.queryForecasts(ctx, query)
 }
 
-func (r *ForecastRepository) ListOpenForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
+func (r *PostgresForecastRepository) ListOpenForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
 	query := `SELECT 
 				id
 				, question
@@ -130,7 +145,7 @@ func (r *ForecastRepository) ListOpenForecastsWithCategory(ctx context.Context, 
 	return r.queryForecasts(ctx, query, categoryPattern)
 }
 
-func (r *ForecastRepository) ListResolvedForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
+func (r *PostgresForecastRepository) ListResolvedForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
 	query := `SELECT
 				id
 				, question
@@ -149,7 +164,7 @@ func (r *ForecastRepository) ListResolvedForecastsWithCategory(ctx context.Conte
 	return r.queryForecasts(ctx, query, categoryPattern)
 }
 
-func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forecast) error {
+func (r *PostgresForecastRepository) UpdateForecast(ctx context.Context, f *models.Forecast) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -182,7 +197,7 @@ func (r *ForecastRepository) UpdateForecast(ctx context.Context, f *models.Forec
 }
 
 // user_id filtered methods
-func (r *ForecastRepository) DeleteForecast(ctx context.Context, id int64, user_id int64) error {
+func (r *PostgresForecastRepository) DeleteForecast(ctx context.Context, id int64, user_id int64) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -207,7 +222,7 @@ func (r *ForecastRepository) DeleteForecast(ctx context.Context, id int64, user_
 }
 
 // Helper function to query forecasts
-func (r *ForecastRepository) queryForecasts(ctx context.Context, query string, args ...interface{}) ([]*models.Forecast, error) {
+func (r *PostgresForecastRepository) queryForecasts(ctx context.Context, query string, args ...interface{}) ([]*models.Forecast, error) {
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err

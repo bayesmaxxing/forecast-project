@@ -10,15 +10,28 @@ import (
 	_ "github.com/jackc/pgx/v5"
 )
 
-type UserRepository struct {
+// UserRepository defines the interface for user data operations
+type UserRepository interface {
+	CreateUser(ctx context.Context, user *models.User) error
+	GetUserByID(ctx context.Context, id int64) (*models.User, error)
+	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
+	DeleteUser(ctx context.Context, id int64) error
+	ValidateUser(ctx context.Context, id int64) (bool, error)
+	UpdatePassword(ctx context.Context, id int64, password string) error
+	ListUsers(ctx context.Context) ([]*models.User, error)
+}
+
+// PostgresUserRepository implements the UserRepository interface
+type PostgresUserRepository struct {
 	db *database.DB
 }
 
-func NewUserRepository(db *database.DB) *UserRepository {
-	return &UserRepository{db: db}
+// NewUserRepository creates a new PostgresUserRepository instance
+func NewUserRepository(db *database.DB) UserRepository {
+	return &PostgresUserRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) error {
+func (r *PostgresUserRepository) CreateUser(ctx context.Context, user *models.User) error {
 	user.CreatedAt = time.Now()
 
 	query := `INSERT INTO users (username, password, created_at)
@@ -31,7 +44,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) erro
 		user.CreatedAt).Scan(&user.ID)
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*models.User, error) {
+func (r *PostgresUserRepository) GetUserByID(ctx context.Context, id int64) (*models.User, error) {
 	query := `SELECT id, username, created_at
               FROM users
               WHERE id = $1`
@@ -49,7 +62,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*models.Use
 	return &user, nil
 }
 
-func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	query := `SELECT id, username, password, created_at
               FROM users
               WHERE username = $1`
@@ -68,7 +81,7 @@ func (r *UserRepository) GetUserByUsername(ctx context.Context, username string)
 	return &user, nil
 }
 
-func (r *UserRepository) DeleteUser(ctx context.Context, id int64) error {
+func (r *PostgresUserRepository) DeleteUser(ctx context.Context, id int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
 	result, err := r.db.ExecContext(ctx, query, id)
@@ -88,7 +101,7 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *UserRepository) ValidateUser(ctx context.Context, id int64) (bool, error) {
+func (r *PostgresUserRepository) ValidateUser(ctx context.Context, id int64) (bool, error) {
 	query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`
 
 	var exists bool
@@ -100,14 +113,14 @@ func (r *UserRepository) ValidateUser(ctx context.Context, id int64) (bool, erro
 	return exists, nil
 }
 
-func (r *UserRepository) UpdatePassword(ctx context.Context, id int64, password string) error {
+func (r *PostgresUserRepository) UpdatePassword(ctx context.Context, id int64, password string) error {
 	query := `UPDATE users SET password = $2 WHERE id = $1`
 
 	_, err := r.db.ExecContext(ctx, query, id, password)
 	return err
 }
 
-func (r *UserRepository) ListUsers(ctx context.Context) ([]*models.User, error) {
+func (r *PostgresUserRepository) ListUsers(ctx context.Context) ([]*models.User, error) {
 	query := `SELECT id, username, created FROM users`
 
 	rows, err := r.db.QueryContext(ctx, query)

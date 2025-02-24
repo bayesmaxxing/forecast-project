@@ -10,16 +10,35 @@ import (
 	_ "github.com/jackc/pgx/v5"
 )
 
-type ScoreRepository struct {
+// ScoreRepository defines the interface for score data operations
+type ScoreRepository interface {
+	GetScoreByForecastID(ctx context.Context, forecastID int64) ([]models.Scores, error)
+	GetScoreByForecastAndUser(ctx context.Context, forecastID int64, userID int64) (*models.Scores, error)
+	CreateScore(ctx context.Context, score *models.Scores) error
+	GetScoresByUserID(ctx context.Context, userID int64) ([]models.Scores, error)
+	GetAllScores(ctx context.Context) ([]models.Scores, error)
+	UpdateScore(ctx context.Context, score *models.Scores) error
+	DeleteScore(ctx context.Context, scoreID int64) error
+	GetOverallScores(ctx context.Context) (*models.OverallScores, error)
+	GetCategoryScores(ctx context.Context, category string) (*models.CategoryScores, error)
+	GetCategoryScoresByUsers(ctx context.Context, category string) ([]models.UserCategoryScores, error)
+	GetOverallScoresByUsers(ctx context.Context) ([]models.UserScores, error)
+	GetUserCategoryScores(ctx context.Context, userID int64, category string) (*models.UserCategoryScores, error)
+	GetUserOverallScores(ctx context.Context, userID int64) (*models.UserScores, error)
+}
+
+// PostgresScoreRepository implements the ScoreRepository interface
+type PostgresScoreRepository struct {
 	db *database.DB
 }
 
-func NewScoreRepository(db *database.DB) *ScoreRepository {
-	return &ScoreRepository{db: db}
+// NewScoreRepository creates a new PostgresScoreRepository instance
+func NewScoreRepository(db *database.DB) ScoreRepository {
+	return &PostgresScoreRepository{db: db}
 }
 
 // Full schema operations
-func (r *ScoreRepository) GetScoreByForecastID(ctx context.Context, forecast_id int64) ([]models.Scores, error) {
+func (r *PostgresScoreRepository) GetScoreByForecastID(ctx context.Context, forecast_id int64) ([]models.Scores, error) {
 	query := `SELECT 
 					id 
 					, brier_score
@@ -56,7 +75,7 @@ func (r *ScoreRepository) GetScoreByForecastID(ctx context.Context, forecast_id 
 	return scores, rows.Err()
 }
 
-func (r *ScoreRepository) GetScoreByForecastAndUser(ctx context.Context, forecast_id int64, user_id int64) (*models.Scores, error) {
+func (r *PostgresScoreRepository) GetScoreByForecastAndUser(ctx context.Context, forecast_id int64, user_id int64) (*models.Scores, error) {
 	query := `SELECT 
 					id 
 					, brier_score
@@ -83,7 +102,7 @@ func (r *ScoreRepository) GetScoreByForecastAndUser(ctx context.Context, forecas
 	return &score, nil
 }
 
-func (r *ScoreRepository) CreateScore(ctx context.Context, score *models.Scores) error {
+func (r *PostgresScoreRepository) CreateScore(ctx context.Context, score *models.Scores) error {
 	score.CreatedAt = time.Now()
 
 	query := `INSERT INTO scores (brier_score, log2_score, logn_score, user_id, forecast_id, created)
@@ -99,7 +118,7 @@ func (r *ScoreRepository) CreateScore(ctx context.Context, score *models.Scores)
 		score.CreatedAt).Scan(&score.ID)
 }
 
-func (r *ScoreRepository) GetScoresByUserID(ctx context.Context, user_id int64) ([]models.Scores, error) {
+func (r *PostgresScoreRepository) GetScoresByUserID(ctx context.Context, user_id int64) ([]models.Scores, error) {
 	query := `SELECT 
 				id, brier_score, log2_score, logn_score, user_id, forecast_id, created
 			  FROM scores 
@@ -131,7 +150,7 @@ func (r *ScoreRepository) GetScoresByUserID(ctx context.Context, user_id int64) 
 	return scores, rows.Err()
 }
 
-func (r *ScoreRepository) GetAllScores(ctx context.Context) ([]models.Scores, error) {
+func (r *PostgresScoreRepository) GetAllScores(ctx context.Context) ([]models.Scores, error) {
 	query := `SELECT 
 				id, brier_score, log2_score, logn_score, user_id, forecast_id, created
 			  FROM scores 
@@ -162,7 +181,7 @@ func (r *ScoreRepository) GetAllScores(ctx context.Context) ([]models.Scores, er
 	return scores, rows.Err()
 }
 
-func (r *ScoreRepository) UpdateScore(ctx context.Context, score *models.Scores) error {
+func (r *PostgresScoreRepository) UpdateScore(ctx context.Context, score *models.Scores) error {
 	query := `UPDATE scores 
 			  SET brier_score = $1, log2_score = $2, logn_score = $3
 			  WHERE id = $4`
@@ -186,7 +205,7 @@ func (r *ScoreRepository) UpdateScore(ctx context.Context, score *models.Scores)
 	return nil
 }
 
-func (r *ScoreRepository) DeleteScore(ctx context.Context, score_id int64) error {
+func (r *PostgresScoreRepository) DeleteScore(ctx context.Context, score_id int64) error {
 	query := `DELETE FROM scores WHERE id = $1`
 
 	result, err := r.db.ExecContext(ctx, query, score_id)
@@ -206,7 +225,7 @@ func (r *ScoreRepository) DeleteScore(ctx context.Context, score_id int64) error
 
 // Aggregate score operations
 // all users
-func (r *ScoreRepository) GetOverallScores(ctx context.Context) (*models.OverallScores, error) {
+func (r *PostgresScoreRepository) GetOverallScores(ctx context.Context) (*models.OverallScores, error) {
 	query := `SELECT 
 				AVG(brier_score) as avg_brier,
 				AVG(log2_score) as avg_log2,
@@ -230,7 +249,7 @@ func (r *ScoreRepository) GetOverallScores(ctx context.Context) (*models.Overall
 	return &overallScores, nil
 }
 
-func (r *ScoreRepository) GetCategoryScores(ctx context.Context, category string) (*models.CategoryScores, error) {
+func (r *PostgresScoreRepository) GetCategoryScores(ctx context.Context, category string) (*models.CategoryScores, error) {
 	query := `SELECT 
 				AVG(brier_score) as avg_brier,
 				AVG(log2_score) as avg_log2,
@@ -259,7 +278,7 @@ func (r *ScoreRepository) GetCategoryScores(ctx context.Context, category string
 	return &categoryScores, nil
 }
 
-func (r *ScoreRepository) GetCategoryScoresByUsers(ctx context.Context, category string) ([]models.UserCategoryScores, error) {
+func (r *PostgresScoreRepository) GetCategoryScoresByUsers(ctx context.Context, category string) ([]models.UserCategoryScores, error) {
 	query := `SELECT 
 				AVG(s.brier_score) as avg_brier,
 				AVG(s.log2_score) as avg_log2,
@@ -298,7 +317,7 @@ func (r *ScoreRepository) GetCategoryScoresByUsers(ctx context.Context, category
 	return userCategoryScores, rows.Err()
 }
 
-func (r *ScoreRepository) GetOverallScoresByUsers(ctx context.Context) ([]models.UserScores, error) {
+func (r *PostgresScoreRepository) GetOverallScoresByUsers(ctx context.Context) ([]models.UserScores, error) {
 	query := `SELECT 
 				AVG(brier_score) as avg_brier,
 				AVG(log2_score) as avg_log2,
@@ -332,7 +351,7 @@ func (r *ScoreRepository) GetOverallScoresByUsers(ctx context.Context) ([]models
 }
 
 // user-specific
-func (r *ScoreRepository) GetUserCategoryScores(ctx context.Context, userID int64, category string) (*models.UserCategoryScores, error) {
+func (r *PostgresScoreRepository) GetUserCategoryScores(ctx context.Context, userID int64, category string) (*models.UserCategoryScores, error) {
 	query := `SELECT 
 				AVG(brier_score) as avg_brier,
 				AVG(log2_score) as avg_log2,
@@ -359,7 +378,7 @@ func (r *ScoreRepository) GetUserCategoryScores(ctx context.Context, userID int6
 	return &userCategoryScores, nil
 }
 
-func (r *ScoreRepository) GetUserOverallScores(ctx context.Context, user_id int64) (*models.UserScores, error) {
+func (r *PostgresScoreRepository) GetUserOverallScores(ctx context.Context, user_id int64) (*models.UserScores, error) {
 	query := `SELECT 
 				AVG(brier_score) as avg_brier,
 				AVG(log2_score) as avg_log2,

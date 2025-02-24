@@ -9,15 +9,27 @@ import (
 	_ "github.com/jackc/pgx/v5"
 )
 
-type ForecastPointRepository struct {
+// ForecastPointRepository defines the interface for forecast point data operations
+type ForecastPointRepository interface {
+	GetAllForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error)
+	GetForecastPointsByForecastID(ctx context.Context, id int64) ([]*models.ForecastPoint, error)
+	GetForecastPointsByForecastIDAndUser(ctx context.Context, id int64, userID int64) ([]*models.ForecastPoint, error)
+	CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error
+	GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error)
+	GetLatestForecastPointsByUser(ctx context.Context, userID int64) ([]*models.ForecastPoint, error)
+}
+
+// PostgresForecastPointRepository implements the ForecastPointRepository interface
+type PostgresForecastPointRepository struct {
 	db *database.DB
 }
 
-func NewForecastPointRepository(db *database.DB) *ForecastPointRepository {
-	return &ForecastPointRepository{db: db}
+// NewForecastPointRepository creates a new PostgresForecastPointRepository instance
+func NewForecastPointRepository(db *database.DB) ForecastPointRepository {
+	return &PostgresForecastPointRepository{db: db}
 }
 
-func (r *ForecastPointRepository) GetAllForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
+func (r *PostgresForecastPointRepository) GetAllForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
 				update_id
 				, forecast_id
@@ -55,7 +67,7 @@ func (r *ForecastPointRepository) GetAllForecastPoints(ctx context.Context) ([]*
 	return forecast_points, rows.Err()
 }
 
-func (r *ForecastPointRepository) GetForecastPointsByForecastID(ctx context.Context, id int64) ([]*models.ForecastPoint, error) {
+func (r *PostgresForecastPointRepository) GetForecastPointsByForecastID(ctx context.Context, id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
 				update_id
 				, forecast_id
@@ -93,7 +105,7 @@ func (r *ForecastPointRepository) GetForecastPointsByForecastID(ctx context.Cont
 	return forecast_points, rows.Err()
 }
 
-func (r *ForecastPointRepository) GetForecastPointsByForecastIDAndUser(ctx context.Context, id int64, user_id int64) ([]*models.ForecastPoint, error) {
+func (r *PostgresForecastPointRepository) GetForecastPointsByForecastIDAndUser(ctx context.Context, id int64, user_id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
 				update_id
 				, forecast_id
@@ -132,7 +144,7 @@ func (r *ForecastPointRepository) GetForecastPointsByForecastIDAndUser(ctx conte
 	return forecast_points, rows.Err()
 }
 
-func (r *ForecastPointRepository) CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error {
+func (r *PostgresForecastPointRepository) CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error {
 	fp.CreatedAt = time.Now()
 
 	query := `INSERT INTO forecast_points (forecast_id
@@ -150,7 +162,7 @@ func (r *ForecastPointRepository) CreateForecastPoint(ctx context.Context, fp *m
 	return err
 }
 
-func (r *ForecastPointRepository) GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
+func (r *PostgresForecastPointRepository) GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
 	query := `SELECT distinct on (forecast_id)
 				update_id
 				, forecast_id
@@ -188,7 +200,7 @@ func (r *ForecastPointRepository) GetLatestForecastPoints(ctx context.Context) (
 	return forecast_points, rows.Err()
 }
 
-func (r *ForecastPointRepository) GetLatestForecastPointsByUser(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
+func (r *PostgresForecastPointRepository) GetLatestForecastPointsByUser(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT distinct on (forecast_id)
 				update_id
 				, forecast_id
