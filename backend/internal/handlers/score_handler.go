@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/internal/auth"
 	"backend/internal/cache"
 	"backend/internal/models"
 	"backend/internal/services"
@@ -68,11 +69,21 @@ func (h *ScoreHandler) GetScores(w http.ResponseWriter, r *http.Request) {
 
 // Handlers to modify/create scores
 func (h *ScoreHandler) CreateScore(w http.ResponseWriter, r *http.Request) {
+	// Get claims from context
+	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var score models.Scores
 	if err := json.NewDecoder(r.Body).Decode(&score); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// Ensure score is created for authenticated user
+	score.UserID = claims.UserID
 
 	if err := h.service.CreateScore(r.Context(), &score); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -82,9 +93,22 @@ func (h *ScoreHandler) CreateScore(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ScoreHandler) DeleteScore(w http.ResponseWriter, r *http.Request) {
+	// Get claims from context
+	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var score models.Scores
 	if err := json.NewDecoder(r.Body).Decode(&score); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Verify user owns this score
+	if score.UserID != claims.UserID {
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 

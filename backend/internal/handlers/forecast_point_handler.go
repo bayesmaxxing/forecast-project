@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/internal/auth"
 	"backend/internal/cache"
 	"backend/internal/models"
 	"backend/internal/services"
@@ -52,11 +53,21 @@ func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *
 }
 
 func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *http.Request) {
+	// Get claims from context
+	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var point models.ForecastPoint
 	if err := json.NewDecoder(r.Body).Decode(&point); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// Set the user ID from the JWT claims
+	point.UserID = claims.UserID
 
 	err := h.service.CreateForecastPoint(r.Context(), &point)
 	if err != nil {
@@ -82,7 +93,7 @@ func (h *ForecastPointHandler) ListAllForecastPoints(w http.ResponseWriter, r *h
 }
 
 func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r *http.Request) {
-	if cachedPoints, found := h.cache.Get("latest"); found {
+	if cachedPoints, found := h.cache.Get("latest_all"); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
 	}
@@ -93,7 +104,29 @@ func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r
 		return
 	}
 
-	h.cache.Set("latest", latestForecastPoints, 24*time.Hour)
+	h.cache.Set("latest_all", latestForecastPoints, 24*time.Hour)
+
+	respondJSON(w, http.StatusOK, latestForecastPoints)
+}
+
+func (h *ForecastPointHandler) ListLatestForecastPointsByUser(w http.ResponseWriter, r *http.Request) {
+	var userID int64
+	if err := json.NewDecoder(r.Body).Decode(&userID); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if cachedPoints, found := h.cache.Get("latest_user_" + strconv.FormatInt(userID, 10)); found {
+		respondJSON(w, http.StatusOK, cachedPoints)
+		return
+	}
+
+	latestForecastPoints, err := h.service.GetLatestForecastPointsByUser(r.Context(), userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.cache.Set("latest_user_"+strconv.FormatInt(userID, 10), latestForecastPoints, 24*time.Hour)
 
 	respondJSON(w, http.StatusOK, latestForecastPoints)
 }

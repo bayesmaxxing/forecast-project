@@ -29,6 +29,14 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	// Get claims from context
+	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get requested user ID to delete
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
@@ -38,6 +46,12 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Only allow users to delete their own account or require admin role
+	if userID != claims.UserID {
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -60,6 +74,13 @@ func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	// Get claims from context
+	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var changePasswordRequest struct {
 		OldPassword string `json:"old_password"`
 		NewPassword string `json:"new_password"`
@@ -70,38 +91,12 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if err := h.service.ChangePassword(r.Context(), userID, changePasswordRequest.OldPassword, changePasswordRequest.NewPassword); err != nil {
+	if err := h.service.ChangePassword(r.Context(), claims.UserID, changePasswordRequest.OldPassword, changePasswordRequest.NewPassword); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	respondJSON(w, http.StatusOK, map[string]string{"message": "Password changed successfully"})
-}
-
-func (h *UserHandler) VerifyPassword(w http.ResponseWriter, r *http.Request) {
-	var verifyPasswordRequest struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&verifyPasswordRequest); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	user, err := h.service.VerifyPassword(r.Context(), verifyPasswordRequest.Username, verifyPasswordRequest.Password)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-
-	respondJSON(w, http.StatusOK, user)
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {

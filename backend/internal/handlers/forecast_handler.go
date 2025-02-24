@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/internal/auth"
 	"backend/internal/cache"
 	"backend/internal/models"
 	"backend/internal/services"
@@ -66,11 +67,20 @@ func (h *ForecastHandler) GetForecast(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ForecastHandler) CreateForecast(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var forecast models.Forecast
 	if err := json.NewDecoder(r.Body).Decode(&forecast); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// Set user ID from claims
+	forecast.UserID = claims.UserID
 
 	err := h.service.CreateForecast(r.Context(), &forecast)
 	if err != nil {
@@ -79,14 +89,17 @@ func (h *ForecastHandler) CreateForecast(w http.ResponseWriter, r *http.Request)
 	}
 
 	h.cache.DeleteByPrefix("forecasts")
-
-	message := "forecast created"
-	respondJSON(w, http.StatusCreated, message)
+	respondJSON(w, http.StatusCreated, "forecast created")
 }
 
 func (h *ForecastHandler) DeleteForecast(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var request struct {
-		UserID     int64 `json:"user_id"`
 		ForecastID int64 `json:"forecast_id"`
 	}
 
@@ -95,22 +108,27 @@ func (h *ForecastHandler) DeleteForecast(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := h.service.DeleteForecast(r.Context(), request.ForecastID, request.UserID); err != nil {
+	// Use UserID from claims
+	if err := h.service.DeleteForecast(r.Context(), request.ForecastID, claims.UserID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	h.cache.DeleteByPrefix("forecasts")
-
 	respondJSON(w, http.StatusOK, "forecast deleted")
 }
 
 func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var resolution struct {
-		ID         int64
-		UserID     int64
-		Resolution string
-		Comment    string
+		ID         int64  `json:"id"`
+		Resolution string `json:"resolution"`
+		Comment    string `json:"comment"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&resolution); err != nil {
@@ -118,7 +136,8 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ownership, err := h.service.CheckForecastOwnership(r.Context(), resolution.ID, resolution.UserID)
+	// Use UserID from claims
+	ownership, err := h.service.CheckForecastOwnership(r.Context(), resolution.ID, claims.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -138,9 +157,7 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 	}
 
 	h.cache.DeleteByPrefix("forecasts")
-
-	message := "forecast resolved"
-	respondJSON(w, http.StatusOK, message)
+	respondJSON(w, http.StatusOK, "forecast resolved")
 }
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
