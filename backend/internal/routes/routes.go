@@ -44,22 +44,22 @@ func Setup(mux *http.ServeMux, handlers *Handlers) {
 
 func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
 	// forecasts
-	mux.HandleFunc("GET /forecasts", handlers.Forecast.ListForecasts)
+	mux.HandleFunc("POST /forecasts", handlers.Forecast.ListForecasts)
 	mux.HandleFunc("GET /forecasts/{id}", handlers.Forecast.GetForecast)
 
 	// forecast points
 	mux.HandleFunc("GET /forecast-points/{id}", handlers.ForecastPoint.ListForecastPointsbyID)
 	mux.HandleFunc("GET /forecast-points", handlers.ForecastPoint.ListAllForecastPoints)
 	mux.HandleFunc("GET /forecast-points/latest", handlers.ForecastPoint.ListLatestForecastPoints)
-	mux.HandleFunc("GET /forecast-points/latest_by_user", handlers.ForecastPoint.ListLatestForecastPointsByUser)
+	mux.HandleFunc("GET /forecast-points/latest/{user_id}", handlers.ForecastPoint.ListLatestForecastPointsByUser)
 
 	// scores (single-score)
-	mux.HandleFunc("GET /scores", handlers.Score.GetScores)
+	mux.HandleFunc("POST /scores", handlers.Score.GetScores)
 	mux.HandleFunc("GET /scores/all", handlers.Score.GetAllScores)
 
 	// scores (aggregate)
-	mux.HandleFunc("GET /scores/aggregate", handlers.Score.GetAggregateScores)
-	mux.HandleFunc("GET /scores/aggregate_by_user", handlers.Score.GetUserAggregateScores)
+	mux.HandleFunc("POST /scores/aggregate", handlers.Score.GetAggregateScores)
+	mux.HandleFunc("POST /scores/aggregate_by_user", handlers.Score.GetUserAggregateScores)
 
 	// users
 	mux.HandleFunc("GET /users", handlers.User.ListUsers)
