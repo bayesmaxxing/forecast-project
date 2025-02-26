@@ -3,12 +3,10 @@ package cache
 import (
 	"strings"
 	"sync"
-	"time"
 )
 
 type CacheItem struct {
-	Value      any
-	Expiration int64
+	Value any
 }
 
 type Cache struct {
@@ -22,14 +20,12 @@ func NewCache() *Cache {
 	}
 }
 
-func (c *Cache) Set(key string, value interface{}, duration time.Duration) {
+func (c *Cache) Set(key string, value any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	expiration := time.Now().Add(duration).UnixNano()
 	c.items[key] = CacheItem{
-		Value:      value,
-		Expiration: expiration,
+		Value: value,
 	}
 }
 
@@ -39,10 +35,6 @@ func (c *Cache) Get(key string) (interface{}, bool) {
 
 	item, found := c.items[key]
 	if !found {
-		return nil, false
-	}
-
-	if time.Now().UnixNano() > item.Expiration {
 		return nil, false
 	}
 

@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type ForecastPointHandler struct {
@@ -104,18 +103,25 @@ func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r
 		return
 	}
 
-	h.cache.Set("latest_all", latestForecastPoints, 24*time.Hour)
+	h.cache.Set("latest_all", latestForecastPoints)
 
 	respondJSON(w, http.StatusOK, latestForecastPoints)
 }
 
 func (h *ForecastPointHandler) ListLatestForecastPointsByUser(w http.ResponseWriter, r *http.Request) {
-	var userID int64
-	if err := json.NewDecoder(r.Body).Decode(&userID); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	userIDStr := r.URL.Query().Get("user_id")
+	if userIDStr == "" {
+		http.Error(w, "user_id query parameter is required", http.StatusBadRequest)
 		return
 	}
-	if cachedPoints, found := h.cache.Get("latest_user_" + strconv.FormatInt(userID, 10)); found {
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid user_id format", http.StatusBadRequest)
+		return
+	}
+
+	if cachedPoints, found := h.cache.Get("latest_user_" + userIDStr); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
 	}
@@ -126,7 +132,7 @@ func (h *ForecastPointHandler) ListLatestForecastPointsByUser(w http.ResponseWri
 		return
 	}
 
-	h.cache.Set("latest_user_"+strconv.FormatInt(userID, 10), latestForecastPoints, 24*time.Hour)
+	h.cache.Set("latest_user_"+userIDStr, latestForecastPoints)
 
 	respondJSON(w, http.StatusOK, latestForecastPoints)
 }

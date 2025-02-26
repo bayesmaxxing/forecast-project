@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type ForecastHandler struct {
@@ -44,7 +43,7 @@ func (h *ForecastHandler) ListForecasts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.cache.Set(cacheKey, forecasts, 24*time.Hour)
+	h.cache.Set(cacheKey, forecasts)
 
 	respondJSON(w, http.StatusOK, forecasts)
 }

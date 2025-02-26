@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type ScoreHandler struct {
@@ -162,7 +161,7 @@ func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var scores interface{}
+	var scores any
 	var err error
 
 	switch {
@@ -185,7 +184,7 @@ func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request
 	}
 
 	// Store in cache (with default expiration time)
-	h.cache.Set(cacheKey, scores, 24*time.Hour)
+	h.cache.Set(cacheKey, scores)
 	respondJSON(w, http.StatusOK, scores)
 }
 
@@ -219,7 +218,7 @@ func (h *ScoreHandler) GetUserAggregateScores(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	var scores interface{}
+	var scores any
 	var err error
 
 	switch {
@@ -237,7 +236,6 @@ func (h *ScoreHandler) GetUserAggregateScores(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Store in cache (with default expiration time)
-	h.cache.Set(cacheKey, scores, 24*time.Hour)
+	h.cache.Set(cacheKey, scores)
 	respondJSON(w, http.StatusOK, scores)
 }
