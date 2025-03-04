@@ -44,7 +44,7 @@ func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int
 					, resolution
 					, resolved
 					, comment
-				FROM forecast_v2 
+				FROM forecasts 
 				WHERE id = $1`
 
 	var f models.Forecast
@@ -53,6 +53,7 @@ func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int
 		&f.Question,
 		&f.Category,
 		&f.CreatedAt,
+		&f.UserID,
 		&f.ResolutionCriteria,
 		&f.Resolution,
 		&f.ResolvedAt,
@@ -65,7 +66,7 @@ func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int
 }
 
 func (r *PostgresForecastRepository) CheckForecastOwnership(ctx context.Context, id int64, user_id int64) (bool, error) {
-	query := `SELECT user_id FROM forecast_v2 WHERE id = $1`
+	query := `SELECT user_id FROM forecasts WHERE id = $1`
 	var forecastUserID int64
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&forecastUserID)
 	if err != nil {
@@ -78,14 +79,14 @@ func (r *PostgresForecastRepository) CheckForecastOwnership(ctx context.Context,
 func (r *PostgresForecastRepository) CreateForecast(ctx context.Context, f *models.Forecast) error {
 	f.CreatedAt = time.Now()
 
-	query := `INSERT INTO forecast_v2 (
+	query := `INSERT INTO forecasts (
 				question
 				, category
 				, created
 				, user_id
 				, resolution_criteria
 				)
-				VALUES ($1, $2, $3, $4, $5, $6) 
+				VALUES ($1, $2, $3, $4, $5) 
 				RETURNING id`
 
 	err := r.db.QueryRowContext(ctx, query, f.Question, f.Category, f.CreatedAt, f.ResolutionCriteria).Scan(&f.ID)
@@ -103,7 +104,7 @@ func (r *PostgresForecastRepository) ListOpenForecasts(ctx context.Context) ([]*
 				, resolution
 				, resolved
 				, comment 
-				FROM forecast_v2
+				FROM forecasts
 				WHERE resolved is null`
 
 	return r.queryForecasts(ctx, query)
@@ -120,7 +121,7 @@ func (r *PostgresForecastRepository) ListResolvedForecasts(ctx context.Context) 
 				, resolution
 				, resolved
 				, comment 
-				FROM forecast_v2
+				FROM forecasts
 				WHERE resolved is not null`
 
 	return r.queryForecasts(ctx, query)
@@ -137,7 +138,7 @@ func (r *PostgresForecastRepository) ListOpenForecastsWithCategory(ctx context.C
 				, resolution
 				, resolved
 				, comment 
-				FROM forecast_v2
+				FROM forecasts
 				WHERE resolved is null
 				AND lower(category) like $1`
 	categoryPattern := "%" + category + "%"
@@ -156,7 +157,7 @@ func (r *PostgresForecastRepository) ListResolvedForecastsWithCategory(ctx conte
 				, resolution
 				, resolved
 				, comment 
-				FROM forecast_v2
+				FROM forecasts
 				WHERE resolved is not null
 				AND lower(category) like $1`
 	categoryPattern := "%" + category + "%"
@@ -172,14 +173,14 @@ func (r *PostgresForecastRepository) UpdateForecast(ctx context.Context, f *mode
 
 	defer tx.Rollback()
 
-	query := `UPDATE forecast_v2 SET 
+	query := `UPDATE forecasts SET 
 				question = $1
 				, category = $2
 				, resolution_criteria = $3
 				, resolution = $4
 				, resolved = $5
-				, comment = $9
-			 WHERE id = $10`
+				, comment = $6
+			 WHERE id = $7`
 
 	_, err = r.db.ExecContext(ctx, query,
 		f.Question,
@@ -206,13 +207,13 @@ func (r *PostgresForecastRepository) DeleteForecast(ctx context.Context, id int6
 	defer tx.Rollback()
 	//if this delete fails, due to user_id not owning forecast, return and do not delete forecast points.
 	//also checking this in service, but this adds redundancy since I delete all user forecast points.
-	queryForecasts := `DELETE FROM forecast_v2 WHERE id = $1 and user_id = $2`
+	queryForecasts := `DELETE FROM forecasts WHERE id = $1 and user_id = $2`
 	_, err = tx.ExecContext(ctx, queryForecasts, id, user_id)
 	if err != nil {
 		return err
 	}
 
-	queryForecastPoints := `DELETE FROM forecast_points WHERE forecast_id = $1`
+	queryForecastPoints := `DELETE FROM points WHERE forecast_id = $1`
 	_, err = tx.ExecContext(ctx, queryForecastPoints, id)
 	if err != nil {
 		return err

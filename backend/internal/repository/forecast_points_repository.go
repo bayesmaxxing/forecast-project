@@ -31,15 +31,13 @@ func NewForecastPointRepository(db *database.DB) ForecastPointRepository {
 
 func (r *PostgresForecastPointRepository) GetAllForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
-				update_id
+				id
 				, forecast_id
 				, point_forecast
-				, upper_ci
-				, lower_ci
 				, reason
 				, created
 				, user_id
-				FROM forecast_points `
+				FROM points`
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
@@ -55,8 +53,6 @@ func (r *PostgresForecastPointRepository) GetAllForecastPoints(ctx context.Conte
 		if err := rows.Scan(&fp.ID,
 			&fp.ForecastID,
 			&fp.PointForecast,
-			&fp.UpperCI,
-			&fp.LowerCI,
 			&fp.Reason,
 			&fp.CreatedAt,
 			&fp.UserID); err != nil {
@@ -69,15 +65,13 @@ func (r *PostgresForecastPointRepository) GetAllForecastPoints(ctx context.Conte
 
 func (r *PostgresForecastPointRepository) GetForecastPointsByForecastID(ctx context.Context, id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
-				update_id
+				id
 				, forecast_id
 				, point_forecast
-				, upper_ci
-				, lower_ci
 				, reason
 				, created
 				, user_id
-				FROM forecast_points 
+				FROM points 
 				WHERE forecast_id = $1`
 
 	rows, err := r.db.QueryContext(ctx, query, id)
@@ -93,8 +87,6 @@ func (r *PostgresForecastPointRepository) GetForecastPointsByForecastID(ctx cont
 		if err := rows.Scan(&fp.ID,
 			&fp.ForecastID,
 			&fp.PointForecast,
-			&fp.UpperCI,
-			&fp.LowerCI,
 			&fp.Reason,
 			&fp.CreatedAt,
 			&fp.UserID); err != nil {
@@ -107,15 +99,13 @@ func (r *PostgresForecastPointRepository) GetForecastPointsByForecastID(ctx cont
 
 func (r *PostgresForecastPointRepository) GetForecastPointsByForecastIDAndUser(ctx context.Context, id int64, user_id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
-				update_id
+				id
 				, forecast_id
 				, point_forecast
-				, upper_ci
-				, lower_ci
 				, reason
 				, created
 				, user_id
-				FROM forecast_points 
+				FROM points 
 				WHERE forecast_id = $1
 				AND user_id = $2`
 
@@ -132,8 +122,6 @@ func (r *PostgresForecastPointRepository) GetForecastPointsByForecastIDAndUser(c
 		if err := rows.Scan(&fp.ID,
 			&fp.ForecastID,
 			&fp.PointForecast,
-			&fp.UpperCI,
-			&fp.LowerCI,
 			&fp.Reason,
 			&fp.CreatedAt,
 			&fp.UserID); err != nil {
@@ -149,30 +137,25 @@ func (r *PostgresForecastPointRepository) CreateForecastPoint(ctx context.Contex
 
 	query := `INSERT INTO forecast_points (forecast_id
 											, point_forecast
-											, upper_ci
-											, lower_ci
 											, created
 											, reason
 											, user_id)
-				VALUES ($1, $2, $3, $4, $5, $6, $7)
-				RETURNING update_id`
+				VALUES ($1, $2, $3, $4, $5)
+				RETURNING id`
 
-	err := r.db.QueryRowContext(ctx, query, fp.ForecastID, fp.PointForecast, fp.UpperCI,
-		fp.LowerCI, fp.CreatedAt, fp.Reason, fp.UserID).Scan(&fp.ID)
+	err := r.db.QueryRowContext(ctx, query, fp.ForecastID, fp.PointForecast, fp.CreatedAt, fp.Reason, fp.UserID).Scan(&fp.ID)
 	return err
 }
 
 func (r *PostgresForecastPointRepository) GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
 	query := `SELECT distinct on (forecast_id)
-				update_id
+				id
 				, forecast_id
 				, point_forecast
-				, upper_ci
-				, lower_ci
 				, created
 				, reason
 				, user_id
-				FROM forecast_points
+				FROM points
 				ORDER BY forecast_id, created DESC;`
 
 	rows, err := r.db.QueryContext(ctx, query)
@@ -188,8 +171,6 @@ func (r *PostgresForecastPointRepository) GetLatestForecastPoints(ctx context.Co
 		if err := rows.Scan(&fp.ID,
 			&fp.ForecastID,
 			&fp.PointForecast,
-			&fp.UpperCI,
-			&fp.LowerCI,
 			&fp.CreatedAt,
 			&fp.Reason,
 			&fp.UserID); err != nil {
@@ -202,15 +183,13 @@ func (r *PostgresForecastPointRepository) GetLatestForecastPoints(ctx context.Co
 
 func (r *PostgresForecastPointRepository) GetLatestForecastPointsByUser(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT distinct on (forecast_id)
-				update_id
+				id
 				, forecast_id
 				, point_forecast
-				, upper_ci
-				, lower_ci
 				, created
 				, reason
 				, user_id
-				FROM forecast_points
+				FROM points
 				WHERE user_id = $1
 				ORDER BY forecast_id, created DESC;`
 
@@ -227,8 +206,6 @@ func (r *PostgresForecastPointRepository) GetLatestForecastPointsByUser(ctx cont
 		if err := rows.Scan(&fp.ID,
 			&fp.ForecastID,
 			&fp.PointForecast,
-			&fp.UpperCI,
-			&fp.LowerCI,
 			&fp.CreatedAt,
 			&fp.Reason,
 			&fp.UserID); err != nil {

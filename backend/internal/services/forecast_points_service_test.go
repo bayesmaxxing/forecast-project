@@ -12,14 +12,14 @@ import (
 
 // MockForecastPointRepository implements the repository.ForecastPointRepository interface
 type MockForecastPointRepository struct {
-	points                []*models.ForecastPoint
-	nextID                int64
-	getAllErr             error
-	getByForecastIDErr    error
-	getByForecastUserErr  error
-	createErr             error
-	getLatestErr          error
-	getLatestByUserErr    error
+	points               []*models.ForecastPoint
+	nextID               int64
+	getAllErr            error
+	getByForecastIDErr   error
+	getByForecastUserErr error
+	createErr            error
+	getLatestErr         error
+	getLatestByUserErr   error
 }
 
 func NewMockForecastPointRepository() repository.ForecastPointRepository {
@@ -240,8 +240,6 @@ func TestCreateForecastPoint(t *testing.T) {
 		ForecastID:    1,
 		PointForecast: 0.7,
 		UserID:        1,
-		UpperCI:       0.8,
-		LowerCI:       0.6,
 		Reason:        "Test reason",
 	}
 	err := service.CreateForecastPoint(ctx, testPoint)

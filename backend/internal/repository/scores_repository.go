@@ -251,15 +251,15 @@ func (r *PostgresScoreRepository) GetOverallScores(ctx context.Context) (*models
 
 func (r *PostgresScoreRepository) GetCategoryScores(ctx context.Context, category string) (*models.CategoryScores, error) {
 	query := `SELECT 
-				AVG(brier_score) as avg_brier,
-				AVG(log2_score) as avg_log2,
-				AVG(logn_score) as avg_logn,
-				COUNT(DISTINCT user_id) as total_users,
-				COUNT(DISTINCT forecast_id) as total_forecasts
+				AVG(s.brier_score) as avg_brier,
+				AVG(s.log2_score) as avg_log2,
+				AVG(s.logn_score) as avg_logn,
+				COUNT(DISTINCT s.user_id) as total_users,
+				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
-			  JOIN forecast_v2 f
+			  JOIN forecasts f
 			  ON s.forecast_id = f.id
-			  WHERE f.category LIKE ($1)`
+			  WHERE lower(f.category) LIKE lower($1)`
 
 	categoryPattern := "%" + category + "%"
 
@@ -274,6 +274,7 @@ func (r *PostgresScoreRepository) GetCategoryScores(ctx context.Context, categor
 	if err != nil {
 		return nil, err
 	}
+	categoryScores.Category = category
 
 	return &categoryScores, nil
 }
@@ -286,9 +287,9 @@ func (r *PostgresScoreRepository) GetCategoryScoresByUsers(ctx context.Context, 
 				s.user_id,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
-			  JOIN forecast_v2 f
+			  JOIN forecasts f
 			  ON s.forecast_id = f.id
-			  WHERE f.category LIKE ($1)
+			  WHERE lower(f.category) LIKE lower($1)
 			  GROUP BY s.user_id`
 
 	categoryPattern := "%" + category + "%"
@@ -307,11 +308,11 @@ func (r *PostgresScoreRepository) GetCategoryScoresByUsers(ctx context.Context, 
 			&u.Log2Score,
 			&u.LogNScore,
 			&u.UserID,
-			&u.Category,
 			&u.TotalForecasts,
 		); err != nil {
 			return nil, err
 		}
+		u.Category = category
 		userCategoryScores = append(userCategoryScores, u)
 	}
 	return userCategoryScores, rows.Err()
@@ -353,14 +354,14 @@ func (r *PostgresScoreRepository) GetOverallScoresByUsers(ctx context.Context) (
 // user-specific
 func (r *PostgresScoreRepository) GetUserCategoryScores(ctx context.Context, userID int64, category string) (*models.UserCategoryScores, error) {
 	query := `SELECT 
-				AVG(brier_score) as avg_brier,
-				AVG(log2_score) as avg_log2,
-				AVG(logn_score) as avg_logn,
-				COUNT(DISTINCT forecast_id) as total_forecasts
+				AVG(s.brier_score) as avg_brier,
+				AVG(s.log2_score) as avg_log2,
+				AVG(s.logn_score) as avg_logn,
+				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
-			  JOIN forecast_v2 f
+			  JOIN forecasts f
 			  ON s.forecast_id = f.id
-			  WHERE s.user_id = $1 AND f.category LIKE ($2)`
+			  WHERE s.user_id = $1 AND lower(f.category) LIKE lower($2)`
 
 	categoryPattern := "%" + category + "%"
 
@@ -374,19 +375,19 @@ func (r *PostgresScoreRepository) GetUserCategoryScores(ctx context.Context, use
 	if err != nil {
 		return nil, err
 	}
+	userCategoryScores.Category = category
+	userCategoryScores.UserID = userID
 
 	return &userCategoryScores, nil
 }
 
 func (r *PostgresScoreRepository) GetUserOverallScores(ctx context.Context, user_id int64) (*models.UserScores, error) {
 	query := `SELECT 
-				AVG(brier_score) as avg_brier,
-				AVG(log2_score) as avg_log2,
-				AVG(logn_score) as avg_logn,
-				COUNT(DISTINCT forecast_id) as total_forecasts
+				AVG(s.brier_score) as avg_brier,
+				AVG(s.log2_score) as avg_log2,
+				AVG(s.logn_score) as avg_logn,
+				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
-			  JOIN forecast_v2 f
-			  ON s.forecast_id = f.id
 			  WHERE s.user_id = $1`
 
 	var userScores models.UserScores
@@ -394,7 +395,6 @@ func (r *PostgresScoreRepository) GetUserOverallScores(ctx context.Context, user
 		&userScores.BrierScore,
 		&userScores.Log2Score,
 		&userScores.LogNScore,
-		&userScores.UserID,
 		&userScores.TotalForecasts,
 	)
 	if err != nil {

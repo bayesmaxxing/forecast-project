@@ -127,7 +127,7 @@ func (h *ScoreHandler) GetAllScores(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, scores)
 }
 
-// Handlers for aggregate scores
+// Handler for aggregate scores
 type aggregateScoresRequest struct {
 	Category *string `json:"category"`
 	User_id  *int64  `json:"user_id"`
@@ -141,17 +141,21 @@ func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if request.User_id != nil {
-		http.Error(w, "user_id is not allowed for this endpoint", http.StatusBadRequest)
-		return
+	// Set default value for ByUser if it's nil
+	byUser := false
+	if request.ByUser != nil {
+		byUser = *request.ByUser
 	}
 
 	// Generate cache key based on request parameters
 	cacheKey := "aggregate_scores"
+	if request.User_id != nil {
+		cacheKey += "_user_" + strconv.FormatInt(*request.User_id, 10)
+	}
 	if request.Category != nil {
 		cacheKey += "_cat_" + *request.Category
 	}
-	if request.ByUser != nil && *request.ByUser {
+	if byUser && request.User_id == nil {
 		cacheKey += "_by_user"
 	}
 
@@ -165,13 +169,20 @@ func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request
 	var err error
 
 	switch {
-	case request.Category != nil && *request.ByUser && request.User_id == nil:
+	// For specific user cases
+	case request.User_id != nil && request.Category != nil:
+		scores, err = h.service.GetUserCategoryScores(r.Context(), *request.User_id, *request.Category)
+	case request.User_id != nil && request.Category == nil:
+		scores, err = h.service.GetUserOverallScores(r.Context(), *request.User_id)
+
+	// For all users cases
+	case request.User_id == nil && request.Category != nil && byUser:
 		scores, err = h.service.GetCategoryScoresByUsers(r.Context(), *request.Category)
-	case request.Category == nil && *request.ByUser && request.User_id == nil:
+	case request.User_id == nil && request.Category == nil && byUser:
 		scores, err = h.service.GetOverallScoresByUsers(r.Context())
-	case request.Category != nil && !*request.ByUser && request.User_id == nil:
+	case request.User_id == nil && request.Category != nil && !byUser:
 		scores, err = h.service.GetCategoryScores(r.Context(), *request.Category)
-	case request.Category == nil && !*request.ByUser && request.User_id == nil:
+	case request.User_id == nil && request.Category == nil && !byUser:
 		scores, err = h.service.GetOverallScores(r.Context())
 	default:
 		http.Error(w, "invalid request", http.StatusBadRequest)
@@ -183,59 +194,7 @@ func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Store in cache (with default expiration time)
-	h.cache.Set(cacheKey, scores)
-	respondJSON(w, http.StatusOK, scores)
-}
-
-// Handler for user-specific aggregate scores
-func (h *ScoreHandler) GetUserAggregateScores(w http.ResponseWriter, r *http.Request) {
-	var request aggregateScoresRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if request.User_id == nil {
-		http.Error(w, "user_id is required", http.StatusBadRequest)
-		return
-	}
-
-	if request.ByUser != nil {
-		http.Error(w, "by_user is not allowed for this endpoint", http.StatusBadRequest)
-		return
-	}
-
-	// Generate cache key based on request parameters
-	cacheKey := "user_aggregate_scores_" + strconv.FormatInt(*request.User_id, 10)
-	if request.Category != nil {
-		cacheKey += "_cat_" + *request.Category
-	}
-
-	// Try to get from cache first
-	if cachedData, found := h.cache.Get(cacheKey); found {
-		respondJSON(w, http.StatusOK, cachedData)
-		return
-	}
-
-	var scores any
-	var err error
-
-	switch {
-	case request.Category != nil:
-		scores, err = h.service.GetUserCategoryScores(r.Context(), *request.User_id, *request.Category)
-	case request.Category == nil:
-		scores, err = h.service.GetUserOverallScores(r.Context(), *request.User_id)
-	default:
-		http.Error(w, "invalid request", http.StatusBadRequest)
-		return
-	}
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+	// Store in cache
 	h.cache.Set(cacheKey, scores)
 	respondJSON(w, http.StatusOK, scores)
 }
