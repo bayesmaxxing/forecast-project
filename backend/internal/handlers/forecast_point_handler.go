@@ -136,3 +136,66 @@ func (h *ForecastPointHandler) ListLatestForecastPointsByUser(w http.ResponseWri
 
 	respondJSON(w, http.StatusOK, latestForecastPoints)
 }
+
+type GraphPoint struct {
+	PointForecast float64   `json:"point_forecast"`
+	CreatedAt     time.Time `json:"created"`
+	UserID        int64     `json:"user_id"`
+}
+
+func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/forecast-points/ordered/")
+	forecastIDStr := strings.TrimSuffix(path, "/")
+
+	if forecastIDStr == "" {
+		http.Error(w, "Forecast ID is required", http.StatusBadRequest)
+		return
+	}
+
+	forecastID, err := strconv.ParseInt(forecastIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid forecast ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if user_id query parameter is provided
+	userIDStr := r.URL.Query().Get("user_id")
+	
+	var points []*models.ForecastPoint
+	
+	if userIDStr != "" {
+		// If user_id is provided, return points for that user only
+		userID, err := strconv.ParseInt(userIDStr, 10, 64)
+		if err != nil {
+			http.Error(w, "Invalid user ID", http.StatusBadRequest)
+			return
+		}
+		
+		points, err = h.service.GetForecastPointsByForecastIDAndUser(r.Context(), forecastID, userID)
+	} else {
+		// If no user_id is provided, return all points
+		points, err = h.service.GetOrderedForecastPointsByForecastID(r.Context(), forecastID)
+	}
+	
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "No forecast points found for this ID", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Transform the points to a simpler format for graphing
+	graphPoints := make([]GraphPoint, len(points))
+	for i, p := range points {
+		graphPoints[i] = GraphPoint{
+			PointForecast: p.PointForecast,
+			CreatedAt:     p.CreatedAt,
+			UserID:        p.UserID,
+		}
+	}
+
+	respondJSON(w, http.StatusOK, graphPoints)
+}

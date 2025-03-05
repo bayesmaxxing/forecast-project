@@ -22,6 +22,10 @@ func (f *ForecastPointService) GetForecastPointsByForecastIDAndUser(ctx context.
 	return f.repo.GetForecastPointsByForecastIDAndUser(ctx, id, user_id)
 }
 
+func (f *ForecastPointService) GetOrderedForecastPointsByForecastID(ctx context.Context, id int64) ([]*models.ForecastPoint, error) {
+	return f.repo.GetOrderedForecastPointsByForecastID(ctx, id)
+}
+
 func (f *ForecastPointService) CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error {
 	return f.repo.CreateForecastPoint(ctx, fp)
 }
