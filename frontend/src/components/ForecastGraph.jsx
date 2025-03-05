@@ -16,8 +16,40 @@ function ForecastGraph({ data, options = {} }) {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const transformData = () => {
-    if (!data || !data.labels) return [];
+    if (!data || !data.labels || !data.datasets || data.datasets.length === 0) {
+      console.log('Invalid chart data format:', data);
+      return [];
+    }
     
+    // Log for debugging
+    console.log('Transforming chart data', {
+      labels: data.labels.length,
+      datasets: data.datasets.length,
+      sampleDataset: data.datasets[0].data.length
+    });
+    
+    // Handle sequence-based data (using prediction number on x-axis)
+    if (data._isSequenced) {
+      return data.labels.map((label, index) => {
+        // Start with name for x-axis
+        const dataPoint = { name: label };
+        
+        // For each dataset, add its value if it exists at this index
+        data.datasets.forEach(dataset => {
+          if (index < dataset.data.length) {
+            dataPoint[dataset.label] = dataset.data[index];
+            // Store the date string for tooltip display
+            if (dataset.dates && dataset.dates[index]) {
+              dataPoint[`${dataset.label}_date`] = dataset.dates[index];
+            }
+          }
+        });
+        
+        return dataPoint;
+      });
+    }
+    
+    // Original date-based implementation
     return data.labels.map((label, index) => {
       const dataPoint = { name: label };
       data.datasets.forEach(dataset => {
@@ -115,7 +147,20 @@ function ForecastGraph({ data, options = {} }) {
                   boxShadow: theme.shadows[1],
                   fontSize: { xs: 10, sm: 12 }
                 }}
-                labelFormatter={(label) => `Date: ${label}`}
+                formatter={(value, name, props) => {
+                  // Find the date field for this dataset
+                  const dateField = `${name}_date`;
+                  const date = props.payload[dateField];
+                  
+                  // Return the formatted value with date if available
+                  if (date) {
+                    return [`${value} (${date})`, name];
+                  }
+                  return [value, name];
+                }}
+                labelFormatter={(label) => {
+                  return `Prediction: ${label}`;
+                }}
               />
               <Legend 
                 wrapperStyle={{

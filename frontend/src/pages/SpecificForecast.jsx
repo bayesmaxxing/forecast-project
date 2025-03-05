@@ -13,6 +13,7 @@ import ForecastPointList from '../components/ForecastPointList';
 import ResolutionDetails from '../components/ResolutionDetails';
 import UpdateForecast from '../components/UpdateForecast';
 import ResolveForecast from '../components/ResolveForecast';
+import UserSelector from '../components/UserSelector';
 import { useForecastData } from '../services/hooks/useForecastData';
 import { usePointsData } from '../services/hooks/usePointsData';
 import { useScoresData } from '../services/hooks/useScoresData';
@@ -20,19 +21,40 @@ import { prepareChartData } from '../utils/chartDataUtils';
 
 function SpecificForecast() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState('all');
   let { id } = useParams();
   const numericId = parseInt(id, 10);
 
+  // Always use multi-user mode when all users are selected
+  // When a specific user is selected, still use single-user mode
+  const isMultiUserMode = selectedUserId === 'all';
+
   const { forecast, forecastLoading, forecastError } = useForecastData({id: id});
-  const { points, pointsLoading, pointsError } = usePointsData({id: id});
   
-  const { score, scoreLoading, scoreError } = useScoresData({forecast_id: numericId});
+  // Use the ordered points endpoint for better multi-user graph visualization
+  const { points, pointsLoading, pointsError } = usePointsData({
+    id: id,
+    useOrderedEndpoint: true
+  });
+  
+  // Only fetch scores if the forecast is resolved, using the shouldFetch parameter
+  // This prevents sending requests that would result in 500 errors for unresolved forecasts
+  const { score, scoreLoading, scoreError } = useScoresData({
+    user_id: isMultiUserMode ? null : selectedUserId,
+    forecast_id: numericId,
+    useAverageEndpoint: isMultiUserMode,
+    shouldFetch: forecast?.resolved != null // Only fetch if the forecast has been resolved
+  });
+  
+  // Handle user selection change
+  const handleUserChange = (userId) => {
+    setSelectedUserId(userId);
+  };
 
-  // Determine whether we should use multi-user mode
-  // This could be based on a prop, context, or derived from the data
-  const isMultiUserMode = true; // For testing, set this to true or false
-
-  if (forecastLoading || pointsLoading || (forecast?.resolved != null && scoreLoading)) {
+  // Check if we're loading any data - only check score loading if the forecast is resolved
+  const isLoading = forecastLoading || pointsLoading || (forecast?.resolved != null && scoreLoading);
+  
+  if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
         <CircularProgress />
@@ -40,20 +62,42 @@ function SpecificForecast() {
     );
   }
 
-  if (forecastError || pointsError || scoreError || !forecast) {
+  // Only include scoreError in the condition if the forecast is resolved
+  // This prevents showing errors for scores when the forecast is not resolved
+  const hasError = forecastError || pointsError || (forecast?.resolved != null && scoreError) || !forecast;
+  
+  if (hasError) {
+    const errorMessage = forecastError?.message || 
+                         pointsError?.message || 
+                         (forecast?.resolved != null ? scoreError?.message : null) || 
+                         "Forecast not found";
+    
     return (
       <Box m={2}>
         <Alert severity="error">
-          Error loading the forecast: {forecastError?.message || pointsError?.message || scoreError?.message || "Forecast not found"}
+          Error loading the forecast: {errorMessage}
         </Alert>
       </Box>
     );
   }
   
-  const sortedPoints = [...(points || [])].sort((a, b) => new Date(a.created) - new Date(b.created));
+  // Filter points based on selected user if not showing all users
+  const filteredPoints = selectedUserId === 'all' 
+    ? [...(points || [])] 
+    : [...(points || [])].filter(point => String(point.user_id) === String(selectedUserId));
+    
+  const sortedPoints = [...filteredPoints].sort((a, b) => new Date(a.created) - new Date(b.created));
   
-  // Use the utility function to prepare chart data
-  const chartData = prepareChartData(points, isMultiUserMode);
+  // Debug the filtering results
+  console.log('Filtering points:', {
+    allPoints: points?.length || 0,
+    selectedUserId,
+    filteredCount: filteredPoints.length,
+    multiUserMode: isMultiUserMode
+  });
+  
+  // Use the utility function to prepare chart data - ensure we have points before trying to prepare chart data
+  const chartData = filteredPoints && filteredPoints.length > 0 ? prepareChartData(filteredPoints, isMultiUserMode) : null;
   
   const chartOptions = {
     title: {
@@ -73,10 +117,21 @@ function SpecificForecast() {
         <Typography variant="h4" component="h1" gutterBottom>
           {forecast.question}
         </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mt={2} mb={2}>
+          <UserSelector onUserChange={handleUserChange} selectedUserId={selectedUserId} />
+        </Box>
         {forecast.resolved && <ResolutionDetails forecast={forecast} score={score} />}
       </Paper>
 
-      <ForecastGraph data={chartData} options={chartOptions} />
+      {chartData ? (
+        <ForecastGraph data={chartData} options={chartOptions} />
+      ) : (
+        <Paper elevation={2} sx={{ p: 3, mb: 3, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary">
+            No forecast data available for the selected user
+          </Typography>
+        </Paper>
+      )}
 
       {isAdmin && forecast.resolved == null && (
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
@@ -97,7 +152,13 @@ function SpecificForecast() {
 
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>Forecast Updates</Typography>
-        <ForecastPointList points={sortedPoints} />
+        {sortedPoints.length > 0 ? (
+          <ForecastPointList points={sortedPoints} />
+        ) : (
+          <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 2 }}>
+            No forecast updates available for the selected user
+          </Typography>
+        )}
       </Paper>
 
       {isAdmin && forecast.resolved == null && (
