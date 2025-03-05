@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ForecastPointHandler struct {
@@ -160,9 +161,9 @@ func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, 
 
 	// Check if user_id query parameter is provided
 	userIDStr := r.URL.Query().Get("user_id")
-	
+
 	var points []*models.ForecastPoint
-	
+
 	if userIDStr != "" {
 		// If user_id is provided, return points for that user only
 		userID, err := strconv.ParseInt(userIDStr, 10, 64)
@@ -170,13 +171,13 @@ func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, 
 			http.Error(w, "Invalid user ID", http.StatusBadRequest)
 			return
 		}
-		
+
 		points, err = h.service.GetForecastPointsByForecastIDAndUser(r.Context(), forecastID, userID)
 	} else {
 		// If no user_id is provided, return all points
 		points, err = h.service.GetOrderedForecastPointsByForecastID(r.Context(), forecastID)
 	}
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "No forecast points found for this ID", http.StatusNotFound)
