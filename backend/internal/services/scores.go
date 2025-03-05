@@ -23,6 +23,10 @@ func (s *ScoreService) GetScoreByForecastAndUser(ctx context.Context, forecast_i
 	return s.repo.GetScoreByForecastAndUser(ctx, forecast_id, user_id)
 }
 
+func (s *ScoreService) GetAverageScoreByForecastID(ctx context.Context, forecast_id int64) (*models.ScoreMetrics, error) {
+	return s.repo.GetAverageScoreByForecastID(ctx, forecast_id)
+}
+
 func (s *ScoreService) GetScoresByUserID(ctx context.Context, user_id int64) ([]models.Scores, error) {
 	return s.repo.GetScoresByUserID(ctx, user_id)
 }

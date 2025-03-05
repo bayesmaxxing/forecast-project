@@ -56,6 +56,7 @@ func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
 	// scores (single-score)
 	mux.HandleFunc("POST /scores", handlers.Score.GetScores)
 	mux.HandleFunc("GET /scores/all", handlers.Score.GetAllScores)
+	mux.HandleFunc("GET /scores/average/{id}", handlers.Score.GetAverageScoreByForecastID)
 
 	// scores (aggregate)
 	mux.HandleFunc("POST /scores/aggregate", handlers.Score.GetAggregateScores)

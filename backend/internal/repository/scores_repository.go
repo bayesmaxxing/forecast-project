@@ -14,6 +14,7 @@ import (
 type ScoreRepository interface {
 	GetScoreByForecastID(ctx context.Context, forecastID int64) ([]models.Scores, error)
 	GetScoreByForecastAndUser(ctx context.Context, forecastID int64, userID int64) (*models.Scores, error)
+	GetAverageScoreByForecastID(ctx context.Context, forecastID int64) (*models.ScoreMetrics, error)
 	CreateScore(ctx context.Context, score *models.Scores) error
 	GetScoresByUserID(ctx context.Context, userID int64) ([]models.Scores, error)
 	GetAllScores(ctx context.Context) ([]models.Scores, error)
@@ -402,4 +403,25 @@ func (r *PostgresScoreRepository) GetUserOverallScores(ctx context.Context, user
 	}
 
 	return &userScores, nil
+}
+
+func (r *PostgresScoreRepository) GetAverageScoreByForecastID(ctx context.Context, forecast_id int64) (*models.ScoreMetrics, error) {
+	query := `SELECT 
+				AVG(brier_score) as avg_brier,
+				AVG(log2_score) as avg_log2,
+				AVG(logn_score) as avg_logn
+			  FROM scores
+			  WHERE forecast_id = $1`
+
+	var scoreMetrics models.ScoreMetrics
+	err := r.db.QueryRowContext(ctx, query, forecast_id).Scan(
+		&scoreMetrics.BrierScore,
+		&scoreMetrics.Log2Score,
+		&scoreMetrics.LogNScore,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &scoreMetrics, nil
 }

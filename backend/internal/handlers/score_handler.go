@@ -127,6 +127,40 @@ func (h *ScoreHandler) GetAllScores(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, scores)
 }
 
+// Gets the average score for a specific forecast
+func (h *ScoreHandler) GetAverageScoreByForecastID(w http.ResponseWriter, r *http.Request) {
+	forecastID := r.PathValue("id")
+	if forecastID == "" {
+		http.Error(w, "forecast ID is required", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.ParseInt(forecastID, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid forecast ID", http.StatusBadRequest)
+		return
+	}
+
+	// Generate cache key
+	cacheKey := "avg_score_forecast_" + forecastID
+
+	// Try to get from cache first
+	if cachedData, found := h.cache.Get(cacheKey); found {
+		respondJSON(w, http.StatusOK, cachedData)
+		return
+	}
+
+	avgScore, err := h.service.GetAverageScoreByForecastID(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Store in cache
+	h.cache.Set(cacheKey, avgScore)
+	respondJSON(w, http.StatusOK, avgScore)
+}
+
 // Handler for aggregate scores
 type aggregateScoresRequest struct {
 	Category *string `json:"category"`
