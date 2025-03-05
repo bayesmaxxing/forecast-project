@@ -9,6 +9,9 @@ export function useForecastCombinedData({ userId = null, category = null, list_t
   useEffect(() => {
     setLoading(true);
     
+    // For debugging 
+    console.log('Fetching forecasts with params:', { userId, category, list_type });
+    
     // Choose which points API to call based on whether userId is provided
     const pointsPromise = userId 
       ? pointsService.fetchLatestPointsByUser(userId)
@@ -31,7 +34,7 @@ export function useForecastCombinedData({ userId = null, category = null, list_t
       setError(error);
       setLoading(false);
     });
-  }, [userId, category]);
+  }, [userId, category, list_type]); // Added list_type to dependency array
 
   return { combinedForecasts, loading, error };
 }

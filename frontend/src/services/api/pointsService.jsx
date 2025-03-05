@@ -7,6 +7,18 @@ export const fetchPointsByID = async (id) => {
   return response.json();
 };
 
+export const fetchOrderedPointsByID = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/forecast-points/ordered/${id}`, {
+    headers: { "Accept": "application/json" }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching ordered points: ${response.status}`);
+  }
+  
+  return response.json();
+};
+
 export const fetchAllPoints = async () => {
   const response = await fetch(`${API_BASE_URL}/forecast-points`, {
     headers: { "Accept": "application/json" }

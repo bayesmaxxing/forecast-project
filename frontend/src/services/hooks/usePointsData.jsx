@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { pointsService } from '../api/index';
 
-export function usePointsData({ id } = {}) {
+export function usePointsData({ id, useOrderedEndpoint = true } = {}) {
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -9,8 +9,10 @@ export function usePointsData({ id } = {}) {
   useEffect(() => {
     setLoading(true);
     
-    // Choose which points API to call based on whether userId is provided
-    const pointsPromise = pointsService.fetchPointsByID(id);
+    // Choose which points API to call based on the useOrderedEndpoint flag
+    const pointsPromise = useOrderedEndpoint 
+      ? pointsService.fetchOrderedPointsByID(id)
+      : pointsService.fetchPointsByID(id);
     
     Promise.all([
       pointsPromise
@@ -24,7 +26,7 @@ export function usePointsData({ id } = {}) {
       setError(error);
       setLoading(false);
     });
-  }, [id]);
+  }, [id, useOrderedEndpoint]);
 
   return { points, loading, error };
 }

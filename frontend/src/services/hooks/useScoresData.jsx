@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { fetchScores } from '../api/scoreService';
+import { fetchScores, fetchAverageScoresById } from '../api/scoreService';
 
-export const useScoresData = ({ user_id=null, forecast_id=null, shouldFetch=true }) => {
+export const useScoresData = ({ user_id=null, forecast_id=null, shouldFetch=true, useAverageEndpoint=false }) => {
   const [score, setScore] = useState(null);
   const [scoreLoading, setScoreLoading] = useState(shouldFetch);
   const [error, setError] = useState(null);
@@ -16,8 +16,17 @@ export const useScoresData = ({ user_id=null, forecast_id=null, shouldFetch=true
     const fetchScoreData = async () => {
       try {
         setScoreLoading(true);
-        // Pass the userId to get scores for a specific user
-        const data = await fetchScores(user_id, forecast_id);
+        
+        let data;
+        
+        // If useAverageEndpoint is true and we have a forecast_id, use the average scores endpoint
+        if (useAverageEndpoint && forecast_id) {
+          data = await fetchAverageScoresById(forecast_id);
+        } else {
+          // Otherwise use the regular scores endpoint
+          data = await fetchScores(user_id, forecast_id);
+        }
+        
         setScore(data);
         setError(null);
       } catch (err) {
@@ -30,7 +39,7 @@ export const useScoresData = ({ user_id=null, forecast_id=null, shouldFetch=true
     };
 
     fetchScoreData();
-  }, [user_id, forecast_id, shouldFetch]);
+  }, [user_id, forecast_id, shouldFetch, useAverageEndpoint]);
 
   return { score, scoreLoading, error };
 }; 

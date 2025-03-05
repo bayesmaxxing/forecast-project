@@ -20,6 +20,18 @@ export const fetchScores = async (user_id, forecast_id) => {
     return response.json();
 };
 
+export const fetchAverageScoresById = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/scores/average/${id}`, {
+    headers: { "Accept": "application/json" }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching average scores: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 export const fetchAllScores = async () => {
   const response = await fetch(`${API_BASE_URL}/scores/all`, {
     headers: { "Accept": "application/json" }
