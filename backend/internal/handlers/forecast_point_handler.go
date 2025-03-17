@@ -166,7 +166,8 @@ func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, 
 
 	if userIDStr != "" {
 		// If user_id is provided, return points for that user only
-		userID, err := strconv.ParseInt(userIDStr, 10, 64)
+		var userID int64
+		userID, err = strconv.ParseInt(userIDStr, 10, 64)
 		if err != nil {
 			http.Error(w, "Invalid user ID", http.StatusBadRequest)
 			return

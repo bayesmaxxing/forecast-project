@@ -18,6 +18,7 @@ type ScoreRepository interface {
 	CreateScore(ctx context.Context, score *models.Scores) error
 	GetScoresByUserID(ctx context.Context, userID int64) ([]models.Scores, error)
 	GetAllScores(ctx context.Context) ([]models.Scores, error)
+	GetAverageScores(ctx context.Context) ([]models.Scores, error)
 	UpdateScore(ctx context.Context, score *models.Scores) error
 	DeleteScore(ctx context.Context, scoreID int64) error
 	GetOverallScores(ctx context.Context) (*models.OverallScores, error)
@@ -156,6 +157,36 @@ func (r *PostgresScoreRepository) GetAllScores(ctx context.Context) ([]models.Sc
 				id, brier_score, log2_score, logn_score, user_id, forecast_id, created
 			  FROM scores 
 			  ORDER BY created DESC`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var scores []models.Scores
+	for rows.Next() {
+		var s models.Scores
+		if err := rows.Scan(
+			&s.ID,
+			&s.BrierScore,
+			&s.Log2Score,
+			&s.LogNScore,
+			&s.UserID,
+			&s.ForecastID,
+			&s.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		scores = append(scores, s)
+	}
+	return scores, rows.Err()
+}
+
+func (r *PostgresScoreRepository) GetAverageScores(ctx context.Context) ([]models.Scores, error) {
+	query := `SELECT AVG(brier_score) as brier_score, AVG(log2_score) as log2_score, AVG(logn_score) as logn_score, 'all' as user_id, forecast_id, max(created) as created
+			  FROM scores
+			  GROUP BY forecast_id`
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {

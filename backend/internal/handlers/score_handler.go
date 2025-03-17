@@ -119,11 +119,41 @@ func (h *ScoreHandler) DeleteScore(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ScoreHandler) GetAllScores(w http.ResponseWriter, r *http.Request) {
+	cacheKey := "all_scores"
+
+	// Try to get from cache first
+	if cachedData, found := h.cache.Get(cacheKey); found {
+		respondJSON(w, http.StatusOK, cachedData)
+		return
+	}
 	scores, err := h.service.GetAllScores(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Store in cache
+	h.cache.Set(cacheKey, scores)
+	respondJSON(w, http.StatusOK, scores)
+}
+
+func (h *ScoreHandler) GetAverageScores(w http.ResponseWriter, r *http.Request) {
+	cacheKey := "avg_scores_by_forecast"
+
+	// Try to get from cache first
+	if cachedData, found := h.cache.Get(cacheKey); found {
+		respondJSON(w, http.StatusOK, cachedData)
+		return
+	}
+
+	scores, err := h.service.GetAverageScores(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Store in cache
+	h.cache.Set(cacheKey, scores)
 	respondJSON(w, http.StatusOK, scores)
 }
 

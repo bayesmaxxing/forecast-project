@@ -48,6 +48,10 @@ func (s *ScoreService) GetAllScores(ctx context.Context) ([]models.Scores, error
 	return s.repo.GetAllScores(ctx)
 }
 
+func (s *ScoreService) GetAverageScores(ctx context.Context) ([]models.Scores, error) {
+	return s.repo.GetAverageScores(ctx)
+}
+
 // Aggregate Scores
 func (s *ScoreService) GetOverallScores(ctx context.Context) (*models.OverallScores, error) {
 	return s.repo.GetOverallScores(ctx)
