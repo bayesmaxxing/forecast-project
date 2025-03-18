@@ -184,9 +184,9 @@ func (r *PostgresScoreRepository) GetAllScores(ctx context.Context) ([]models.Sc
 }
 
 func (r *PostgresScoreRepository) GetAverageScores(ctx context.Context) ([]models.Scores, error) {
-	query := `SELECT AVG(brier_score) as brier_score, AVG(log2_score) as log2_score, AVG(logn_score) as logn_score, 'all' as user_id, forecast_id, max(created) as created
+	query := `SELECT 0 as id, AVG(brier_score) as brier_score, AVG(log2_score) as log2_score, AVG(logn_score) as logn_score, 0 as user_id, forecast_id, max(created) as created
 			  FROM scores
-			  GROUP BY forecast_id`
+			  GROUP BY forecast_id, user_id, id`
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
