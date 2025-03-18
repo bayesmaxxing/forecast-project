@@ -19,65 +19,52 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
+import { useAggregateScoresData } from '../services/hooks/useAggregateScoresData';
+import { useForecastList } from '../services/hooks/useForecastList';
+import { useScoresData } from '../services/hooks/useScoresData';
 
-function SummaryScores() {
-  const [scores, setScores] = useState([]);
-  const [resolutions, setResolutions] = useState([]);
+function SummaryScores({user_id=null}) {
+  
   const [selectedMetric, setSelectedMetric] = useState('brier_score');
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  useEffect(() => {
-    Promise.all([
-      fetch('https://forecasting-389105.ey.r.appspot.com/scores', {
-        headers: {
-          'Accept': 'application/json'
-        }
-      }),
-      fetch('https://forecasting-389105.ey.r.appspot.com/forecasts?type=resolved', {
-        headers: {
-          'Accept': 'application/json'
-        }
-      })
-    ])
-      .then(async ([scoreData, forecastData]) => {
-        const scoreDataJson = await scoreData.json();
-        const forecastDataJson = await forecastData.json();
-        return [scoreDataJson, forecastDataJson];
-      })
-      .then(([scoreDataJson, forecastDataJson]) => {
-        setScores(scoreDataJson);
-        setResolutions(forecastDataJson);
-      })
-      .catch(error => console.error('Error fetching data: ', error));
-  }, []);
-
+  const { scores: aggregateScores, loading: aggregateScoresLoading, error: aggregateScoresError } = useAggregateScoresData();
+  const { forecasts = [], loading: forecastsLoading, error: forecastsError } = useForecastList({list_type: 'resolved'});
+  const { scores, scoresLoading, error: scoresError } = useScoresData({user_id: user_id, useAverageEndpoint: true});
+  
   const getScore = () => {
-    if (!scores) return 0;
+    if (!aggregateScores) return 0;
 
     switch (selectedMetric) {
       case 'brier_score':
-        return scores.AggBrierScore ?? 0;
+        return aggregateScores.brier_score ?? 0;
       case 'log2_score':
-        return scores.AggLog2Score ?? 0;
+        return aggregateScores.log2_score ?? 0;
       case 'logn_score':
-        return scores.AggLogNScore ?? 0;
+        return aggregateScores.logn_score ?? 0;
       default:
-        return scores.AggBrierScore ?? 0;
+        return aggregateScores.brier_score ?? 0;
     }
   };
 
   const avgScore = getScore();
 
-  const sortedResolutions = [...resolutions].sort((a, b) => {
+  const sortedForecasts = [...forecasts].sort((a, b) => {
     return new Date(b.resolved) - new Date(a.resolved);
   });
 
-  const chartData = sortedResolutions.map(resolution => ({
-    id: resolution.id,
-    score: resolution[selectedMetric],
-    label: `Forecast ${resolution.id}`
+  const combined = sortedForecasts.map(forecast => ({
+    ...forecast,
+    score: scores.find(score => score.forecast_id === forecast.id)?.[selectedMetric] ?? 0
+  }));
+
+  console.log("combined",combined);
+
+  const chartData = combined.map(forecast => ({
+    id: forecast.id,
+    score: forecast.score,
+    label: `${forecast.question}`
   }));
 
   const getMetricLabel = (metric) => {
