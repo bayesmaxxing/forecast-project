@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SummaryScores from '../components/SummaryScores';
-import CalibrationChart from '../components/CalibrationChart';
 import {
   Container,
   Typography,
@@ -47,17 +46,6 @@ function HomePage() {
           <Link to="/faq"> FAQ</Link>. Click on a datapoint to see information about the forecast.
         </Typography>
         <SummaryScores />
-      </Box>
-
-      <Box component="section" sx={{ mb: 6 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          Calibration
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          Forecasts are not always right, but I aim to have calibrated forecasts. Meaning that when I forecast
-          50% probability, it happens around 50% of the time. Below is my calibration.
-        </Typography>
-        <CalibrationChart />
       </Box>
 
       <Typography variant="h4" component="h2" gutterBottom>
