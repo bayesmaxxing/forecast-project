@@ -13,7 +13,8 @@ import Sidebar from '../components/Sidebar';
 import SearchBar from '../components/SearchBar';
 import ForecastCard from '../components/ForecastCard';
 import UserSelector from '../components/UserSelector';
-import { useForecastCombinedData } from '../services/hooks/useForecastCombinedData';
+import { useForecastList } from '../services/hooks/useForecastList';
+import { usePointsData } from '../services/hooks/usePointsData';
 import { useSearchFilter } from '../services/hooks/useSearchFilter';
 import ScoreDisplay from '../components/ScoreDisplay';
 import { useAggregateScoresData } from '../services/hooks/useAggregateScoresData';
@@ -23,14 +24,24 @@ function ForecastPage() {
     const location = useLocation();
     const [selectedUserId, setSelectedUserId] = useState('all');
     
+    // Get the category and list type from the url
     const categoryFilter = category || null;
-    
     const listType = location.pathname.endsWith('/resolved') ? 'resolved' : 'open';
     
-    const { combinedForecasts, loading, error } = useForecastCombinedData({category: categoryFilter, list_type: listType});
+    // Fetch the data
+    const { forecasts = [], loading, error } = useForecastList({category: categoryFilter, list_type: listType});
+    const { points = [], loading: pointsLoading, error: pointsError } = usePointsData({userId: selectedUserId, useLatestPoints: true, useOrderedEndpoint: false});
+
+    // Combine the forecasts and points
+    const combined = Array.isArray(forecasts) 
+      ? forecasts.map(forecast => {
+          const matchingPoint = points.find(point => point.forecast_id === forecast.id);
+          return { ...forecast, latestPoint: matchingPoint || null};
+        })
+      : [];
     
     const { handleSearch, sortedForecasts } = useSearchFilter(
-      combinedForecasts, 
+      combined, 
       { userId: selectedUserId, category: categoryFilter }
     );
     
@@ -59,8 +70,8 @@ function ForecastPage() {
           mt: '64px',                    
         }}
       >
-        {error && (
-          <Typography color="error">Error loading data: {error.message}</Typography>
+        {(error || pointsError) && (
+          <Typography color="error">Error loading data: {error?.message || pointsError?.message}</Typography>
         )}
         
         <Grid container spacing={3}>
@@ -133,14 +144,18 @@ function ForecastPage() {
               </Grid>
             ))
           ) : (
-            sortedForecasts.map(forecast => (
+            Array.isArray(sortedForecasts) ? sortedForecasts.map(forecast => (
               <Grid item xs={12} md={6} lg={4} key={forecast.id}>
                 <ForecastCard 
                   forecast={forecast}  
                   isResolved={listType === 'resolved'}
                 />
               </Grid>
-            ))
+            )) : (
+              <Grid item xs={12}>
+                <Typography>No forecasts available</Typography>
+              </Grid>
+            )
           )}
         </Grid>
       </Box>

@@ -40,7 +40,7 @@ export const fetchLatestPoints = async () => {
 };
 
 export const fetchLatestPointsByUser = async (user_id) => {
-  const response = await fetch(`${API_BASE_URL}/forecast-points/latest/${user_id}`, {
+  const response = await fetch(`${API_BASE_URL}/forecast-points/latest_by_user?user_id=${user_id}`, {
     headers: { "Accept": "application/json" }
   });
   

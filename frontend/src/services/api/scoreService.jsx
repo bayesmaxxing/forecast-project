@@ -44,6 +44,20 @@ export const fetchAllScores = async () => {
   return response.json();
 };
 
+export const fetchAverageScores = async () => {
+  const response = await fetch(`${API_BASE_URL}/scores/average`, {
+    headers: { "Accept": "application/json" }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching average scores: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+
+
 export const fetchAggregateScores = async (category,user_id,by_user) => {
   const requestBody = {};
   if (category) requestBody.category = category;

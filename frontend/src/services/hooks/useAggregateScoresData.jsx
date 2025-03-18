@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchAggregateScores } from '../api/scoreService';
 
 export const useAggregateScoresData = (category = null,userId = null, byUser = null) => {
-  const [scores, setScores] = useState(null);
+  const [scores, setScores] = useState([]);
   const [scoresLoading, setScoresLoading] = useState(true);
   const [error, setError] = useState(null);
 

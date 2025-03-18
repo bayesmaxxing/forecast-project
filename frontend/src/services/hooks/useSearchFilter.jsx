@@ -31,7 +31,7 @@ export const useSearchFilter = (forecasts, options = {}) => {
     
     // Sort by creation date (newest first)
     return [...filtered].sort((a, b) => {
-      return new Date(b.created_at) - new Date(a.created_at);
+      return new Date(b.created) - new Date(a.created);
     });
   }, [forecasts, searchTerm, userId]);
 

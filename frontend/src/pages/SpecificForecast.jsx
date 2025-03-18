@@ -34,7 +34,8 @@ function SpecificForecast() {
   // Use the ordered points endpoint for better multi-user graph visualization
   const { points, pointsLoading, pointsError } = usePointsData({
     id: id,
-    useOrderedEndpoint: true
+    useOrderedEndpoint: true,
+    useLatestPoints: false
   });
   
   // Only fetch scores if the forecast is resolved, using the shouldFetch parameter

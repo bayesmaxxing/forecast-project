@@ -1,45 +1,47 @@
 import { useState, useEffect } from 'react';
-import { fetchScores, fetchAverageScoresById } from '../api/scoreService';
+import { fetchScores, fetchAverageScoresById, fetchAverageScores } from '../api/scoreService';
 
 export const useScoresData = ({ user_id=null, forecast_id=null, shouldFetch=true, useAverageEndpoint=false }) => {
-  const [score, setScore] = useState(null);
-  const [scoreLoading, setScoreLoading] = useState(shouldFetch);
-  const [error, setError] = useState(null);
+  const [scores, setScores] = useState([]);
+  const [scoresLoading, setScoresLoading] = useState(shouldFetch);
+  const [scoresError, setScoresError] = useState(null);
 
   useEffect(() => {
     // Skip fetching if shouldFetch is false
     if (!shouldFetch) {
-      setScoreLoading(false);
+      setScoresLoading(false);
       return;
     }
     
     const fetchScoreData = async () => {
       try {
-        setScoreLoading(true);
+        setScoresLoading(true);
         
         let data;
         
         // If useAverageEndpoint is true and we have a forecast_id, use the average scores endpoint
         if (useAverageEndpoint && forecast_id) {
           data = await fetchAverageScoresById(forecast_id);
-        } else {
-          // Otherwise use the regular scores endpoint
+        } else if (user_id && forecast_id) {
           data = await fetchScores(user_id, forecast_id);
+        } else if (useAverageEndpoint && !forecast_id) {
+          data = await fetchAverageScores();
+        } else {
+          data = [];
         }
-        
-        setScore(data);
-        setError(null);
+        setScores(data || []);
+        setScoresError(null);
       } catch (err) {
         console.error('Error fetching scores:', err);
-        setError(err.message || 'Failed to load scores');
-        setScore(null);
+        setScoresError(err.message || 'Failed to load scores');
+        setScores([]);
       } finally {
-        setScoreLoading(false);
+        setScoresLoading(false);
       }
     };
 
     fetchScoreData();
   }, [user_id, forecast_id, shouldFetch, useAverageEndpoint]);
 
-  return { score, scoreLoading, error };
+  return { scores, scoresLoading, scoresError };
 }; 

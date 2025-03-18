@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { forecastService } from '../api/index';
 
-export function useForecastData({id} = {}) {
-  const [forecast, setForecast] = useState(null);
+export function useForecastList({list_type, category} = {}) {
+  const [forecasts, setForecasts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -10,10 +10,10 @@ export function useForecastData({id} = {}) {
     setLoading(true);
     
     Promise.all([
-      forecastService.fetchForecastById(id),
+      forecastService.fetchForecasts(list_type, category),
     ])
     .then(([forecastDataJson]) => {
-      setForecast(forecastDataJson);
+      setForecasts(forecastDataJson || []);
       setLoading(false);
     })
     .catch(error => {
@@ -21,7 +21,7 @@ export function useForecastData({id} = {}) {
       setError(error);
       setLoading(false);
     });
-  }, [id]);
+  }, [list_type, category]);
 
-  return { forecast, loading, error };
+  return { forecasts, loading, error };
 }
