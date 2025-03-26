@@ -159,7 +159,7 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 	respondJSON(w, http.StatusOK, "forecast resolved")
 }
 
-func respondJSON(w http.ResponseWriter, status int, data interface{}) {
+func respondJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
