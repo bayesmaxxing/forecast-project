@@ -18,7 +18,7 @@ const UserSelector = ({ onUserChange, selectedUserId = 'all' }) => {
   };
 
   return (
-    <Box sx={{ minWidth: 220 }}>
+    <Box sx={{ minWidth: 190 }}>
       <FormControl fullWidth>
         <InputLabel id="user-selector-label">Select User</InputLabel>
         <Select

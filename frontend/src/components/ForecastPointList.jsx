@@ -11,7 +11,7 @@ import {
   Paper,
 } from '@mui/material';
 
-function ForecastPointsList({ points }) {
+function ForecastPointsList({ points, users }) {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -23,7 +23,6 @@ function ForecastPointsList({ points }) {
     });
   };
   
-  // Assume points now includes user information
   const sortedPoints = [...points].sort((a, b) => new Date(b.created) - new Date(a.created));
 
   if (!points || points.length === 0) {
@@ -63,8 +62,7 @@ function ForecastPointsList({ points }) {
                 {/* User chip/avatar */}
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <Chip 
-                    avatar={<Avatar sx={{ bgcolor: 'grey.300' }}>{String(point.user_id || 'User').charAt(0)}</Avatar>}
-                    label={point.user_id || 'Unknown User'}
+                    label={users.find(user => user.id === point.user_id)?.username || 'Unknown User'}
                     size="small"
                     sx={{ mr: 1 }}
                   />
