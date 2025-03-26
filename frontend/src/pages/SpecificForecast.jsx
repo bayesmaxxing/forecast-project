@@ -18,28 +18,37 @@ import { useForecastData } from '../services/hooks/useForecastData';
 import { usePointsData } from '../services/hooks/usePointsData';
 import { useScoresData } from '../services/hooks/useScoresData';
 import { prepareChartData } from '../utils/chartDataUtils';
+import { useUserData } from '../services/hooks/useUserData';
 
 function SpecificForecast() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('all');
   let { id } = useParams();
   const numericId = parseInt(id, 10);
 
+  // USER SELECTION
   // Always use multi-user mode when all users are selected
-  // When a specific user is selected, still use single-user mode
   const isMultiUserMode = selectedUserId === 'all';
 
+  // Handle user selection change
+  const handleUserChange = (userId) => {
+    setSelectedUserId(userId);
+  };
+
+  // AUTH CHECK
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  // DATA FETCHING
   const { forecast, forecastLoading, forecastError } = useForecastData({id: id});
-  
-  // Use the ordered points endpoint for better multi-user graph visualization
   const { points, pointsLoading, pointsError } = usePointsData({
     id: id,
-    useOrderedEndpoint: true,
+    useOrderedEndpoint: false,
     useLatestPoints: false
   });
   
-  // Only fetch scores if the forecast is resolved, using the shouldFetch parameter
-  // This prevents sending requests that would result in 500 errors for unresolved forecasts
   const { score, scoreLoading, scoreError } = useScoresData({
     user_id: isMultiUserMode ? null : selectedUserId,
     forecast_id: numericId,
@@ -47,12 +56,7 @@ function SpecificForecast() {
     shouldFetch: forecast?.resolved != null // Only fetch if the forecast has been resolved
   });
   
-  // Handle user selection change
-  const handleUserChange = (userId) => {
-    setSelectedUserId(userId);
-  };
-
-  // Check if we're loading any data - only check score loading if the forecast is resolved
+  const { users, usersLoading, usersError } = useUserData();
   const isLoading = forecastLoading || pointsLoading || (forecast?.resolved != null && scoreLoading);
   
   if (isLoading) {
@@ -63,8 +67,6 @@ function SpecificForecast() {
     );
   }
 
-  // Only include scoreError in the condition if the forecast is resolved
-  // This prevents showing errors for scores when the forecast is not resolved
   const hasError = forecastError || pointsError || (forecast?.resolved != null && scoreError) || !forecast;
   
   if (hasError) {
@@ -82,6 +84,7 @@ function SpecificForecast() {
     );
   }
   
+  // CHART PREP
   // Filter points based on selected user if not showing all users
   const filteredPoints = selectedUserId === 'all' 
     ? [...(points || [])] 
@@ -89,15 +92,6 @@ function SpecificForecast() {
     
   const sortedPoints = [...filteredPoints].sort((a, b) => new Date(a.created) - new Date(b.created));
   
-  // Debug the filtering results
-  console.log('Filtering points:', {
-    allPoints: points?.length || 0,
-    selectedUserId,
-    filteredCount: filteredPoints.length,
-    multiUserMode: isMultiUserMode
-  });
-  
-  // Use the utility function to prepare chart data - ensure we have points before trying to prepare chart data
   const chartData = filteredPoints && filteredPoints.length > 0 ? prepareChartData(filteredPoints, isMultiUserMode) : null;
   
   const chartOptions = {
@@ -120,8 +114,16 @@ function SpecificForecast() {
         </Typography>
         <Box display="flex" justifyContent="space-between" alignItems="center" mt={2} mb={2}>
           <UserSelector onUserChange={handleUserChange} selectedUserId={selectedUserId} />
+          {isLoggedIn && forecast.resolved == null && (
+            <ResolveForecast/>
+        )}
         </Box>
-        {forecast.resolved && <ResolutionDetails forecast={forecast} score={score} />}
+        
+        {forecast.resolved && (
+          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+            <ResolutionDetails forecast={forecast} score={score} />
+          </Paper>
+        )}
       </Paper>
 
       {chartData ? (
@@ -134,27 +136,26 @@ function SpecificForecast() {
         </Paper>
       )}
 
-      {isAdmin && forecast.resolved == null && (
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <ResolveForecast forecastPoints={sortedPoints} />
-        </Paper>
-      )}
-
       {forecast.resolved != null && (
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={3} sx={{ p: 3, mb: 3 , mt: 3}}>
           <ResolutionDetails forecast={forecast} score={score} />
         </Paper>
       )}
 
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Paper elevation={3} sx={{ p: 3, mb: 3 , mt: 3}}>
         <Typography variant="h6" gutterBottom>Resolution Criteria</Typography>
         <Typography variant="body1">{forecast.resolution_criteria}</Typography>
       </Paper>
 
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Forecast Updates</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6">Forecast Updates</Typography>
+          {isLoggedIn && forecast.resolved == null && (
+            <UpdateForecast />
+          )}
+        </Box>
         {sortedPoints.length > 0 ? (
-          <ForecastPointList points={sortedPoints} />
+          <ForecastPointList points={sortedPoints} users={users}/>
         ) : (
           <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 2 }}>
             No forecast updates available for the selected user
@@ -162,11 +163,7 @@ function SpecificForecast() {
         )}
       </Paper>
 
-      {isAdmin && forecast.resolved == null && (
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <UpdateForecast />
-        </Paper>
-      )}
+      
     </Container>
   );
 }

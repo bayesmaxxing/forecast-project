@@ -18,10 +18,12 @@ import { usePointsData } from '../services/hooks/usePointsData';
 import { useSearchFilter } from '../services/hooks/useSearchFilter';
 import ScoreDisplay from '../components/ScoreDisplay';
 import { useAggregateScoresData } from '../services/hooks/useAggregateScoresData';
+import AddForecast from '../components/AddForecast';
 
 function ForecastPage() {
     const { category } = useParams();
     const location = useLocation();
+    const isLoggedIn = localStorage.getItem('token') !== null;
     const [selectedUserId, setSelectedUserId] = useState('all');
     
     // Get the category and list type from the url
@@ -78,10 +80,18 @@ function ForecastPage() {
           {/* Search and Header Section */}
           <Grid item xs={12}>
             <Box sx={{ mb: 4 }}>
-              <Typography variant="h4" sx={{ color: 'primary.light', mb: 2 }}>
-                {getPageTitle()}
-              </Typography>
-              
+              <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                <Grid item xs={12} sm={isLoggedIn ? 6 : 12}>
+                  <Typography variant="h4" sx={{ color: 'primary.light' }}>
+                    {getPageTitle()}             
+                  </Typography>
+                </Grid>
+                {isLoggedIn && (
+                  <Grid item xs={12} sm={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
+                    <AddForecast />
+                  </Grid>
+                )}
+              </Grid>
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} md={8}>
                   <SearchBar 
