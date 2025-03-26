@@ -51,4 +51,32 @@ export const fetchLatestPointsByUser = async (user_id) => {
   return response.json();
 };
 
+export const createPoint = async (forecast_id, point_forecast, reason) => {
+  // Get the token from localStorage
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('User needs to login to create a forecast point');
+  }
+  
+  const response = await fetch(`${API_BASE_URL}/api/forecast-points`, {
+    method: 'POST',
+    headers: { 
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      forecast_id: forecast_id,
+      point_forecast: point_forecast,
+      reason: reason,
+      user_id: 0,
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error creating point: ${response.status}`);
+  }
+
+  return response.json(); 
+};
 

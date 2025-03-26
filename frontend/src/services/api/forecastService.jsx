@@ -34,3 +34,45 @@ export const fetchForecastById = async (id) => {
     return response.json();
   };  
 
+export const resolveForecast = async (forecast_id, resolution, comment) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('User needs to login to resolve a forecast');
+  }
+  const response = await fetch(`${API_BASE_URL}/api/resolve`, {
+    method: 'PUT',
+    headers: { 
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      id: forecast_id,
+      resolution: resolution,
+      comment: comment
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error resolving forecast: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+export const createForecast = async (forecast) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('User needs to login to create a forecast');
+  }
+  const response = await fetch(`${API_BASE_URL}/api/forecasts`, {
+    method: 'POST',
+    headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` },
+    body: JSON.stringify(forecast)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error creating forecast: ${response.status}`);
+  }
+
+  return response.json(); 
+};

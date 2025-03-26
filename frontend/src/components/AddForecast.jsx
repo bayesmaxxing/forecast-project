@@ -1,39 +1,35 @@
 import React, { useState } from 'react';
 import {
-  Paper,
   Box,
   TextField,
   Button,
-  Typography,
   Alert,
   Snackbar,
-  useTheme,
-  Autocomplete
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
+import { createForecast } from '../services/api/forecastService';
 
 const AddForecast = () => {
-  const theme = useTheme();
   const [forecastData, setForecastData] = useState({
     question: '',
-    short_question: '',
     category: '',
     resolution_criteria: ''
   });
   const [submitStatus, setSubmitStatus] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  // Predefined categories - you can adjust these based on your needs
-  const categories = [
-    'ai',
-    'economy',
-    'politics',
-    'x-risk',
-    'personal',
-    'sports',
-    'technology',
-    'society',
-    'other'
-  ];
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,37 +39,23 @@ const AddForecast = () => {
     }));
   };
 
-  const handleCategoryChange = (event, newValue) => {
-    setForecastData(prevState => ({
-      ...prevState,
-      category: newValue || ''
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitStatus('Submitting forecast...');
     setSnackbarOpen(true);
 
     try {
-      const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecasts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(forecastData)
-      });
+      const response = await createForecast(forecastData);
 
       if (response.ok) {
         setSubmitStatus('Forecast added successfully');
         setForecastData({
           question: '',
-          short_question: '',
           category: '',
           resolution_criteria: ''
         });
       } else {
-        setSubmitStatus('Failed to add forecast. Please try again.');
+        setSubmitStatus('Failed to create forecast. Please try again.');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -86,94 +68,85 @@ const AddForecast = () => {
   };
 
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 3,
-        mt: 2,
-        backgroundColor: theme.palette.background.paper,
-        maxWidth: 800,
-        mx: 'auto'
-      }}
-    >
-      <Typography variant="h6" gutterBottom>
-        Add New Forecast
-      </Typography>
-
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          '& .MuiTextField-root': { mb: 2 },
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2
-        }}
+    <>
+      <Button 
+        variant="contained" 
+        color="primary"
+        onClick={handleClickOpen}
+        sx={{ mt: 2 }}
       >
-        <TextField
-          label="Question"
-          id="question"
-          name="question"
-          value={forecastData.question}
-          onChange={handleChange}
-          required
-          fullWidth
-          helperText="Enter the full question text"
-        />
-
-        <TextField
-          label="Short Question"
-          id="short_question"
-          name="short_question"
-          value={forecastData.short_question}
-          onChange={handleChange}
-          required
-          fullWidth
-          helperText="Enter a brief version of the question"
-        />
-
-        <Autocomplete
-          freeSolo
-          options={categories}
-          value={forecastData.category}
-          onChange={handleCategoryChange}
-          renderInput={(params) => (
+        Create Forecast
+      </Button>
+      
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Create forecast question</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Create a new forecast question.
+          </DialogContentText>
+          
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              '& .MuiTextField-root': { mb: 2 },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              mt: 1
+            }}
+          >
             <TextField
-              {...params}
-              label="Category"
-              name="category"
+              label="Question"
+              id="question"
+              name="question"
+              value={forecastData.question}
+              onChange={handleChange}
               required
               fullWidth
-              helperText="Select or enter a category"
-              onChange={(e) => {
-                handleChange(e);
-              }}
+              size="small"
+              type="text"
+              helperText="Enter the forecast question"
             />
-          )}
-        />
-
-        <TextField
-          label="Resolution Criteria"
-          id="resolution_criteria"
-          name="resolution_criteria"
-          value={forecastData.resolution_criteria}
-          onChange={handleChange}
-          required
-          fullWidth
-          multiline
-          rows={4}
-          helperText="Specify how this forecast will be resolved"
-        />
-
-        <Button 
-          type="submit" 
-          variant="contained" 
-          color="primary"
-          sx={{ mt: 2 }}
-        >
-          Add Forecast
-        </Button>
-      </Box>
+            <TextField
+              label="Category"
+              id="category"
+              name="category"
+              value={forecastData.category}
+              onChange={handleChange}
+              required
+              fullWidth
+              size="small"
+              type="text"
+              helperText="Enter the forecast category"
+            />
+            <TextField
+              label="Resolution Criteria"
+              id="resolution_criteria"
+              name="resolution_criteria"
+              value={forecastData.resolution_criteria}
+              onChange={handleChange}
+              required
+              fullWidth
+              multiline
+              rows={3}
+              helperText="Enter the resolution criteria"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleClose} color="secondary">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            color="primary"
+          >
+            Submit Forecast
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbarOpen}
@@ -189,7 +162,7 @@ const AddForecast = () => {
           {submitStatus}
         </Alert>
       </Snackbar>
-    </Paper>
+    </>
   );
 };
 
