@@ -136,7 +136,7 @@ func (r *PostgresForecastPointRepository) GetForecastPointsByForecastIDAndUser(c
 func (r *PostgresForecastPointRepository) CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error {
 	fp.CreatedAt = time.Now()
 
-	query := `INSERT INTO forecast_points (forecast_id
+	query := `INSERT INTO points (forecast_id
 											, point_forecast
 											, created
 											, reason

@@ -4,6 +4,7 @@ import (
 	"backend/internal/cache"
 	"backend/internal/database"
 	"backend/internal/handlers"
+	"backend/internal/middleware"
 	"backend/internal/repository"
 	"backend/internal/routes"
 	"backend/internal/services"
@@ -52,7 +53,6 @@ func main() {
 	repositories := &routes.Repositories{
 		Forecast:      repository.NewForecastRepository(db),
 		ForecastPoint: repository.NewForecastPointRepository(db),
-		Blogpost:      repository.NewBlogpostRepository(db),
 		User:          repository.NewUserRepository(db),
 		Score:         repository.NewScoreRepository(db),
 	}
@@ -60,7 +60,6 @@ func main() {
 	services := &routes.Services{
 		Forecast:      services.NewForecastService(repositories.Forecast, repositories.ForecastPoint, repositories.Score),
 		ForecastPoint: services.NewForecastPointService(repositories.ForecastPoint),
-		Blogpost:      services.NewBlogpostService(repositories.Blogpost),
 		User:          services.NewUserService(repositories.User),
 		Score:         services.NewScoreService(repositories.Score),
 	}
@@ -70,7 +69,6 @@ func main() {
 	handlers := &routes.Handlers{
 		Forecast:      handlers.NewForecastHandler(services.Forecast, cache),
 		ForecastPoint: handlers.NewForecastPointHandler(services.ForecastPoint, cache),
-		Blogpost:      handlers.NewBlogpostHandler(services.Blogpost),
 		User:          handlers.NewUserHandler(services.User),
 		Score:         handlers.NewScoreHandler(services.Score, cache),
 	}
@@ -78,6 +76,7 @@ func main() {
 	mux := http.NewServeMux()
 	routes.Setup(mux, handlers)
 	handler := CORSMiddleware(mux)
+	handler = middleware.RequestLogger(handler)
 
 	log.Println("Starting server on :8080")
 	if err := http.ListenAndServe(":8080", handler); err != nil {

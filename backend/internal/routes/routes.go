@@ -11,7 +11,6 @@ import (
 type Handlers struct {
 	Forecast      *handlers.ForecastHandler
 	ForecastPoint *handlers.ForecastPointHandler
-	Blogpost      *handlers.BlogpostHandler
 	User          *handlers.UserHandler
 	Score         *handlers.ScoreHandler
 }
@@ -19,7 +18,6 @@ type Handlers struct {
 type Services struct {
 	Forecast      *services.ForecastService
 	ForecastPoint *services.ForecastPointService
-	Blogpost      *services.BlogpostService
 	User          *services.UserService
 	Score         *services.ScoreService
 }
@@ -27,7 +25,6 @@ type Services struct {
 type Repositories struct {
 	Forecast      repository.ForecastRepository
 	ForecastPoint repository.ForecastPointRepository
-	Blogpost      repository.BlogpostRepository
 	User          repository.UserRepository
 	Score         repository.ScoreRepository
 }
@@ -39,7 +36,9 @@ func Setup(mux *http.ServeMux, handlers *Handlers) {
 	// protected routes
 	protected := http.NewServeMux()
 	setupProtectedRoutes(protected, handlers)
-	mux.Handle("/api/", auth.AuthMiddleware(protected))
+
+	apiHandler := http.StripPrefix("/api", protected)
+	mux.Handle("/api/", auth.AuthMiddleware(apiHandler))
 }
 
 func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
@@ -67,16 +66,13 @@ func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
 	mux.HandleFunc("GET /users", handlers.User.ListUsers)
 	mux.HandleFunc("POST /users", handlers.User.CreateUser)
 	mux.HandleFunc("POST /users/login", handlers.User.Login)
+	//mux.HandleFunc("POST /users/reset-password", handlers.User.AdminResetPassword)
 
-	// blogposts
-	mux.HandleFunc("GET /blogposts", handlers.Blogpost.ListBlogposts)
-	mux.HandleFunc("GET /blogposts/{slug}", handlers.Blogpost.GetBlogpostBySlug)
-	mux.HandleFunc("POST /blogposts", handlers.Blogpost.CreateBlogpost)
 }
 
 func setupProtectedRoutes(mux *http.ServeMux, handlers *Handlers) {
 	// forecasts
-	mux.HandleFunc("POST /forecasts", handlers.Forecast.CreateForecast)
+	mux.HandleFunc("POST /forecasts/create", handlers.Forecast.CreateForecast)
 	mux.HandleFunc("DELETE /forecasts", handlers.Forecast.DeleteForecast)
 	mux.HandleFunc("PUT /resolve", handlers.Forecast.ResolveForecast)
 
@@ -90,4 +86,5 @@ func setupProtectedRoutes(mux *http.ServeMux, handlers *Handlers) {
 	// users
 	mux.HandleFunc("DELETE /users", handlers.User.DeleteUser)
 	mux.HandleFunc("PUT /users/password", handlers.User.ChangePassword)
+
 }
