@@ -14,12 +14,13 @@ import (
 )
 
 type ForecastPointHandler struct {
-	service *services.ForecastPointService
-	cache   *cache.Cache
+	service         *services.ForecastPointService
+	forecastService *services.ForecastService
+	cache           *cache.Cache
 }
 
-func NewForecastPointHandler(s *services.ForecastPointService, c *cache.Cache) *ForecastPointHandler {
-	return &ForecastPointHandler{service: s, cache: c}
+func NewForecastPointHandler(s *services.ForecastPointService, f *services.ForecastService, c *cache.Cache) *ForecastPointHandler {
+	return &ForecastPointHandler{service: s, forecastService: f, cache: c}
 }
 
 func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +70,14 @@ func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *htt
 	// Set the user ID from the JWT claims
 	point.UserID = claims.UserID
 
-	err := h.service.CreateForecastPoint(r.Context(), &point)
+	// Check if the forecast exists
+	_, err := h.forecastService.GetForecastByID(r.Context(), point.ForecastID)
+	if err != nil {
+		http.Error(w, "Forecast not found", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.CreateForecastPoint(r.Context(), &point)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

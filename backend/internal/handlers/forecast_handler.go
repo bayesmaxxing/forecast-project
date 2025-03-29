@@ -5,6 +5,7 @@ import (
 	"backend/internal/cache"
 	"backend/internal/models"
 	"backend/internal/services"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,7 +40,7 @@ func (h *ForecastHandler) ListForecasts(w http.ResponseWriter, r *http.Request) 
 	}
 	forecasts, err := h.service.ForecastList(r.Context(), request.ListType, request.Category)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -75,6 +76,11 @@ func (h *ForecastHandler) CreateForecast(w http.ResponseWriter, r *http.Request)
 	var forecast models.Forecast
 	if err := json.NewDecoder(r.Body).Decode(&forecast); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if forecast.Question == "" || forecast.ResolutionCriteria == "" || forecast.Category == "" {
+		http.Error(w, "Question, resolution criteria, and category are required", http.StatusBadRequest)
 		return
 	}
 
@@ -137,8 +143,24 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 
 	// Use UserID from claims
 	ownership, err := h.service.CheckForecastOwnership(r.Context(), resolution.ID, claims.UserID)
+	if err == sql.ErrNoRows {
+		http.Error(w, "forecast does not exist", http.StatusBadRequest)
+		return
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	status, err := h.service.CheckForecastStatus(r.Context(), resolution.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if !status {
+		http.Error(w, "forecast is already resolved", http.StatusBadRequest)
 		return
 	}
 
@@ -146,7 +168,7 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 		http.Error(w, "user does not own this forecast", http.StatusForbidden)
 		return
 	}
-
+	fmt.Println("resolving forecast", resolution.ID)
 	if err := h.service.ResolveForecast(r.Context(),
 		resolution.ID,
 		resolution.Resolution,
@@ -156,7 +178,7 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 	}
 
 	h.cache.DeleteByPrefix("forecasts")
-	respondJSON(w, http.StatusOK, "forecast resolved")
+	respondJSON(w, http.StatusOK, nil)
 }
 
 func respondJSON(w http.ResponseWriter, status int, data any) {
