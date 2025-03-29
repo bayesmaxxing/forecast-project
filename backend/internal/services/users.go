@@ -4,6 +4,8 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
+	"fmt"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -27,14 +29,18 @@ func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*
 }
 
 func (s *UserService) CreateUser(ctx context.Context, user *models.User) error {
-	// Hash password before storing
+	user.CreatedAt = time.Now()
+
+	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
+	// Set the hashed password
 	user.Password = string(hashedPassword)
 
+	// Create the user with the hashed password
 	return s.repo.CreateUser(ctx, user)
 }
 
@@ -67,15 +73,26 @@ func (s *UserService) ChangePassword(ctx context.Context, userID int64, oldPassw
 	return s.repo.UpdatePassword(ctx, userID, string(hashedPassword))
 }
 
-// Add a method to verify password (useful for login)
+// AdminResetPassword resets a user's password without requiring the old password
+func (s *UserService) AdminResetPassword(ctx context.Context, userID int64, newPassword string) error {
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.UpdatePassword(ctx, userID, string(hashedPassword))
+}
+
 func (s *UserService) VerifyPassword(ctx context.Context, username string, password string) (*models.User, error) {
 	user, err := s.repo.GetUserByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return nil, err
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return nil, fmt.Errorf("invalid credentials")
 	}
 
 	return user, nil

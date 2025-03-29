@@ -18,13 +18,29 @@ func NewUserHandler(s *services.UserService) *UserHandler {
 }
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	// Create a request struct that includes the password field
+	var userRequest struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&userRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	h.service.CreateUser(r.Context(), &user)
+	// Create a user model and set the password
+	user := models.User{
+		Username: userRequest.Username,
+		Password: userRequest.Password,
+	}
+
+	err := h.service.CreateUser(r.Context(), &user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	respondJSON(w, http.StatusCreated, user)
 }
 
@@ -126,9 +142,14 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if loginRequest.Username == "" || loginRequest.Password == "" {
+		http.Error(w, "Username and password are required", http.StatusBadRequest)
+		return
+	}
+
 	user, err := h.service.VerifyPassword(r.Context(), loginRequest.Username, loginRequest.Password)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
@@ -143,4 +164,30 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		"token":    token,
 		"username": user.Username,
 	})
+}
+
+// AdminResetPassword allows resetting a user's password without knowing the old one
+func (h *UserHandler) AdminResetPassword(w http.ResponseWriter, r *http.Request) {
+	var resetRequest struct {
+		UserID      int64  `json:"user_id"`
+		NewPassword string `json:"new_password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&resetRequest); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if resetRequest.UserID == 0 || resetRequest.NewPassword == "" {
+		http.Error(w, "User ID and new password are required", http.StatusBadRequest)
+		return
+	}
+
+	err := h.service.AdminResetPassword(r.Context(), resetRequest.UserID, resetRequest.NewPassword)
+	if err != nil {
+		http.Error(w, "Failed to reset password: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Password reset successfully"})
 }

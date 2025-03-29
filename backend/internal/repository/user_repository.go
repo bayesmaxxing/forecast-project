@@ -19,6 +19,7 @@ type UserRepository interface {
 	ValidateUser(ctx context.Context, id int64) (bool, error)
 	UpdatePassword(ctx context.Context, id int64, password string) error
 	ListUsers(ctx context.Context) ([]*models.User, error)
+	CreateUserWithPassword(ctx context.Context, username string, passwordHash string) (int64, error)
 }
 
 // PostgresUserRepository implements the UserRepository interface
@@ -34,7 +35,7 @@ func NewUserRepository(db *database.DB) UserRepository {
 func (r *PostgresUserRepository) CreateUser(ctx context.Context, user *models.User) error {
 	user.CreatedAt = time.Now()
 
-	query := `INSERT INTO users (username, password, created_at)
+	query := `INSERT INTO users (username, password, created)
               VALUES ($1, $2, $3)	
               RETURNING id`
 
@@ -45,7 +46,7 @@ func (r *PostgresUserRepository) CreateUser(ctx context.Context, user *models.Us
 }
 
 func (r *PostgresUserRepository) GetUserByID(ctx context.Context, id int64) (*models.User, error) {
-	query := `SELECT id, username, created_at
+	query := `SELECT id, username, password, created
               FROM users
               WHERE id = $1`
 
@@ -53,6 +54,7 @@ func (r *PostgresUserRepository) GetUserByID(ctx context.Context, id int64) (*mo
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
 		&user.Username,
+		&user.Password,
 		&user.CreatedAt)
 
 	if err != nil {
@@ -63,7 +65,7 @@ func (r *PostgresUserRepository) GetUserByID(ctx context.Context, id int64) (*mo
 }
 
 func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
-	query := `SELECT id, username, password, created_at
+	query := `SELECT id, username, password, created
               FROM users
               WHERE username = $1`
 
@@ -141,4 +143,21 @@ func (r *PostgresUserRepository) ListUsers(ctx context.Context) ([]*models.User,
 	}
 
 	return users, rows.Err()
+}
+
+func (r *PostgresUserRepository) CreateUserWithPassword(ctx context.Context, username string, passwordHash string) (int64, error) {
+	createdAt := time.Now()
+	var userID int64
+
+	// Direct SQL with no struct involved
+	query := `INSERT INTO users (username, password, created)
+              VALUES ($1, $2, $3)  
+              RETURNING id`
+
+	err := r.db.QueryRowContext(ctx, query,
+		username,
+		passwordHash,
+		createdAt).Scan(&userID)
+
+	return userID, err
 }
