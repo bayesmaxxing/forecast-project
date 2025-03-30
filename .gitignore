@@ -23,3 +23,5 @@ forcast_database.py
 .DS_Store
 #md_post_upload.py
 app.yaml 
+copy_rds_to_local.sh
+db_copy_log.txt
