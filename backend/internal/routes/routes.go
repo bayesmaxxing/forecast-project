@@ -66,8 +66,7 @@ func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
 	mux.HandleFunc("GET /users", handlers.User.ListUsers)
 	mux.HandleFunc("POST /users", handlers.User.CreateUser)
 	mux.HandleFunc("POST /users/login", handlers.User.Login)
-	//mux.HandleFunc("POST /users/reset-password", handlers.User.AdminResetPassword)
-
+	// mux.HandleFunc("POST /users/reset-password", handlers.User.AdminResetPassword)
 }
 
 func setupProtectedRoutes(mux *http.ServeMux, handlers *Handlers) {
