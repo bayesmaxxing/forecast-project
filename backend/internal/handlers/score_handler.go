@@ -6,6 +6,7 @@ import (
 	"backend/internal/models"
 	"backend/internal/services"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -39,6 +40,7 @@ func (h *ScoreHandler) GetScores(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		respondJSON(w, http.StatusOK, scores)
+
 	case request.User_id != nil:
 		scores, err := h.service.GetScoresByUserID(r.Context(), *request.User_id)
 		if err != nil {
@@ -46,6 +48,7 @@ func (h *ScoreHandler) GetScores(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		respondJSON(w, http.StatusOK, scores)
+
 	case request.Forecast_id != nil:
 		scores, err := h.service.GetScoreByForecastID(r.Context(), *request.Forecast_id)
 		if err != nil {
@@ -53,13 +56,21 @@ func (h *ScoreHandler) GetScores(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		respondJSON(w, http.StatusOK, scores)
+
 	case request.User_id == nil && request.Forecast_id == nil:
+		cacheKey := "scores:all"
+		if cachedData, found := h.cache.Get(cacheKey); found {
+			respondJSON(w, http.StatusOK, cachedData)
+			return
+		}
 		scores, err := h.service.GetAllScores(r.Context())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		h.cache.Set(cacheKey, scores)
 		respondJSON(w, http.StatusOK, scores)
+
 	default:
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
@@ -88,6 +99,10 @@ func (h *ScoreHandler) CreateScore(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Invalidate all cache keys that start with "scores" on write
+	h.cache.DeleteByPrefix("scores:")
+
 	respondJSON(w, http.StatusCreated, score.ID)
 }
 
@@ -115,11 +130,15 @@ func (h *ScoreHandler) DeleteScore(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Invalidate all cache keys that start with "scores" on write
+	h.cache.DeleteByPrefix("scores:")
+
 	respondJSON(w, http.StatusOK, "Score deleted successfully")
 }
 
 func (h *ScoreHandler) GetAllScores(w http.ResponseWriter, r *http.Request) {
-	cacheKey := "all_scores"
+	cacheKey := "scores:all"
 
 	// Try to get from cache first
 	if cachedData, found := h.cache.Get(cacheKey); found {
@@ -138,7 +157,7 @@ func (h *ScoreHandler) GetAllScores(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ScoreHandler) GetAverageScores(w http.ResponseWriter, r *http.Request) {
-	cacheKey := "avg_scores_by_forecast"
+	cacheKey := "scores:all:average"
 
 	// Try to get from cache first
 	if cachedData, found := h.cache.Get(cacheKey); found {
@@ -172,7 +191,7 @@ func (h *ScoreHandler) GetAverageScoreByForecastID(w http.ResponseWriter, r *htt
 	}
 
 	// Generate cache key
-	cacheKey := "avg_score_forecast_" + forecastID
+	cacheKey := "scores:detail:average:" + forecastID
 
 	// Try to get from cache first
 	if cachedData, found := h.cache.Get(cacheKey); found {
@@ -211,17 +230,18 @@ func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request
 		byUser = *request.ByUser
 	}
 
-	// Generate cache key based on request parameters
-	cacheKey := "aggregate_scores"
+	userID := "ALL"
 	if request.User_id != nil {
-		cacheKey += "_user_" + strconv.FormatInt(*request.User_id, 10)
+		userID = strconv.FormatInt(*request.User_id, 10)
 	}
-	if request.Category != nil {
-		cacheKey += "_cat_" + *request.Category
+
+	category := "ALL"
+	if request.Category != nil && *request.Category != "" {
+		category = *request.Category
 	}
-	if byUser && request.User_id == nil {
-		cacheKey += "_by_user"
-	}
+
+	// Consistent key format: entity:action:param1:param2:param3
+	cacheKey := fmt.Sprintf("score:aggregate:%s:%s:%t", userID, category, byUser)
 
 	// Try to get from cache first
 	if cachedData, found := h.cache.Get(cacheKey); found {

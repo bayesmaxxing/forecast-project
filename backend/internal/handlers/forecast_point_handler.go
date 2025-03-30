@@ -7,6 +7,7 @@ import (
 	"backend/internal/services"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,6 +40,12 @@ func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *
 		return
 	}
 
+	cacheKey := fmt.Sprintf("points:list:%d", forecastID)
+	if cachedPoints, found := h.cache.Get(cacheKey); found {
+		respondJSON(w, http.StatusOK, cachedPoints)
+		return
+	}
+
 	points, err := h.service.GetForecastPointsByForecastID(r.Context(), forecastID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -49,6 +56,8 @@ func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+
+	h.cache.Set(cacheKey, points)
 
 	respondJSON(w, http.StatusOK, points)
 }
@@ -83,25 +92,35 @@ func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *htt
 		return
 	}
 
-	h.cache.DeleteByPrefix("latest")
-
+	h.cache.Delete(fmt.Sprintf("points:list:%d", point.ForecastID))
+	h.cache.Delete("points:all:latest")
+	h.cache.Delete("points:all")
 	message := "Forecast point created"
 
 	respondJSON(w, http.StatusCreated, message)
 }
 
 func (h *ForecastPointHandler) ListAllForecastPoints(w http.ResponseWriter, r *http.Request) {
+	cacheKey := "points:all"
+	if cachedPoints, found := h.cache.Get(cacheKey); found {
+		respondJSON(w, http.StatusOK, cachedPoints)
+		return
+	}
+
 	points, err := h.service.GetAllForecastPoints(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	h.cache.Set(cacheKey, points)
+
 	respondJSON(w, http.StatusOK, points)
 }
 
 func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r *http.Request) {
-	if cachedPoints, found := h.cache.Get("latest_all"); found {
+	cacheKey := "points:all:latest"
+	if cachedPoints, found := h.cache.Get(cacheKey); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
 	}
@@ -112,7 +131,7 @@ func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r
 		return
 	}
 
-	h.cache.Set("latest_all", latestForecastPoints)
+	h.cache.Set(cacheKey, latestForecastPoints)
 
 	respondJSON(w, http.StatusOK, latestForecastPoints)
 }
@@ -130,7 +149,8 @@ func (h *ForecastPointHandler) ListLatestForecastPointsByUser(w http.ResponseWri
 		return
 	}
 
-	if cachedPoints, found := h.cache.Get("latest_user_" + userIDStr); found {
+	cacheKey := fmt.Sprintf("points:all:latest:%d", userID)
+	if cachedPoints, found := h.cache.Get(cacheKey); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
 	}
@@ -141,7 +161,7 @@ func (h *ForecastPointHandler) ListLatestForecastPointsByUser(w http.ResponseWri
 		return
 	}
 
-	h.cache.Set("latest_user_"+userIDStr, latestForecastPoints)
+	h.cache.Set(cacheKey, latestForecastPoints)
 
 	respondJSON(w, http.StatusOK, latestForecastPoints)
 }
@@ -169,6 +189,17 @@ func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, 
 
 	// Check if user_id query parameter is provided
 	userIDStr := r.URL.Query().Get("user_id")
+
+	userId := "ALL"
+	if userIDStr != "" {
+		userId = userIDStr
+	}
+
+	cacheKey := fmt.Sprintf("points:ordered:%s:%d", userId, forecastID)
+	if cachedPoints, found := h.cache.Get(cacheKey); found {
+		respondJSON(w, http.StatusOK, cachedPoints)
+		return
+	}
 
 	var points []*models.ForecastPoint
 
@@ -206,6 +237,8 @@ func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, 
 			UserID:        p.UserID,
 		}
 	}
+
+	h.cache.Set(cacheKey, graphPoints)
 
 	respondJSON(w, http.StatusOK, graphPoints)
 }

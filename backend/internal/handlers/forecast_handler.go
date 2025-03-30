@@ -32,12 +32,24 @@ func (h *ForecastHandler) ListForecasts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cacheKey := fmt.Sprintf("forecasts_%s_%s", request.ListType, request.Category)
+	// Handle empty values with defaults
+	listType := "ALL"
+	if request.ListType != "" {
+		listType = request.ListType
+	}
+
+	category := "ALL"
+	if request.Category != "" {
+		category = request.Category
+	}
+
+	cacheKey := fmt.Sprintf("forecast:list:%s:%s", listType, category)
 
 	if cachedList, found := h.cache.Get(cacheKey); found {
 		respondJSON(w, http.StatusOK, cachedList)
 		return
 	}
+
 	forecasts, err := h.service.ForecastList(r.Context(), request.ListType, request.Category)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -57,11 +69,20 @@ func (h *ForecastHandler) GetForecast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cacheKey := fmt.Sprintf("forecast:detail:%d", id)
+
+	if cachedForecast, found := h.cache.Get(cacheKey); found {
+		respondJSON(w, http.StatusOK, cachedForecast)
+		return
+	}
+
 	forecast, err := h.service.GetForecastByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	h.cache.Set(cacheKey, forecast)
 
 	respondJSON(w, http.StatusOK, forecast)
 }
@@ -93,7 +114,8 @@ func (h *ForecastHandler) CreateForecast(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	h.cache.DeleteByPrefix("forecasts")
+	// Invalidate all cache keys that start with "forecasts:list:" on write
+	h.cache.DeleteByPrefix("forecasts:list:")
 	respondJSON(w, http.StatusCreated, "forecast created")
 }
 
@@ -119,7 +141,7 @@ func (h *ForecastHandler) DeleteForecast(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	h.cache.DeleteByPrefix("forecasts")
+	h.cache.DeleteByPrefix("forecasts:list:")
 	respondJSON(w, http.StatusOK, "forecast deleted")
 }
 
@@ -177,7 +199,10 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	h.cache.DeleteByPrefix("forecasts")
+	// Invalidate list cache and the cache for the resolved forecast
+	h.cache.DeleteByPrefix("forecasts:list:")
+	h.cache.Delete(fmt.Sprintf("forecast:detail:%d", resolution.ID))
+
 	respondJSON(w, http.StatusOK, nil)
 }
 
