@@ -13,6 +13,7 @@ import (
 type ForecastRepository interface {
 	GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error)
 	CheckForecastOwnership(ctx context.Context, id int64, userID int64) (bool, error)
+	CheckForecastStatus(ctx context.Context, id int64) (bool, error)
 	CreateForecast(ctx context.Context, f *models.Forecast) error
 	ListOpenForecasts(ctx context.Context) ([]*models.Forecast, error)
 	ListResolvedForecasts(ctx context.Context) ([]*models.Forecast, error)
@@ -76,6 +77,14 @@ func (r *PostgresForecastRepository) CheckForecastOwnership(ctx context.Context,
 	return forecastUserID == user_id, nil
 }
 
+func (r *PostgresForecastRepository) CheckForecastStatus(ctx context.Context, id int64) (bool, error) {
+	query := `SELECT (resolved is null) FROM forecasts WHERE id = $1`
+	var resolved bool
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&resolved)
+
+	return resolved, err
+}
+
 func (r *PostgresForecastRepository) CreateForecast(ctx context.Context, f *models.Forecast) error {
 	f.CreatedAt = time.Now()
 
@@ -89,7 +98,7 @@ func (r *PostgresForecastRepository) CreateForecast(ctx context.Context, f *mode
 				VALUES ($1, $2, $3, $4, $5) 
 				RETURNING id`
 
-	err := r.db.QueryRowContext(ctx, query, f.Question, f.Category, f.CreatedAt, f.ResolutionCriteria).Scan(&f.ID)
+	err := r.db.QueryRowContext(ctx, query, f.Question, f.Category, f.CreatedAt, f.UserID, f.ResolutionCriteria).Scan(&f.ID)
 	return err
 }
 

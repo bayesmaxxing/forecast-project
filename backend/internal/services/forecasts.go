@@ -31,6 +31,10 @@ func (s *ForecastService) CheckForecastOwnership(ctx context.Context, id int64, 
 	return s.repo.CheckForecastOwnership(ctx, id, user_id)
 }
 
+func (s *ForecastService) CheckForecastStatus(ctx context.Context, id int64) (bool, error) {
+	return s.repo.CheckForecastStatus(ctx, id)
+}
+
 func (s *ForecastService) CreateForecast(ctx context.Context, f *models.Forecast) error {
 	return s.repo.CreateForecast(ctx, f)
 }
