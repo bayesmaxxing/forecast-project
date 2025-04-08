@@ -17,7 +17,7 @@ function ResolutionDetails({ forecast, score }) {
       default: return "warning";
     }
   };
-
+  
   return (
     <>
       <Box sx={{ mb: 2 }}>

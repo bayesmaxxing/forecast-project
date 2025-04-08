@@ -56,7 +56,7 @@ export const resolveForecast = async (forecast_id, resolution, comment) => {
     throw new Error(`Error resolving forecast: ${response.status}`);
   }
 
-  return response.json();
+  return true;
 };
 
 export const createForecast = async (forecast) => {
@@ -64,7 +64,7 @@ export const createForecast = async (forecast) => {
   if (!token) {
     throw new Error('User needs to login to create a forecast');
   }
-  const response = await fetch(`${API_BASE_URL}/api/forecasts`, {
+  const response = await fetch(`${API_BASE_URL}/api/forecasts/create`, {
     method: 'POST',
     headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` },
     body: JSON.stringify(forecast)

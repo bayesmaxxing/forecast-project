@@ -22,16 +22,30 @@ import {
 import { useAggregateScoresData } from '../services/hooks/useAggregateScoresData';
 import { useForecastList } from '../services/hooks/useForecastList';
 import { useScoresData } from '../services/hooks/useScoresData';
+import UserSelector from './UserSelector';
 
 function SummaryScores({user_id=null}) {
   
   const [selectedMetric, setSelectedMetric] = useState('brier_score');
+  const [selectedUser, setSelectedUser] = useState(user_id || 'all');
   const navigate = useNavigate();
   const theme = useTheme();
 
-  const { scores: aggregateScores, loading: aggregateScoresLoading, error: aggregateScoresError } = useAggregateScoresData();
+  useEffect(() => {
+    if (user_id !== null) {
+      setSelectedUser(user_id);
+    }
+  }, [user_id]);
+
+  const { scores: aggregateScores, loading: aggregateScoresLoading, error: aggregateScoresError } = useAggregateScoresData(
+    null, 
+    selectedUser === 'all' ? null : selectedUser
+  );
   const { forecasts = [], loading: forecastsLoading, error: forecastsError } = useForecastList({list_type: 'resolved'});
-  const { scores, scoresLoading, error: scoresError } = useScoresData({user_id: user_id, useAverageEndpoint: true});
+  const { scores, scoresLoading, error: scoresError } = useScoresData({
+    user_id: selectedUser === 'all' ? null : selectedUser, 
+    useAverageEndpoint: selectedUser === 'all' ? true : false
+  });
   
   const getScore = () => {
     if (!aggregateScores) return 0;
@@ -59,8 +73,6 @@ function SummaryScores({user_id=null}) {
     score: scores.find(score => score.forecast_id === forecast.id)?.[selectedMetric] ?? 0
   }));
 
-  console.log("combined",combined);
-
   const chartData = combined.map(forecast => ({
     id: forecast.id,
     score: forecast.score,
@@ -87,6 +99,10 @@ function SummaryScores({user_id=null}) {
     }
   };
 
+  const handleUserChange = (newUserId) => {
+    setSelectedUser(newUserId || 'all');
+  };
+
   return (
     <Paper 
       elevation={3} 
@@ -97,17 +113,20 @@ function SummaryScores({user_id=null}) {
       }}
     >
       <Box sx={{ mb: 3 }}>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <Select
-            value={selectedMetric}
-            onChange={(e) => setSelectedMetric(e.target.value)}
-            size="small"
-          >
-            <MenuItem value="brier_score">Brier Score</MenuItem>
-            <MenuItem value="log2_score">Binary Log Score</MenuItem>
-            <MenuItem value="logn_score">Natural Log Score</MenuItem>
-          </Select>
-        </FormControl>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
+          <FormControl sx={{ minWidth: 150, '& .MuiInputBase-root': { height: '55px' } }}>
+            <Select
+              value={selectedMetric}
+              onChange={(e) => setSelectedMetric(e.target.value)}
+              size="small"
+            >
+              <MenuItem value="brier_score">Brier Score</MenuItem>
+              <MenuItem value="log2_score">Binary Log Score</MenuItem>
+              <MenuItem value="logn_score">Natural Log Score</MenuItem>
+            </Select>
+          </FormControl>
+          <UserSelector onUserChange={handleUserChange} selectedUserId={selectedUser} />
+        </Box>
         <Typography variant="h6" align="center" sx={{ mb: 2 }}>
           Average {getMetricLabel(selectedMetric)}: {avgScore.toFixed(3)}
         </Typography>

@@ -23,8 +23,8 @@ export const useSearchFilter = (forecasts, options = {}) => {
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(forecast => 
-        forecast.title?.toLowerCase().includes(term) || 
-        forecast.description?.toLowerCase().includes(term) ||
+        forecast.question?.toLowerCase().includes(term) || 
+        forecast.resolution_criteria?.toLowerCase().includes(term) ||
         forecast.category?.toLowerCase().includes(term)
       );
     }

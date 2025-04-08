@@ -9,10 +9,10 @@ import {
 } from '@mui/material';
 
 function ForecastCard({ forecast, isResolved = false}) {
-  const resolution = forecast.resolution == '0' ? 'No' : 
-                     forecast.resolution == '-' ? 'Ambiguous' : 'Yes';
-  const resolutionColor = forecast.resolution == '0' ? 'secondary.main' : 
-                          forecast.resolution == '-' ? 'warning.main' : 'primary.main';
+  const resolution = forecast.resolution === '0' ? 'No' : 
+                     forecast.resolution === '-' ? 'Ambiguous' : 'Yes';
+  const resolutionColor = forecast.resolution === '0' ? 'secondary.main' : 
+                          forecast.resolution === '-' ? 'warning.main' : 'primary.main';
 
   const formatDate = (dateString) => dateString.split('T')[0];
   return (
