@@ -114,8 +114,7 @@ func (h *ForecastHandler) CreateForecast(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Invalidate all cache keys that start with "forecasts:list:" on write
-	h.cache.DeleteByPrefix("forecasts:list:")
+	h.cache.DeleteByPrefix("forecast:list:")
 	respondJSON(w, http.StatusCreated, "forecast created")
 }
 
@@ -141,7 +140,7 @@ func (h *ForecastHandler) DeleteForecast(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	h.cache.DeleteByPrefix("forecasts:list:")
+	h.cache.DeleteByPrefix("forecast:list:")
 	respondJSON(w, http.StatusOK, "forecast deleted")
 }
 
@@ -190,7 +189,7 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 		http.Error(w, "user does not own this forecast", http.StatusForbidden)
 		return
 	}
-	fmt.Println("resolving forecast", resolution.ID)
+
 	if err := h.service.ResolveForecast(r.Context(),
 		resolution.ID,
 		resolution.Resolution,
@@ -199,11 +198,12 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Invalidate list cache and the cache for the resolved forecast
-	h.cache.DeleteByPrefix("forecasts:list:")
-	h.cache.Delete(fmt.Sprintf("forecast:detail:%d", resolution.ID))
+	detailKey := fmt.Sprintf("forecast:detail:%d", resolution.ID)
+	h.cache.Delete(detailKey)
 
-	respondJSON(w, http.StatusOK, nil)
+	h.cache.DeleteByPrefix("forecast:list:")
+
+	respondJSON(w, http.StatusOK, "forecast resolved")
 }
 
 func respondJSON(w http.ResponseWriter, status int, data any) {
