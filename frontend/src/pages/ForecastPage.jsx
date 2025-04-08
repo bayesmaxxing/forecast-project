@@ -31,8 +31,21 @@ function ForecastPage() {
     const listType = location.pathname.endsWith('/resolved') ? 'resolved' : 'open';
     
     // Fetch the data
-    const { forecasts = [], loading, error } = useForecastList({category: categoryFilter, list_type: listType});
-    const { points = [], loading: pointsLoading, error: pointsError } = usePointsData({userId: selectedUserId, useLatestPoints: true, useOrderedEndpoint: false});
+    const { forecasts = [], loading, error, refetchForecasts } = useForecastList({
+      category: categoryFilter, 
+      list_type: listType
+    });
+    const { points = [], loading: pointsLoading, error: pointsError, refetchPoints } = usePointsData({
+      userId: selectedUserId, 
+      useLatestPoints: true, 
+      useOrderedEndpoint: false
+    });
+
+    // Function to refetch all relevant data
+    const refetchAllData = () => {
+      refetchForecasts();
+      refetchPoints();
+    };
 
     // Combine the forecasts and points
     const combined = Array.isArray(forecasts) 
@@ -53,8 +66,6 @@ function ForecastPage() {
       setSelectedUserId(userId);
     };
 
-    const formatDate = (dateString) => dateString.split('T')[0];
-
     const getPageTitle = () => {
       if (!category) return "ALL QUESTIONS";
       return `${category.toUpperCase()} QUESTIONS`;
@@ -69,7 +80,9 @@ function ForecastPage() {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - 240px)` },
-          mt: '64px',                    
+          mt: '64px',
+          maxWidth: '1000px',
+          mx: 'auto'                   
         }}
       >
         {(error || pointsError) && (
@@ -88,7 +101,7 @@ function ForecastPage() {
                 </Grid>
                 {isLoggedIn && (
                   <Grid item xs={12} sm={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
-                    <AddForecast />
+                    <AddForecast onSubmitSuccess={refetchAllData} />
                   </Grid>
                 )}
               </Grid>
@@ -137,7 +150,7 @@ function ForecastPage() {
           {/* Forecasts Grid */}
           {loading ? (
             [...Array(6)].map((_, index) => (
-              <Grid item xs={12} md={6} lg={4} key={index}>
+              <Grid item xs={12} key={index}>
                 <Card sx={{ 
                   backgroundColor: 'background.paper',
                   height: '100%',
@@ -155,7 +168,7 @@ function ForecastPage() {
             ))
           ) : (
             Array.isArray(sortedForecasts) ? sortedForecasts.map(forecast => (
-              <Grid item xs={12} md={6} lg={4} key={forecast.id}>
+              <Grid item xs={12} key={forecast.id}>
                 <ForecastCard 
                   forecast={forecast}  
                   isResolved={listType === 'resolved'}

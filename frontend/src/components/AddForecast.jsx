@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { createForecast } from '../services/api/forecastService';
 
-const AddForecast = () => {
+const AddForecast = ({ onSubmitSuccess }) => {
   const [forecastData, setForecastData] = useState({
     question: '',
     category: '',
@@ -47,13 +47,18 @@ const AddForecast = () => {
     try {
       const response = await createForecast(forecastData);
 
-      if (response.ok) {
+      if (response==='forecast created') {
         setSubmitStatus('Forecast added successfully');
         setForecastData({
           question: '',
           category: '',
           resolution_criteria: ''
         });
+        handleClose();
+        
+        if (onSubmitSuccess) {
+          onSubmitSuccess();
+        }
       } else {
         setSubmitStatus('Failed to create forecast. Please try again.');
       }

@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { createPoint } from '../services/api/pointsService';
 
-const UpdateForecast = () => {
+const UpdateForecast = ({ onSubmitSuccess }) => {
   let { id } = useParams();
   const theme = useTheme();
   const [updateData, setUpdateData] = useState({
@@ -67,14 +67,19 @@ const UpdateForecast = () => {
 
     try {
       const response = await createPoint(dataToSubmit.forecast_id, dataToSubmit.point_forecast, dataToSubmit.reason);
-
-      if (response.ok) {
+      
+      if (response) {
         setSubmitStatus('Update added successfully');
         setUpdateData({
           point_forecast: '',
           reason: ''
         });
         handleClose(); // Close the dialog on success
+        
+        // Call the callback function to refetch data
+        if (onSubmitSuccess) {
+          onSubmitSuccess();
+        }
       } else {
         setSubmitStatus('Update failed. Please try again.');
       }

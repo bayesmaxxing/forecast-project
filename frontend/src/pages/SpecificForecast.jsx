@@ -42,14 +42,14 @@ function SpecificForecast() {
   }, []);
 
   // DATA FETCHING
-  const { forecast, forecastLoading, forecastError } = useForecastData({id: id});
-  const { points, pointsLoading, pointsError } = usePointsData({
+  const { forecast, forecastLoading, forecastError, refetchForecast } = useForecastData({id: id});
+  const { points, pointsLoading, pointsError, refetchPoints } = usePointsData({
     id: id,
     useOrderedEndpoint: false,
     useLatestPoints: false
   });
   
-  const { score, scoreLoading, scoreError } = useScoresData({
+  const { scores, scoreLoading, scoreError, refetchScores } = useScoresData({
     user_id: isMultiUserMode ? null : selectedUserId,
     forecast_id: numericId,
     useAverageEndpoint: isMultiUserMode,
@@ -57,6 +57,16 @@ function SpecificForecast() {
   });
   
   const { users, usersLoading, usersError } = useUserData();
+  
+  // Function to refetch all data
+  const refetchAllData = () => {
+    refetchForecast();
+    refetchPoints();
+    if (forecast?.resolved != null) {
+      refetchScores();
+    }
+  };
+
   const isLoading = forecastLoading || pointsLoading || (forecast?.resolved != null && scoreLoading);
   
   if (isLoading) {
@@ -92,7 +102,9 @@ function SpecificForecast() {
     
   const sortedPoints = [...filteredPoints].sort((a, b) => new Date(a.created) - new Date(b.created));
   
-  const chartData = filteredPoints && filteredPoints.length > 0 ? prepareChartData(filteredPoints, isMultiUserMode) : null;
+  // Use a 4-hour minimum time window between points
+  const chartData = filteredPoints && filteredPoints.length > 0 ? 
+    prepareChartData(filteredPoints, isMultiUserMode, false, 0) : null;
   
   const chartOptions = {
     title: {
@@ -103,7 +115,8 @@ function SpecificForecast() {
         min: 0,
         max: 1,
       }
-    }
+    },
+    useSequential: false // Use date-based x-axis
   };
 
   return (
@@ -115,16 +128,16 @@ function SpecificForecast() {
         <Box display="flex" justifyContent="space-between" alignItems="center" mt={2} mb={2}>
           <UserSelector onUserChange={handleUserChange} selectedUserId={selectedUserId} />
           {isLoggedIn && forecast.resolved == null && (
-            <ResolveForecast/>
-        )}
+            <ResolveForecast onSubmitSuccess={refetchAllData} />
+          )}
         </Box>
         
-        {forecast.resolved && (
+      </Paper>
+      {forecast.resolved && (
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <ResolutionDetails forecast={forecast} score={score} />
+            <ResolutionDetails forecast={forecast} score={scores} />
           </Paper>
         )}
-      </Paper>
 
       {chartData ? (
         <ForecastGraph data={chartData} options={chartOptions} />
@@ -133,12 +146,6 @@ function SpecificForecast() {
           <Typography variant="h6" color="text.secondary">
             No forecast data available for the selected user
           </Typography>
-        </Paper>
-      )}
-
-      {forecast.resolved != null && (
-        <Paper elevation={3} sx={{ p: 3, mb: 3 , mt: 3}}>
-          <ResolutionDetails forecast={forecast} score={score} />
         </Paper>
       )}
 
@@ -151,7 +158,7 @@ function SpecificForecast() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6">Forecast Updates</Typography>
           {isLoggedIn && forecast.resolved == null && (
-            <UpdateForecast />
+            <UpdateForecast onSubmitSuccess={refetchAllData} />
           )}
         </Box>
         {sortedPoints.length > 0 ? (

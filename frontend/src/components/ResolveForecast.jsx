@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { resolveForecast } from '../services/api/forecastService';
 
-const ResolveForecast = () => {
+const ResolveForecast = ({ onSubmitSuccess }) => {
   let { id } = useParams();
   const [resolveData, setResolveData] = useState({
     resolution: '',
@@ -59,14 +59,19 @@ const ResolveForecast = () => {
 
     try {
       const response = await resolveForecast(dataToSubmit.forecast_id, dataToSubmit.resolution, dataToSubmit.comment);
-
-      if (response.ok) {
+      
+      if (response===true) {
         setSubmitStatus('Forecast resolved successfully');
         setResolveData({
           resolution: '',
           comment: ''
         });
         handleClose(); // Close the dialog on success
+        
+        // Call the callback function to refetch data
+        if (onSubmitSuccess) {
+          onSubmitSuccess();
+        }
       } else {
         setSubmitStatus('Forecast resolution failed. Please try again.');
       }

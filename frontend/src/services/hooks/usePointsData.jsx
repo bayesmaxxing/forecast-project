@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { pointsService } from '../api/index';
 
 export function usePointsData({ id, userId, useOrderedEndpoint = true, useLatestPoints = true } = {}) {
@@ -6,7 +6,8 @@ export function usePointsData({ id, userId, useOrderedEndpoint = true, useLatest
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  // Create a fetchData function using useCallback
+  const fetchData = useCallback(() => {
     setLoading(true);
     const user = userId === 'all' ? null : userId;
     let pointsPromise; 
@@ -21,7 +22,7 @@ export function usePointsData({ id, userId, useOrderedEndpoint = true, useLatest
         : pointsService.fetchPointsByID(id);
     }
     
-    Promise.all([
+    return Promise.all([
       pointsPromise
     ])
     .then(([pointsDataJson]) => {
@@ -35,5 +36,16 @@ export function usePointsData({ id, userId, useOrderedEndpoint = true, useLatest
     });
   }, [id, useOrderedEndpoint, userId, useLatestPoints]);
 
-  return { points, loading, error };
+  // Initial data fetch
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Return the refetch function along with the data
+  return { 
+    points, 
+    loading: loading, 
+    error, 
+    refetchPoints: fetchData 
+  };
 }

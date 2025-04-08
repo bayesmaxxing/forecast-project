@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { forecastService } from '../api/index';
 
 export function useForecastData({id} = {}) {
@@ -6,10 +6,11 @@ export function useForecastData({id} = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  // Create a fetchData function using useCallback to memoize it
+  const fetchData = useCallback(() => {
     setLoading(true);
     
-    Promise.all([
+    return Promise.all([
       forecastService.fetchForecastById(id),
     ])
     .then(([forecastDataJson]) => {
@@ -23,5 +24,16 @@ export function useForecastData({id} = {}) {
     });
   }, [id]);
 
-  return { forecast, loading, error };
+  // Initial data fetch
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Return the refetch function along with the data
+  return { 
+    forecast, 
+    loading, 
+    error, 
+    refetchForecast: fetchData 
+  };
 }
