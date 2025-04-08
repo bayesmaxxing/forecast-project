@@ -1,27 +1,39 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Paper,
-  Box,
-  TextField,
   Button,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Typography,
   Alert,
   Snackbar,
-  useTheme
+  useTheme,
+  Box
 } from '@mui/material';
+import { createPoint } from '../services/api/pointsService';
 
-const UpdateForecast = () => {
+const UpdateForecast = ({ onSubmitSuccess }) => {
   let { id } = useParams();
   const theme = useTheme();
   const [updateData, setUpdateData] = useState({
     point_forecast: '',
-    upper_ci: '',
-    lower_ci: '',
     reason: '',
   });
   const [submitStatus, setSubmitStatus] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,29 +61,25 @@ const UpdateForecast = () => {
     const dataToSubmit = {
       ...updateData,
       point_forecast: parseFloat(updateData.point_forecast),
-      upper_ci: parseFloat(updateData.upper_ci),
-      lower_ci: parseFloat(updateData.lower_ci),
       reason: updateData.reason,
       forecast_id: parseInt(id)
     };
 
     try {
-      const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/forecast-points`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSubmit)
-      });
-
-      if (response.ok) {
+      const response = await createPoint(dataToSubmit.forecast_id, dataToSubmit.point_forecast, dataToSubmit.reason);
+      
+      if (response) {
         setSubmitStatus('Update added successfully');
         setUpdateData({
           point_forecast: '',
-          upper_ci: '',
-          lower_ci: '',
           reason: ''
         });
+        handleClose(); // Close the dialog on success
+        
+        // Call the callback function to refetch data
+        if (onSubmitSuccess) {
+          onSubmitSuccess();
+        }
       } else {
         setSubmitStatus('Update failed. Please try again.');
       }
@@ -86,89 +94,74 @@ const UpdateForecast = () => {
   };
 
   return (
-    <Paper 
-      elevation={3}
-      sx={{
-        p: 3,
-        mt: 2,
-        backgroundColor: theme.palette.background.paper
-      }}
-    >
-      <Typography variant="h6" gutterBottom>
-        Update Forecast
-      </Typography>
-      
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          '& .MuiTextField-root': { mb: 2 },
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2
-        }}
+    <>
+      <Button 
+        variant="contained" 
+        color="primary"
+        onClick={handleClickOpen}
+        sx={{ mt: 2 }}
       >
-        <TextField
-          label="Point Forecast"
-          id="point_forecast"
-          name="point_forecast"
-          value={updateData.point_forecast}
-          onChange={handleChange}
-          required
-          fullWidth
-          size="small"
-          type="text"
-          helperText="Enter a number between 0 and 1"
-        />
+        Update Forecast
+      </Button>
+      
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Update Forecast</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Add a new forecast point with your latest prediction.
+          </DialogContentText>
+          
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              '& .MuiTextField-root': { mb: 2 },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              mt: 1
+            }}
+          >
+            <TextField
+              label="Point Forecast"
+              id="point_forecast"
+              name="point_forecast"
+              value={updateData.point_forecast}
+              onChange={handleChange}
+              required
+              fullWidth
+              size="small"
+              type="text"
+              helperText="Enter a number between 0 and 1"
+            />
 
-        <TextField
-          label="Upper Confidence Interval"
-          id="upper_ci"
-          name="upper_ci"
-          value={updateData.upper_ci}
-          onChange={handleChange}
-          required
-          fullWidth
-          size="small"
-          type="text"
-          helperText="Must be greater than point forecast"
-        />
-
-        <TextField
-          label="Lower Confidence Interval"
-          id="lower_ci"
-          name="lower_ci"
-          value={updateData.lower_ci}
-          onChange={handleChange}
-          required
-          fullWidth
-          size="small"
-          type="text"
-          helperText="Must be less than point forecast"
-        />
-
-        <TextField
-          label="Reason for Update"
-          id="reason"
-          name="reason"
-          value={updateData.reason}
-          onChange={handleChange}
-          required
-          fullWidth
-          multiline
-          rows={3}
-          helperText="Explain your reasoning for this update"
-        />
-
-        <Button 
-          type="submit" 
-          variant="contained" 
-          color="primary"
-          sx={{ mt: 2 }}
-        >
-          Submit Update
-        </Button>
-      </Box>
+            <TextField
+              label="Reason for Update"
+              id="reason"
+              name="reason"
+              value={updateData.reason}
+              onChange={handleChange}
+              required
+              fullWidth
+              multiline
+              rows={3}
+              helperText="Explain your reasoning for this update"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleClose} color="secondary">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            color="primary"
+          >
+            Submit Update
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbarOpen}
@@ -184,7 +177,7 @@ const UpdateForecast = () => {
           {submitStatus}
         </Alert>
       </Snackbar>
-    </Paper>
+    </>
   );
 };
 

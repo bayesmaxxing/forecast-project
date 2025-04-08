@@ -1,30 +1,41 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Paper,
-  Box,
-  TextField,
   Button,
-  Typography,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Alert,
   Snackbar,
+  Box,
   RadioGroup,
-  FormControlLabel,
-  Radio,
   FormControl,
   FormLabel,
-  useTheme
+  FormControlLabel,
+  Radio
 } from '@mui/material';
+import { resolveForecast } from '../services/api/forecastService';
 
-const ResolveForecast = ({ forecastPoints }) => {
+const ResolveForecast = ({ onSubmitSuccess }) => {
   let { id } = useParams();
-  const theme = useTheme();
   const [resolveData, setResolveData] = useState({
     resolution: '',
     comment: '',
   });
   const [submitStatus, setSubmitStatus] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,7 +43,7 @@ const ResolveForecast = ({ forecastPoints }) => {
       ...prevState,
       [name]: value
     }));
-  };
+  };  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,26 +54,26 @@ const ResolveForecast = ({ forecastPoints }) => {
       ...resolveData,
       resolution: resolveData.resolution,
       comment: resolveData.comment,
-      id: parseInt(id)
+      forecast_id: parseInt(id)
     };
 
     try {
-      const response = await fetch(`https://forecasting-389105.ey.r.appspot.com/resolve/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSubmit)
-      });
-
-      if (response.ok) {
+      const response = await resolveForecast(dataToSubmit.forecast_id, dataToSubmit.resolution, dataToSubmit.comment);
+      
+      if (response===true) {
         setSubmitStatus('Forecast resolved successfully');
         setResolveData({
           resolution: '',
-          comment: '',
+          comment: ''
         });
+        handleClose(); // Close the dialog on success
+        
+        // Call the callback function to refetch data
+        if (onSubmitSuccess) {
+          onSubmitSuccess();
+        }
       } else {
-        setSubmitStatus('Resolution failed. Please try again.');
+        setSubmitStatus('Forecast resolution failed. Please try again.');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -75,28 +86,35 @@ const ResolveForecast = ({ forecastPoints }) => {
   };
 
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 3,
-        mt: 2,
-        backgroundColor: theme.palette.background.paper
-      }}
-    >
-      <Typography variant="h6" gutterBottom>
-        Resolve Forecast
-      </Typography>
-
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 3
-        }}
+    <>
+      <Button 
+        variant="contained" 
+        color="primary"
+        onClick={handleClickOpen}
+        sx={{ mt: 2 }}
       >
-        <FormControl required>
+        Resolve Forecast
+      </Button>
+      
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Resolve Forecast</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Resolve the forecast as Yes, No, or Ambiguous.
+          </DialogContentText>
+          
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              '& .MuiTextField-root': { mb: 2 },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              mt: 1
+            }}
+          >
+            <FormControl required>
           <FormLabel id="resolution-group-label">Resolution</FormLabel>
           <RadioGroup
             aria-labelledby="resolution-group-label"
@@ -134,17 +152,21 @@ const ResolveForecast = ({ forecastPoints }) => {
           rows={3}
           helperText="Provide details about the resolution"
         />
-
-        <Button 
-          type="submit" 
-          variant="contained" 
-          color="primary"
-          disabled={!resolveData.resolution} // Disable if no resolution selected
-          sx={{ mt: 2 }}
-        >
-          Resolve Forecast
-        </Button>
-      </Box>
+        </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleClose} color="secondary">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            color="primary"
+          >
+            Submit resolution 
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbarOpen}
@@ -160,7 +182,7 @@ const ResolveForecast = ({ forecastPoints }) => {
           {submitStatus}
         </Alert>
       </Snackbar>
-    </Paper>
+    </>
   );
 };
 

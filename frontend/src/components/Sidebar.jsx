@@ -35,7 +35,7 @@ import {
 } from '@mui/icons-material';
 
 // Constants
-const DRAWER_WIDTH = 240;
+const DRAWER_WIDTH = 200;
 
 const Sidebar = () => {
   const theme = useTheme();
@@ -57,7 +57,6 @@ const Sidebar = () => {
     { text: 'X-risk', path: '/questions/category/x-risk', icon: <Dangerous /> },
     { text: 'Sports', path: '/questions/category/sports', icon: <SportsBasketball /> },
     { text: 'Personal', path: '/questions/category/personal', icon: <Category /> },
-    { text: 'One-shot', path: '/questions/category/one-shot', icon: <TimesOneMobiledata />},
     { text: 'Other', path: '/questions/category/other', icon: <Category /> },
     { text: 'Resolved', path: '/questions/resolved', icon: <Timeline /> } 
   ];
@@ -81,7 +80,7 @@ const Sidebar = () => {
       <Box
         sx={{
           position: 'absolute',
-          top: 64, // AppBar height
+          top: 60, // AppBar height
           left: 0,
           right: 0,
           zIndex: 1100,
