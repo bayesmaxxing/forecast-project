@@ -120,7 +120,7 @@ function SpecificForecast() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, mt: { xs: 8, sm: 10}, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4, mt: { xs: 5, sm: 8}, mb: 0 }}>
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           {forecast.question}
