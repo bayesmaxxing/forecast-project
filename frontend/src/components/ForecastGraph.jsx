@@ -7,13 +7,21 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceArea
 } from 'recharts';
-import { Paper, Typography, useTheme, Box, useMediaQuery } from '@mui/material';
+import { Paper, Typography, useTheme, Box, useMediaQuery, Switch, FormControlLabel } from '@mui/material';
+import { format } from 'date-fns';
 
 function ForecastGraph({ data, options = {} }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [useSequentialView, setUseSequentialView] = React.useState(options.useSequential !== false);
+
+  // Toggle between date and sequential views
+  const handleViewChange = (event) => {
+    setUseSequentialView(event.target.checked);
+  };
 
   const transformData = () => {
     if (!data || !data.labels || !data.datasets || data.datasets.length === 0) {
@@ -21,26 +29,40 @@ function ForecastGraph({ data, options = {} }) {
       return [];
     }
     
-    // Log for debugging
-    console.log('Transforming chart data', {
-      labels: data.labels.length,
-      datasets: data.datasets.length,
-      sampleDataset: data.datasets[0].data.length
-    });
-    
-    // Handle sequence-based data (using prediction number on x-axis)
-    if (data._isSequenced) {
+    // For sequential view, use the existing sequential data
+    if (useSequentialView && data._isSequenced) {
       return data.labels.map((label, index) => {
-        // Start with name for x-axis
         const dataPoint = { name: label };
-        
-        // For each dataset, add its value if it exists at this index
         data.datasets.forEach(dataset => {
           if (index < dataset.data.length) {
             dataPoint[dataset.label] = dataset.data[index];
-            // Store the date string for tooltip display
             if (dataset.dates && dataset.dates[index]) {
               dataPoint[`${dataset.label}_date`] = dataset.dates[index];
+            }
+          }
+        });
+        return dataPoint;
+      });
+    }
+    
+    // For date-based view
+    if (data._timestamps && data._timestamps.length > 0) {
+      return data._timestamps.map((timestamp, index) => {
+        const dataPoint = { 
+          timestamp: timestamp,
+          // Format the time for display in tooltips
+          formattedTime: format(new Date(timestamp), 'MM/dd/yyyy HH:mm')
+        };
+        
+        // Add dataset values matching this timestamp
+        data.datasets.forEach(dataset => {
+          const datasetIndex = dataset.timestamps ? 
+            dataset.timestamps.indexOf(timestamp) : -1;
+          
+          if (datasetIndex !== -1) {
+            dataPoint[dataset.label] = dataset.data[datasetIndex];
+            if (dataset.dates && dataset.dates[datasetIndex]) {
+              dataPoint[`${dataset.label}_date`] = dataset.dates[datasetIndex];
             }
           }
         });
@@ -49,7 +71,7 @@ function ForecastGraph({ data, options = {} }) {
       });
     }
     
-    // Original date-based implementation
+    // Fallback implementation
     return data.labels.map((label, index) => {
       const dataPoint = { name: label };
       data.datasets.forEach(dataset => {
@@ -60,6 +82,87 @@ function ForecastGraph({ data, options = {} }) {
   };
 
   const rechartsData = transformData();
+
+  // Customize the x-axis tick display
+  const formatXAxis = (tickItem) => {
+    if (useSequentialView) return tickItem;
+    
+    const date = new Date(tickItem);
+    return format(date, 'M/d');
+  };
+
+  // Create a properly scaled time axis for date view
+  const getXAxisConfig = () => {
+    if (useSequentialView) {
+      return {
+        dataKey: "name",
+        type: "category",
+        tick: { 
+          fill: theme.palette.text.primary, 
+          fontSize: 12 
+        },
+        angle: 0,
+        textAnchor: "middle",
+        height: isMobile ? 30 : 50
+      };
+    } else {
+      // Find min and max timestamps
+      let minTime = Infinity;
+      let maxTime = -Infinity;
+      
+      if (data && data._timestamps) {
+        data._timestamps.forEach(timestamp => {
+          minTime = Math.min(minTime, timestamp);
+          maxTime = Math.max(maxTime, timestamp);
+        });
+      }
+      
+      // Calculate proper domain with padding
+      const timeRange = maxTime - minTime;
+      const padding = Math.max(timeRange * 0.1, 24 * 60 * 60 * 1000); // 10% or 1 day min
+      
+      return {
+        dataKey: "timestamp",
+        type: "number",
+        scale: "time",
+        domain: [minTime - padding, maxTime + padding],
+        tickFormatter: formatXAxis,
+        tick: { 
+          fill: theme.palette.text.primary, 
+          fontSize: 12 
+        },
+        angle: 0,
+        textAnchor: "middle",
+        height: isMobile ? 30 : 50,
+        dy: 10,
+        // Customize the number of ticks to avoid crowding
+        ticks: calculateTimeTicks(minTime - padding, maxTime + padding)
+      };
+    }
+  };
+  
+  // Calculate appropriate time ticks based on the range
+  const calculateTimeTicks = (start, end) => {
+    const range = end - start;
+    const dayMs = 24 * 60 * 60 * 1000;
+    
+    // Determine number of ticks based on range
+    let tickCount;
+    if (range <= dayMs * 3) {
+      // If 3 days or less, show ticks for each day
+      tickCount = Math.ceil(range / dayMs) + 1;
+    } else if (range <= dayMs * 14) {
+      // If 2 weeks or less, show ~5 ticks
+      tickCount = 5;
+    } else {
+      // For longer ranges, show ~7 ticks
+      tickCount = 7;
+    }
+    
+    // Calculate evenly spaced ticks
+    const step = range / (tickCount - 1);
+    return Array.from({length: tickCount}, (_, i) => start + i * step);
+  };
 
   return (
     <Paper 
@@ -80,6 +183,29 @@ function ForecastGraph({ data, options = {} }) {
           {options.title.text}
         </Typography>
       )}
+      
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          mb: 1
+        }}
+      >
+        <FormControlLabel
+          control={
+            <Switch
+              checked={useSequentialView}
+              onChange={handleViewChange}
+              color="primary"
+              size="small"
+            />
+          }
+          label={useSequentialView ? "Sequential View" : "Time View"}
+          labelPlacement="start"
+          sx={{ ml: 0, fontSize: '0.8rem' }}
+        />
+      </Box>
+      
       <Box
         sx={{
           width: '100%',
@@ -111,24 +237,14 @@ function ForecastGraph({ data, options = {} }) {
                 top: 10,
                 right: 10,
                 left: 0,
-                bottom: isMobile ? 10 : 20, // Reduced bottom margin on mobile since we're hiding labels
+                bottom: isMobile ? 10 : 20, 
               }}
             >
               <CartesianGrid 
                 strokeDasharray="3 3" 
                 stroke={theme.palette.divider}
               />
-              <XAxis 
-                dataKey="name"
-                tick={isMobile ? false : { 
-                  fill: theme.palette.text.primary, 
-                  fontSize: 12
-                }}
-                angle={0}
-                textAnchor="middle"
-                height={isMobile ? 30 : 50}
-                dy={10}
-              />
+              <XAxis {...getXAxisConfig()} />
               <YAxis
                 tick={{ 
                   fill: theme.palette.text.primary, 
@@ -158,8 +274,11 @@ function ForecastGraph({ data, options = {} }) {
                   }
                   return [value, name];
                 }}
-                labelFormatter={(label) => {
-                  return `Prediction: ${label}`;
+                labelFormatter={(label, payload) => {
+                  if (!useSequentialView && payload && payload.length > 0) {
+                    return payload[0].payload.formattedTime || format(new Date(label), 'MM/dd/yyyy HH:mm');
+                  }
+                  return useSequentialView ? `Prediction: ${label}` : label;
                 }}
               />
               <Legend 
@@ -176,6 +295,7 @@ function ForecastGraph({ data, options = {} }) {
                   strokeWidth={dataset.borderWidth || 2}
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}
+                  connectNulls={true}
                 />
               ))}
             </LineChart>
