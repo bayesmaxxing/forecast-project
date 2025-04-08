@@ -202,6 +202,7 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 	h.cache.Delete(detailKey)
 
 	h.cache.DeleteByPrefix("forecast:list:")
+	h.cache.DeleteByPrefix("scores:")
 
 	respondJSON(w, http.StatusOK, "forecast resolved")
 }

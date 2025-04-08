@@ -58,7 +58,7 @@ func (h *ScoreHandler) GetScores(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, http.StatusOK, scores)
 
 	case request.User_id == nil && request.Forecast_id == nil:
-		cacheKey := "scores:all"
+		cacheKey := "score:all"
 		if cachedData, found := h.cache.Get(cacheKey); found {
 			respondJSON(w, http.StatusOK, cachedData)
 			return
@@ -101,7 +101,7 @@ func (h *ScoreHandler) CreateScore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Invalidate all cache keys that start with "scores" on write
-	h.cache.DeleteByPrefix("scores:")
+	h.cache.DeleteByPrefix("score:")
 
 	respondJSON(w, http.StatusCreated, score.ID)
 }
@@ -132,13 +132,13 @@ func (h *ScoreHandler) DeleteScore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Invalidate all cache keys that start with "scores" on write
-	h.cache.DeleteByPrefix("scores:")
+	h.cache.DeleteByPrefix("score:")
 
 	respondJSON(w, http.StatusOK, "Score deleted successfully")
 }
 
 func (h *ScoreHandler) GetAllScores(w http.ResponseWriter, r *http.Request) {
-	cacheKey := "scores:all"
+	cacheKey := "score:all"
 
 	// Try to get from cache first
 	if cachedData, found := h.cache.Get(cacheKey); found {
@@ -157,7 +157,7 @@ func (h *ScoreHandler) GetAllScores(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ScoreHandler) GetAverageScores(w http.ResponseWriter, r *http.Request) {
-	cacheKey := "scores:all:average"
+	cacheKey := "score:all:average"
 
 	// Try to get from cache first
 	if cachedData, found := h.cache.Get(cacheKey); found {
@@ -191,7 +191,7 @@ func (h *ScoreHandler) GetAverageScoreByForecastID(w http.ResponseWriter, r *htt
 	}
 
 	// Generate cache key
-	cacheKey := "scores:detail:average:" + forecastID
+	cacheKey := "score:detail:average:" + forecastID
 
 	// Try to get from cache first
 	if cachedData, found := h.cache.Get(cacheKey); found {
@@ -240,7 +240,6 @@ func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request
 		category = *request.Category
 	}
 
-	// Consistent key format: entity:action:param1:param2:param3
 	cacheKey := fmt.Sprintf("score:aggregate:%s:%s:%t", userID, category, byUser)
 
 	// Try to get from cache first

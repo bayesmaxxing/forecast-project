@@ -40,7 +40,7 @@ func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *
 		return
 	}
 
-	cacheKey := fmt.Sprintf("points:list:%d", forecastID)
+	cacheKey := fmt.Sprintf("point:list:%d", forecastID)
 	if cachedPoints, found := h.cache.Get(cacheKey); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
@@ -92,16 +92,16 @@ func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *htt
 		return
 	}
 
-	h.cache.Delete(fmt.Sprintf("points:list:%d", point.ForecastID))
-	h.cache.Delete("points:all:latest")
-	h.cache.Delete("points:all")
+	h.cache.Delete(fmt.Sprintf("point:list:%d", point.ForecastID))
+	h.cache.Delete("point:all:latest")
+	h.cache.Delete("point:all")
 	message := "Forecast point created"
 
 	respondJSON(w, http.StatusCreated, message)
 }
 
 func (h *ForecastPointHandler) ListAllForecastPoints(w http.ResponseWriter, r *http.Request) {
-	cacheKey := "points:all"
+	cacheKey := "point:all"
 	if cachedPoints, found := h.cache.Get(cacheKey); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
@@ -119,7 +119,7 @@ func (h *ForecastPointHandler) ListAllForecastPoints(w http.ResponseWriter, r *h
 }
 
 func (h *ForecastPointHandler) ListLatestForecastPoints(w http.ResponseWriter, r *http.Request) {
-	cacheKey := "points:all:latest"
+	cacheKey := "point:all:latest"
 	if cachedPoints, found := h.cache.Get(cacheKey); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
@@ -149,7 +149,7 @@ func (h *ForecastPointHandler) ListLatestForecastPointsByUser(w http.ResponseWri
 		return
 	}
 
-	cacheKey := fmt.Sprintf("points:all:latest:%d", userID)
+	cacheKey := fmt.Sprintf("point:all:latest:%d", userID)
 	if cachedPoints, found := h.cache.Get(cacheKey); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
@@ -195,7 +195,7 @@ func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, 
 		userId = userIDStr
 	}
 
-	cacheKey := fmt.Sprintf("points:ordered:%s:%d", userId, forecastID)
+	cacheKey := fmt.Sprintf("point:ordered:%s:%d", userId, forecastID)
 	if cachedPoints, found := h.cache.Get(cacheKey); found {
 		respondJSON(w, http.StatusOK, cachedPoints)
 		return
