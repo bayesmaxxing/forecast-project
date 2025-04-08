@@ -1,7 +1,4 @@
-// Authentication service for JWT token management
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-
-// Login user and get JWT token
+import { API_BASE_URL } from './index';
 export const login = async (username, password) => {
   try {
     const response = await fetch(`${API_BASE_URL}/users/login`, {

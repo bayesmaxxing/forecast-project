@@ -16,7 +16,7 @@ function HomePage() {
     <Container 
       maxWidth="lg"
       sx={{
-        mt: { xs: 8, sm: 10 }, // Add top margin to prevent header overlap
+        mt: { xs: 6, sm: 8 }, // Add top margin to prevent header overlap
         mb: 4,
         '& a': {
           textDecoration: 'none',
@@ -27,7 +27,7 @@ function HomePage() {
         }
       }}
     >
-      <Box component="section" sx={{ mb: 6 }}>
+      <Box component="section" sx={{ mb: 0 , mt: { xs: 6, sm: 8 } }}>
         <Typography variant="h3" component="h1" gutterBottom>
           Forecasting to understand Reality
         </Typography>
