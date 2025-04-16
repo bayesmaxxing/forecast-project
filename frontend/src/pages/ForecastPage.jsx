@@ -60,7 +60,7 @@ function ForecastPage() {
       { userId: selectedUserId, category: categoryFilter }
     );
     
-    const { scores, scoresLoading } = useAggregateScoresData(categoryFilter, selectedUserId, false);
+    const { scores, scoresLoading, error: scoresError } = useAggregateScoresData(categoryFilter, selectedUserId, false);
     
     const handleUserChange = (userId) => {
       setSelectedUserId(userId);
@@ -85,8 +85,8 @@ function ForecastPage() {
           mx: 'auto'                   
         }}
       >
-        {(error || pointsError) && (
-          <Typography color="error">Error loading data: {error?.message || pointsError?.message}</Typography>
+        {(error || pointsError || scoresError) && (
+          <Typography color="error">Error loading data: {error?.message || pointsError?.message || scoresError?.message}</Typography>
         )}
         
         <Grid container spacing={3}>
@@ -110,12 +110,6 @@ function ForecastPage() {
                   <SearchBar 
                     onSearch={handleSearch}
                     placeholder="Search forecasts..."
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <UserSelector 
-                    onUserChange={handleUserChange}
-                    selectedUserId={selectedUserId}
                   />
                 </Grid>
               </Grid>
