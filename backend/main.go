@@ -69,7 +69,7 @@ func main() {
 	handlers := &routes.Handlers{
 		Forecast:      handlers.NewForecastHandler(services.Forecast, cache),
 		ForecastPoint: handlers.NewForecastPointHandler(services.ForecastPoint, services.Forecast, cache),
-		User:          handlers.NewUserHandler(services.User),
+		User:          handlers.NewUserHandler(services.User, cache),
 		Score:         handlers.NewScoreHandler(services.Score, cache),
 	}
 
