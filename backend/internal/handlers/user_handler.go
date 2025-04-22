@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"backend/internal/auth"
+	"backend/internal/cache"
 	"backend/internal/models"
 	"backend/internal/services"
 	"encoding/json"
@@ -11,10 +12,11 @@ import (
 
 type UserHandler struct {
 	service *services.UserService
+	cache   *cache.Cache
 }
 
-func NewUserHandler(s *services.UserService) *UserHandler {
-	return &UserHandler{service: s}
+func NewUserHandler(s *services.UserService, c *cache.Cache) *UserHandler {
+	return &UserHandler{service: s, cache: c}
 }
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -80,11 +82,19 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	users, found := h.cache.Get("users")
+	if found {
+		respondJSON(w, http.StatusOK, users)
+		return
+	}
+
 	users, err := h.service.ListUsers(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	h.cache.Set("users", users)
 
 	respondJSON(w, http.StatusOK, users)
 }
