@@ -62,6 +62,40 @@ func (h *ForecastPointHandler) ListForecastPointsbyID(w http.ResponseWriter, r *
 	respondJSON(w, http.StatusOK, points)
 }
 
+func (h *ForecastPointHandler) ListForecastPointsbyIDAndUser(w http.ResponseWriter, r *http.Request) {
+	var point_request struct {
+		ForecastID int64 `json:"forecast_id"`
+		UserID     int64 `json:"user_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&point_request); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	cacheKey := fmt.Sprintf("point:list:user:%d:%d", point_request.UserID, point_request.ForecastID)
+
+	if cachedPoints, found := h.cache.Get(cacheKey); found {
+		respondJSON(w, http.StatusOK, cachedPoints)
+		return
+	}
+
+	points, err := h.service.GetForecastPointsByForecastIDAndUser(r.Context(), point_request.ForecastID, point_request.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "No forecast points found for this ID", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	h.cache.Set(cacheKey, points)
+
+	respondJSON(w, http.StatusOK, points)
+}
+
 func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *http.Request) {
 	// Get claims from context
 	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)

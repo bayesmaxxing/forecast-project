@@ -48,6 +48,7 @@ func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
 
 	// forecast points
 	mux.HandleFunc("GET /forecast-points/{id}", handlers.ForecastPoint.ListForecastPointsbyID)
+	mux.HandleFunc("POST /forecast-points/user", handlers.ForecastPoint.ListForecastPointsbyIDAndUser)
 	mux.HandleFunc("GET /forecast-points", handlers.ForecastPoint.ListAllForecastPoints)
 	mux.HandleFunc("GET /forecast-points/latest", handlers.ForecastPoint.ListLatestForecastPoints)
 	mux.HandleFunc("GET /forecast-points/latest_by_user", handlers.ForecastPoint.ListLatestForecastPointsByUser)
