@@ -207,6 +207,23 @@ func (h *ForecastHandler) ResolveForecast(w http.ResponseWriter, r *http.Request
 	respondJSON(w, http.StatusOK, "forecast resolved")
 }
 
+func (h *ForecastHandler) GetStaleAndNewForecasts(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.PathValue("user_id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	forecasts, err := h.service.GetStaleAndNewForecasts(r.Context(), userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, forecasts)
+}
+
 func respondJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

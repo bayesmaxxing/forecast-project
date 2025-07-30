@@ -120,3 +120,12 @@ func (s *ForecastService) ForecastList(ctx context.Context, listType string, cat
 		return nil, errors.New("invalid resolved status")
 	}
 }
+
+func (s *ForecastService) GetStaleAndNewForecasts(ctx context.Context, userID int64) ([]*models.Forecast, error) {
+	forecasts, err := s.repo.GetStaleAndNewForecasts(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return forecasts, nil
+}

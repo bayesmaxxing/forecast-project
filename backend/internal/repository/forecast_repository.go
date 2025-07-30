@@ -21,6 +21,7 @@ type ForecastRepository interface {
 	ListResolvedForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error)
 	UpdateForecast(ctx context.Context, f *models.Forecast) error
 	DeleteForecast(ctx context.Context, id int64, userID int64) error
+	GetStaleAndNewForecasts(ctx context.Context, userID int64) ([]*models.Forecast, error)
 }
 
 // PostgresForecastRepository implements the ForecastRepository interface
@@ -229,6 +230,35 @@ func (r *PostgresForecastRepository) DeleteForecast(ctx context.Context, id int6
 	}
 
 	return tx.Commit()
+}
+
+func (r *PostgresForecastRepository) GetStaleAndNewForecasts(ctx context.Context, userID int64) ([]*models.Forecast, error) {
+	query := `WITH latest_forecast_points as (
+							 select forecast_id
+							 , max(created) latest_created
+							 , count(id) count_forecast_points
+							 from points
+							 where user_id = $1
+							 group by forecast_id
+							)
+
+							SELECT
+							f.id
+							, f.question
+							, f.category
+							, f.created
+							, f.user_id
+							, f.resolution_criteria
+							, f.resolution
+							, f.resolved
+							, f.comment 
+							FROM forecasts f
+							LEFT JOIN latest_forecast_points lfp
+							ON f.id = lfp.forecast_id
+							WHERE f.resolved is not null
+							AND (lfp.forecast_id is null or lfp.latest_created < current_date - 14)`
+
+	return r.queryForecasts(ctx, query, userID)
 }
 
 // Helper function to query forecasts
