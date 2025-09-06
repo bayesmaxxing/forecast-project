@@ -258,6 +258,7 @@ func (r *PostgresForecastRepository) GetStaleAndNewForecasts(ctx context.Context
 							WHERE f.resolved is null
 							AND (lfp.forecast_id is null or lfp.latest_created < current_date - 30)
 							AND lower(f.category) not like '%personal%'
+							order by f.created desc
 							limit 30`
 
 	return r.queryForecasts(ctx, query, userID)
