@@ -5,7 +5,7 @@ import {
   Container,
   Typography,
   Box,
-  Grid,
+  Grid2,
   useTheme
 } from '@mui/material';
 
@@ -52,8 +52,8 @@ function HomePage() {
         Focus Areas
       </Typography>
 
-      <Grid container spacing={4} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4}>
+      <Grid2 container spacing={4} sx={{ mb: 4 }}>
+        <Grid2 xs={12} sm={6} md={4}>
           <Typography variant="h5" component="h3" gutterBottom>
             <Link to="/questions/category/ai">
               Artificial Intelligence
@@ -64,9 +64,9 @@ function HomePage() {
             explore future AI technology and impacts on humanity.
           </Typography>
           <Link to="/questions/category/ai">See AI Forecasts →</Link>
-        </Grid>
+        </Grid2>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid2 xs={12} sm={6} md={4}>
           <Typography variant="h5" component="h3" gutterBottom>
             <Link to="/questions/category/economy">
               Economy
@@ -76,9 +76,9 @@ function HomePage() {
             The economy affects peoples lives daily. These forecasts model economic development to help aid economic decision-making.
           </Typography>
           <Link to="/questions/category/economy">See Economy Forecasts →</Link>
-        </Grid>
+        </Grid2>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid2 xs={12} sm={6} md={4}>
           <Typography variant="h5" component="h3" gutterBottom>
             <Link to="/questions/category/politics">
               Politics
@@ -89,9 +89,9 @@ function HomePage() {
             to understand future changes.
           </Typography>
           <Link to="/questions/category/politics">See Politics Forecasts →</Link>
-        </Grid>
+        </Grid2>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid2 xs={12} sm={6} md={4}>
           <Typography variant="h5" component="h3" gutterBottom>
             <Link to="/questions/category/x-risk">
               Existential Risks
@@ -103,9 +103,9 @@ function HomePage() {
             <Link to="/questions/category/nuclear"> Artificial Intelligence</Link> and Biological weapons are examples of such technologies.
           </Typography>
           <Link to="/questions/category/x-risk">See X-Risk Forecasts →</Link>
-        </Grid>
+        </Grid2>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid2 xs={12} sm={6} md={4}>
           <Typography variant="h5" component="h3" gutterBottom>
             <Link to="/questions">
               Other Categories
@@ -115,8 +115,8 @@ function HomePage() {
             Apart from the focus areas, I also forecast personal questions, Sweden-specific topics, Sports, among many other types of questions.
           </Typography>
           <Link to="/questions">See All Forecasts →</Link>
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </Container>
   );
 }
