@@ -6,7 +6,6 @@ import (
 	"backend/internal/models"
 	"backend/internal/services"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -32,49 +31,16 @@ func (h *ScoreHandler) GetScores(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch {
-	case request.User_id != nil && request.Forecast_id != nil:
-		scores, err := h.service.GetScoreByForecastAndUser(r.Context(), *request.Forecast_id, *request.User_id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		respondJSON(w, http.StatusOK, scores)
+	userID := *request.User_id
+	forecastID := *request.Forecast_id
 
-	case request.User_id != nil:
-		scores, err := h.service.GetScoresByUserID(r.Context(), *request.User_id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		respondJSON(w, http.StatusOK, scores)
-
-	case request.Forecast_id != nil:
-		scores, err := h.service.GetScoreByForecastID(r.Context(), *request.Forecast_id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		respondJSON(w, http.StatusOK, scores)
-
-	case request.User_id == nil && request.Forecast_id == nil:
-		cacheKey := "score:all"
-		if cachedData, found := h.cache.Get(cacheKey); found {
-			respondJSON(w, http.StatusOK, cachedData)
-			return
-		}
-		scores, err := h.service.GetAllScores(r.Context())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		h.cache.Set(cacheKey, scores)
-		respondJSON(w, http.StatusOK, scores)
-
-	default:
-		http.Error(w, "invalid request", http.StatusBadRequest)
+	scores, err := h.service.GetScores(r.Context(), userID, forecastID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	respondJSON(w, http.StatusOK, scores)
+
 }
 
 // Handlers to modify/create scores
@@ -99,9 +65,6 @@ func (h *ScoreHandler) CreateScore(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// Invalidate all cache keys that start with "scores" on write
-	h.cache.DeleteByPrefix("score:")
 
 	respondJSON(w, http.StatusCreated, score.ID)
 }
@@ -131,48 +94,27 @@ func (h *ScoreHandler) DeleteScore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Invalidate all cache keys that start with "scores" on write
-	h.cache.DeleteByPrefix("score:")
-
 	respondJSON(w, http.StatusOK, "Score deleted successfully")
 }
 
 func (h *ScoreHandler) GetAllScores(w http.ResponseWriter, r *http.Request) {
-	cacheKey := "score:all"
 
-	// Try to get from cache first
-	if cachedData, found := h.cache.Get(cacheKey); found {
-		respondJSON(w, http.StatusOK, cachedData)
-		return
-	}
 	scores, err := h.service.GetAllScores(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Store in cache
-	h.cache.Set(cacheKey, scores)
 	respondJSON(w, http.StatusOK, scores)
 }
 
 func (h *ScoreHandler) GetAverageScores(w http.ResponseWriter, r *http.Request) {
-	cacheKey := "score:all:average"
-
-	// Try to get from cache first
-	if cachedData, found := h.cache.Get(cacheKey); found {
-		respondJSON(w, http.StatusOK, cachedData)
-		return
-	}
-
 	scores, err := h.service.GetAverageScores(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Store in cache
-	h.cache.Set(cacheKey, scores)
 	respondJSON(w, http.StatusOK, scores)
 }
 
@@ -190,94 +132,95 @@ func (h *ScoreHandler) GetAverageScoreByForecastID(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Generate cache key
-	cacheKey := "score:detail:average:" + forecastID
-
-	// Try to get from cache first
-	if cachedData, found := h.cache.Get(cacheKey); found {
-		respondJSON(w, http.StatusOK, cachedData)
-		return
-	}
-
 	avgScore, err := h.service.GetAverageScoreByForecastID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Store in cache
-	h.cache.Set(cacheKey, avgScore)
 	respondJSON(w, http.StatusOK, avgScore)
 }
 
-// Handler for aggregate scores
-type aggregateScoresRequest struct {
-	Category *string `json:"category"`
-	User_id  *int64  `json:"user_id"`
-	ByUser   *bool   `json:"by_user"`
-}
-
-func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request) {
-	var request aggregateScoresRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+func (h *ScoreHandler) GetAggregateScoresByUserID(w http.ResponseWriter, r *http.Request) {
+	userID := r.PathValue("user_id")
+	if userID == "" {
+		http.Error(w, "user ID is required", http.StatusBadRequest)
 		return
 	}
 
-	// Set default value for ByUser if it's nil
-	byUser := false
-	if request.ByUser != nil {
-		byUser = *request.ByUser
-	}
-
-	userID := "ALL"
-	if request.User_id != nil {
-		userID = strconv.FormatInt(*request.User_id, 10)
-	}
-
-	category := "ALL"
-	if request.Category != nil && *request.Category != "" {
-		category = *request.Category
-	}
-
-	cacheKey := fmt.Sprintf("score:aggregate:%s:%s:%t", userID, category, byUser)
-
-	// Try to get from cache first
-	if cachedData, found := h.cache.Get(cacheKey); found {
-		respondJSON(w, http.StatusOK, cachedData)
+	id, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	var scores any
-	var err error
-
-	switch {
-	// For specific user cases
-	case request.User_id != nil && request.Category != nil:
-		scores, err = h.service.GetUserCategoryScores(r.Context(), *request.User_id, *request.Category)
-	case request.User_id != nil && request.Category == nil:
-		scores, err = h.service.GetUserOverallScores(r.Context(), *request.User_id)
-
-	// For all users cases
-	case request.User_id == nil && request.Category != nil && byUser:
-		scores, err = h.service.GetCategoryScoresByUsers(r.Context(), *request.Category)
-	case request.User_id == nil && request.Category == nil && byUser:
-		scores, err = h.service.GetOverallScoresByUsers(r.Context())
-	case request.User_id == nil && request.Category != nil && !byUser:
-		scores, err = h.service.GetCategoryScores(r.Context(), *request.Category)
-	case request.User_id == nil && request.Category == nil && !byUser:
-		scores, err = h.service.GetOverallScores(r.Context())
-	default:
-		http.Error(w, "invalid request", http.StatusBadRequest)
-		return
-	}
+	scores, err := h.service.GetAggregateScoresByUserID(r.Context(), id)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	respondJSON(w, http.StatusOK, scores)
+}
 
-	// Store in cache
-	h.cache.Set(cacheKey, scores)
+func (h *ScoreHandler) GetAggregateScoresByUserIDAndCategory(w http.ResponseWriter, r *http.Request) {
+	userID := r.PathValue("user_id")
+	if userID == "" {
+		http.Error(w, "user ID is required", http.StatusBadRequest)
+		return
+	}
+	category := r.PathValue("category")
+	if category == "" {
+		http.Error(w, "category is required", http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
+	scores, err := h.service.GetAggregateScoresByUserIDAndCategory(r.Context(), id, category)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	respondJSON(w, http.StatusOK, scores)
+}
+
+func (h *ScoreHandler) GetAggregateScoresByUsers(w http.ResponseWriter, r *http.Request) {
+	scores, err := h.service.GetAggregateScoresByUsers(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	respondJSON(w, http.StatusOK, scores)
+}
+
+func (h *ScoreHandler) GetAggregateScoresByCategory(w http.ResponseWriter, r *http.Request) {
+	category := r.PathValue("category")
+	if category == "" {
+		http.Error(w, "category is required", http.StatusBadRequest)
+		return
+	}
+
+	scores, err := h.service.GetAggregateScoresByCategory(r.Context(), category)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	respondJSON(w, http.StatusOK, scores)
+}
+
+func (h *ScoreHandler) GetAggregateScoresByUsersAndCategory(w http.ResponseWriter, r *http.Request) {
+	category := r.PathValue("category")
+	if category == "" {
+		http.Error(w, "category is required", http.StatusBadRequest)
+		return
+	}
+	scores, err := h.service.GetAggregateScoresByUsersAndCategory(r.Context(), category)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	respondJSON(w, http.StatusOK, scores)
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"backend/internal/cache"
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
@@ -11,12 +12,14 @@ import (
 )
 
 type UserService struct {
-	repo repository.UserRepository
+	repo  repository.UserRepository
+	cache *cache.Cache
 }
 
-func NewUserService(repo repository.UserRepository) *UserService {
+func NewUserService(repo repository.UserRepository, cache *cache.Cache) *UserService {
 	return &UserService{
-		repo: repo,
+		repo:  repo,
+		cache: cache,
 	}
 }
 
@@ -40,11 +43,13 @@ func (s *UserService) CreateUser(ctx context.Context, user *models.User) error {
 	// Set the hashed password
 	user.Password = string(hashedPassword)
 
+	s.cache.Delete("users")
 	// Create the user with the hashed password
 	return s.repo.CreateUser(ctx, user)
 }
 
 func (s *UserService) DeleteUser(ctx context.Context, id int64) error {
+	s.cache.Delete("users")
 	return s.repo.DeleteUser(ctx, id)
 }
 
@@ -99,5 +104,14 @@ func (s *UserService) VerifyPassword(ctx context.Context, username string, passw
 }
 
 func (s *UserService) ListUsers(ctx context.Context) ([]*models.User, error) {
-	return s.repo.ListUsers(ctx)
+	users_cache, found := s.cache.Get("users")
+	if found {
+		return users_cache.([]*models.User), nil
+	}
+	users, err := s.repo.ListUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	s.cache.Set("users", users)
+	return users, nil
 }
