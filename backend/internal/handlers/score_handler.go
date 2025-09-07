@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"backend/internal/auth"
-	"backend/internal/cache"
 	"backend/internal/models"
 	"backend/internal/services"
 	"encoding/json"
@@ -12,11 +11,10 @@ import (
 
 type ScoreHandler struct {
 	service *services.ScoreService
-	cache   *cache.Cache
 }
 
-func NewScoreHandler(s *services.ScoreService, c *cache.Cache) *ScoreHandler {
-	return &ScoreHandler{service: s, cache: c}
+func NewScoreHandler(s *services.ScoreService) *ScoreHandler {
+	return &ScoreHandler{service: s}
 }
 
 // Depending on the request parameters, this handler returns scores for a user_id, a forecast_id, or both
