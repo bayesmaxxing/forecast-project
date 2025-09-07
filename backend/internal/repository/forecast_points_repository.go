@@ -32,13 +32,16 @@ func NewForecastPointRepository(db *database.DB) ForecastPointRepository {
 
 func (r *PostgresForecastPointRepository) GetAllForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
-				id
-				, forecast_id
-				, point_forecast
-				, reason
-				, created
-				, user_id
-				FROM points`
+				p.id
+				, p.forecast_id
+				, p.point_forecast
+				, p.reason
+				, p.created
+				, p.user_id
+				, u.username
+				FROM points p
+				left join users u on p.user_id = u.id
+				ORDER BY p.created DESC`
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
@@ -56,7 +59,8 @@ func (r *PostgresForecastPointRepository) GetAllForecastPoints(ctx context.Conte
 			&fp.PointForecast,
 			&fp.Reason,
 			&fp.CreatedAt,
-			&fp.UserID); err != nil {
+			&fp.UserID,
+			&fp.UserName); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)
@@ -66,14 +70,16 @@ func (r *PostgresForecastPointRepository) GetAllForecastPoints(ctx context.Conte
 
 func (r *PostgresForecastPointRepository) GetForecastPointsByForecastID(ctx context.Context, id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
-				id
-				, forecast_id
-				, point_forecast
-				, reason
-				, created
-				, user_id
-				FROM points 
-				WHERE forecast_id = $1`
+				p.id
+				, p.forecast_id
+				, p.point_forecast
+				, p.reason
+				, p.created
+				, p.user_id
+				, u.username
+				FROM points p
+				left join users u on p.user_id = u.id
+				WHERE p.forecast_id = $1`
 
 	rows, err := r.db.QueryContext(ctx, query, id)
 	if err != nil {
@@ -90,7 +96,8 @@ func (r *PostgresForecastPointRepository) GetForecastPointsByForecastID(ctx cont
 			&fp.PointForecast,
 			&fp.Reason,
 			&fp.CreatedAt,
-			&fp.UserID); err != nil {
+			&fp.UserID,
+			&fp.UserName); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)
@@ -100,15 +107,17 @@ func (r *PostgresForecastPointRepository) GetForecastPointsByForecastID(ctx cont
 
 func (r *PostgresForecastPointRepository) GetForecastPointsByForecastIDAndUser(ctx context.Context, id int64, user_id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
-				id
-				, forecast_id
-				, point_forecast
-				, reason
-				, created
-				, user_id
-				FROM points 
-				WHERE forecast_id = $1
-				AND user_id = $2`
+				p.id
+				, p.forecast_id
+				, p.point_forecast
+				, p.reason
+				, p.created
+				, p.user_id
+				, u.username
+				FROM points p
+				left join users u on p.user_id = u.id
+				WHERE p.forecast_id = $1
+				AND p.user_id = $2`
 
 	rows, err := r.db.QueryContext(ctx, query, id, user_id)
 	if err != nil {
@@ -125,7 +134,8 @@ func (r *PostgresForecastPointRepository) GetForecastPointsByForecastIDAndUser(c
 			&fp.PointForecast,
 			&fp.Reason,
 			&fp.CreatedAt,
-			&fp.UserID); err != nil {
+			&fp.UserID,
+			&fp.UserName); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)
@@ -150,14 +160,16 @@ func (r *PostgresForecastPointRepository) CreateForecastPoint(ctx context.Contex
 
 func (r *PostgresForecastPointRepository) GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error) {
 	query := `SELECT distinct on (forecast_id)
-				id
-				, forecast_id
-				, point_forecast
-				, created
-				, reason
-				, user_id
-				FROM points
-				ORDER BY forecast_id, created DESC;`
+				p.id
+				, p.forecast_id
+				, p.point_forecast
+				, p.created
+				, p.reason
+				, p.user_id
+				, u.username
+				FROM points p
+				left join users u on p.user_id = u.id
+				ORDER BY p.forecast_id, p.created DESC;`
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
@@ -174,7 +186,8 @@ func (r *PostgresForecastPointRepository) GetLatestForecastPoints(ctx context.Co
 			&fp.PointForecast,
 			&fp.CreatedAt,
 			&fp.Reason,
-			&fp.UserID); err != nil {
+			&fp.UserID,
+			&fp.UserName); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)
@@ -184,15 +197,17 @@ func (r *PostgresForecastPointRepository) GetLatestForecastPoints(ctx context.Co
 
 func (r *PostgresForecastPointRepository) GetLatestForecastPointsByUser(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT distinct on (forecast_id)
-				id
-				, forecast_id
-				, point_forecast
-				, created
-				, reason
-				, user_id
-				FROM points
-				WHERE user_id = $1
-				ORDER BY forecast_id, created DESC;`
+				p.id
+				, p.forecast_id
+				, p.point_forecast
+				, p.created
+				, p.reason
+				, p.user_id
+				, u.username
+				FROM points p 
+				left join users u on p.user_id = u.id
+				WHERE p.user_id = $1
+				ORDER BY p.forecast_id, p.created DESC;`
 
 	rows, err := r.db.QueryContext(ctx, query, user_id)
 	if err != nil {
@@ -209,7 +224,8 @@ func (r *PostgresForecastPointRepository) GetLatestForecastPointsByUser(ctx cont
 			&fp.PointForecast,
 			&fp.CreatedAt,
 			&fp.Reason,
-			&fp.UserID); err != nil {
+			&fp.UserID,
+			&fp.UserName); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)
@@ -219,15 +235,17 @@ func (r *PostgresForecastPointRepository) GetLatestForecastPointsByUser(ctx cont
 
 func (r *PostgresForecastPointRepository) GetOrderedForecastPointsByForecastID(ctx context.Context, id int64) ([]*models.ForecastPoint, error) {
 	query := `SELECT 
-				id
-				, forecast_id
-				, point_forecast
-				, reason
-				, created
-				, user_id
-				FROM points 
-				WHERE forecast_id = $1
-				ORDER BY id ASC`
+				p.id
+				, p.forecast_id
+				, p.point_forecast
+				, p.reason
+				, p.created
+				, p.user_id
+				, u.username
+				FROM points p 
+				left join users u on p.user_id = u.id
+				WHERE p.forecast_id = $1
+				ORDER BY p.id ASC`
 
 	rows, err := r.db.QueryContext(ctx, query, id)
 	if err != nil {
@@ -244,7 +262,8 @@ func (r *PostgresForecastPointRepository) GetOrderedForecastPointsByForecastID(c
 			&fp.PointForecast,
 			&fp.Reason,
 			&fp.CreatedAt,
-			&fp.UserID); err != nil {
+			&fp.UserID,
+			&fp.UserName); err != nil {
 			return nil, err
 		}
 		forecast_points = append(forecast_points, &fp)
