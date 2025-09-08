@@ -2,23 +2,15 @@ import React, { useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
-  Skeleton,
-  Paper,
-  Grid,
+  Grid2,
 } from '@mui/material';
 import Sidebar from '../components/Sidebar';
-import SearchBar from '../components/SearchBar';
-import ForecastCard from '../components/ForecastCard';
-import UserSelector from '../components/UserSelector';
-import { useForecastList } from '../services/hooks/useForecastList';
-import { usePointsData } from '../services/hooks/usePointsData';
-import { useSearchFilter } from '../services/hooks/useSearchFilter';
-import ScoreDisplay from '../components/ScoreDisplay';
-import { useAggregateScoresData } from '../services/hooks/useAggregateScoresData';
+import SearchAndFilters from '../components/SearchAndFilters';
+import ScoresSection from '../components/ScoresSection';
+import ForecastsList from '../components/ForecastsList';
 import AddForecast from '../components/AddForecast';
+import { useForecastPageData } from '../services/hooks/useForecastPageData';
 
 function ForecastPage() {
     const { category } = useParams();
@@ -30,37 +22,16 @@ function ForecastPage() {
     const categoryFilter = category || null;
     const listType = location.pathname.endsWith('/resolved') ? 'resolved' : 'open';
     
-    // Fetch the data
-    const { forecasts = [], loading, error, refetchForecasts } = useForecastList({
-      category: categoryFilter, 
-      list_type: listType
-    });
-    const { points = [], loading: pointsLoading, error: pointsError, refetchPoints } = usePointsData({
-      userId: selectedUserId, 
-      useLatestPoints: true, 
-      useOrderedEndpoint: false
-    });
-
-    // Function to refetch all relevant data
-    const refetchAllData = () => {
-      refetchForecasts();
-      refetchPoints();
-    };
-
-    // Combine the forecasts and points
-    const combined = Array.isArray(forecasts) 
-      ? forecasts.map(forecast => {
-          const matchingPoint = points.find(point => point.forecast_id === forecast.id);
-          return { ...forecast, latestPoint: matchingPoint || null};
-        })
-      : [];
-    
-    const { handleSearch, sortedForecasts } = useSearchFilter(
-      combined, 
-      { userId: selectedUserId, category: categoryFilter }
-    );
-    
-    const { scores, scoresLoading, error: scoresError } = useAggregateScoresData(categoryFilter, selectedUserId, false);
+    // Fetch and combine all data using the custom hook
+    const {
+      sortedForecasts,
+      scores,
+      loading,
+      scoresLoading,
+      error,
+      handleSearch,
+      refetchAllData
+    } = useForecastPageData({ categoryFilter, listType, selectedUserId });
     
     const handleUserChange = (userId) => {
       setSelectedUserId(userId);
@@ -85,96 +56,49 @@ function ForecastPage() {
           mx: 'auto'                   
         }}
       >
-        {(error || pointsError || scoresError) && (
-          <Typography color="error">Error loading data: {error?.message || pointsError?.message || scoresError?.message}</Typography>
+        {error && (
+          <Typography color="error">Error loading data: {error?.message}</Typography>
         )}
         
-        <Grid container spacing={3}>
+        <Grid2 container spacing={3}>
           {/* Search and Header Section */}
-          <Grid item xs={12}>
+          <Grid2 xs={12}>
             <Box sx={{ mb: 4 }}>
-              <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                <Grid item xs={12} sm={isLoggedIn ? 6 : 12}>
+              <Grid2 container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                <Grid2 xs={12} sm={isLoggedIn ? 6 : 12}>
                   <Typography variant="h4" sx={{ color: 'primary.light' }}>
                     {getPageTitle()}             
                   </Typography>
-                </Grid>
+                </Grid2>
                 {isLoggedIn && (
-                  <Grid item xs={12} sm={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
+                  <Grid2 xs={12} sm={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
                     <AddForecast onSubmitSuccess={refetchAllData} />
-                  </Grid>
+                  </Grid2>
                 )}
-              </Grid>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} md={8}>
-                  <SearchBar 
-                    onSearch={handleSearch}
-                    placeholder="Search forecasts..."
-                  />
-                </Grid>
-              </Grid>
+              </Grid2>
+              <SearchAndFilters
+                onSearch={handleSearch}
+                selectedUserId={selectedUserId}
+                onUserChange={handleUserChange}
+              />
               
               {/* Score Display Section */}
-              <Grid container spacing={2} sx={{ mt: 2 }}>
-                <Grid item xs={12} md={4}>
-                  <ScoreDisplay
-                    type="brier"
-                    value={scores?.brier_score || null}
-                    loading={loading || scoresLoading}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <ScoreDisplay
-                    type="base2log"
-                    value={scores?.log2_score || null}
-                    loading={loading || scoresLoading}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <ScoreDisplay
-                    type="baseNlog"
-                    value={scores?.logn_score || null}
-                    loading={loading || scoresLoading}
-                  />
-                </Grid>
-              </Grid>
+              <ScoresSection 
+                scores={scores}
+                loading={loading || scoresLoading}
+              />
             </Box>
-          </Grid>
+          </Grid2>
 
           {/* Forecasts Grid */}
-          {loading ? (
-            [...Array(6)].map((_, index) => (
-              <Grid item xs={12} key={index}>
-                <Card sx={{ 
-                  backgroundColor: 'background.paper',
-                  height: '100%',
-                }}>
-                  <CardContent>
-                    <Skeleton variant="text" height={60} />
-                    <Skeleton variant="text" width="40%" />
-                    <Box sx={{ mt: 2 }}>
-                      <Skeleton variant="text" width="30%" />
-                      <Skeleton variant="text" width="40%" />
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))
-          ) : (
-            Array.isArray(sortedForecasts) ? sortedForecasts.map(forecast => (
-              <Grid item xs={12} key={forecast.id}>
-                <ForecastCard 
-                  forecast={forecast}  
-                  isResolved={listType === 'resolved'}
-                />
-              </Grid>
-            )) : (
-              <Grid item xs={12}>
-                <Typography>No forecasts available</Typography>
-              </Grid>
-            )
-          )}
-        </Grid>
+          <Grid2 xs={12}>
+            <ForecastsList 
+              forecasts={sortedForecasts}
+              loading={loading}
+              listType={listType}
+            />
+          </Grid2>
+        </Grid2>
       </Box>
     </Box>
   );

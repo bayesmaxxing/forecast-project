@@ -58,16 +58,11 @@ export const fetchAverageScores = async () => {
 
 
 
-export const fetchAggregateScores = async (category,user_id,by_user) => {
-  const requestBody = {};
-  if (category) requestBody.category = category;
-  if (user_id) requestBody.user_id = user_id;
-  if (by_user) requestBody.by_user = by_user;
-
-  const response = await fetch(`${API_BASE_URL}/scores/aggregate`, {
-    method: 'POST',
+export const fetchAggregateScoresAllUsers = async () => {
+  
+  const response = await fetch(`${API_BASE_URL}/scores/aggregate/all`, {
+    method: 'GET',
     headers: { "Accept": "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify(requestBody)
   });
   
   if (!response.ok) {
@@ -76,3 +71,39 @@ export const fetchAggregateScores = async (category,user_id,by_user) => {
 
   return response.json();
 };
+
+export const fetchAggregateScoresByUserID = async (user_id) => {
+  const response = await fetch(`${API_BASE_URL}/scores/aggregate/${user_id}`, {
+    method: 'GET',
+    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching aggregate scores: ${response.status}`);
+  }
+  return response.json();
+};
+
+export const fetchAggregateScoresByUserIDAndCategory = async (user_id, category) => {
+  const response = await fetch(`${API_BASE_URL}/scores/aggregate/${user_id}/${category}`, {
+    method: 'GET',
+    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching aggregate scores: ${response.status}`);
+  }
+  return response.json();
+};
+
+export const fetchAggregateScoresByCategory = async (category) => {
+  const response = await fetch(`${API_BASE_URL}/scores/aggregate/category/${category}`, {
+    method: 'GET',
+    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error(`Error fetching aggregate scores: ${response.status}`);
+  }
+  return response.json();
+};
+

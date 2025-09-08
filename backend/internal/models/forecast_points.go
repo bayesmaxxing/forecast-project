@@ -11,4 +11,5 @@ type ForecastPoint struct {
 	Reason        string    `json:"reason"`
 	CreatedAt     time.Time `json:"created"`
 	UserID        int64     `json:"user_id"`
+	UserName      *string   `json:"user_name,omitempty"`
 }

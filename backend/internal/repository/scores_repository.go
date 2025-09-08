@@ -184,7 +184,7 @@ func (r *PostgresScoreRepository) GetAllScores(ctx context.Context) ([]models.Sc
 }
 
 func (r *PostgresScoreRepository) GetAverageScores(ctx context.Context) ([]models.Scores, error) {
-	query := `SELECT 0 as id, AVG(brier_score) as brier_score, AVG(log2_score) as log2_score, AVG(logn_score) as logn_score, 0 as user_id, forecast_id, max(created) as created
+	query := `SELECT 0 as id, coalesce(AVG(brier_score), 0) as brier_score, coalesce(AVG(log2_score), 0) as log2_score, coalesce(AVG(logn_score), 0) as logn_score, 0 as user_id, forecast_id, max(created) as created
 			  FROM scores
 			  GROUP BY forecast_id, user_id, id`
 
@@ -259,9 +259,9 @@ func (r *PostgresScoreRepository) DeleteScore(ctx context.Context, score_id int6
 // all users
 func (r *PostgresScoreRepository) GetOverallScores(ctx context.Context) (*models.OverallScores, error) {
 	query := `SELECT 
-				AVG(brier_score) as avg_brier,
-				AVG(log2_score) as avg_log2,
-				AVG(logn_score) as avg_logn,
+				coalesce(AVG(brier_score), 0) as avg_brier,
+				coalesce(AVG(log2_score), 0) as avg_log2,
+				coalesce(AVG(logn_score), 0) as avg_logn,
 				COUNT(DISTINCT user_id) as total_users,
 				COUNT(DISTINCT forecast_id) as total_forecasts
 			  FROM scores`
@@ -283,9 +283,9 @@ func (r *PostgresScoreRepository) GetOverallScores(ctx context.Context) (*models
 
 func (r *PostgresScoreRepository) GetCategoryScores(ctx context.Context, category string) (*models.CategoryScores, error) {
 	query := `SELECT 
-				AVG(s.brier_score) as avg_brier,
-				AVG(s.log2_score) as avg_log2,
-				AVG(s.logn_score) as avg_logn,
+				coalesce(AVG(s.brier_score), 0) as avg_brier,
+				coalesce(AVG(s.log2_score), 0) as avg_log2,
+				coalesce(AVG(s.logn_score), 0) as avg_logn,
 				COUNT(DISTINCT s.user_id) as total_users,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
@@ -313,9 +313,9 @@ func (r *PostgresScoreRepository) GetCategoryScores(ctx context.Context, categor
 
 func (r *PostgresScoreRepository) GetCategoryScoresByUsers(ctx context.Context, category string) ([]models.UserCategoryScores, error) {
 	query := `SELECT 
-				AVG(s.brier_score) as avg_brier,
-				AVG(s.log2_score) as avg_log2,
-				AVG(s.logn_score) as avg_logn,
+				coalesce(AVG(s.brier_score), 0) as avg_brier,
+				coalesce(AVG(s.log2_score), 0) as avg_log2,
+				coalesce(AVG(s.logn_score), 0) as avg_logn,
 				s.user_id,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
@@ -352,9 +352,9 @@ func (r *PostgresScoreRepository) GetCategoryScoresByUsers(ctx context.Context, 
 
 func (r *PostgresScoreRepository) GetOverallScoresByUsers(ctx context.Context) ([]models.UserScores, error) {
 	query := `SELECT 
-				AVG(brier_score) as avg_brier,
-				AVG(log2_score) as avg_log2,
-				AVG(logn_score) as avg_logn,
+				coalesce(AVG(brier_score), 0) as avg_brier,
+				coalesce(AVG(log2_score), 0) as avg_log2,
+				coalesce(AVG(logn_score), 0) as avg_logn,
 				user_id,
 				COUNT(DISTINCT forecast_id) as total_forecasts
 			  FROM scores
@@ -386,9 +386,9 @@ func (r *PostgresScoreRepository) GetOverallScoresByUsers(ctx context.Context) (
 // user-specific
 func (r *PostgresScoreRepository) GetUserCategoryScores(ctx context.Context, userID int64, category string) (*models.UserCategoryScores, error) {
 	query := `SELECT 
-				AVG(s.brier_score) as avg_brier,
-				AVG(s.log2_score) as avg_log2,
-				AVG(s.logn_score) as avg_logn,
+				coalesce(AVG(s.brier_score), 0) as avg_brier,
+				coalesce(AVG(s.log2_score), 0) as avg_log2,
+				coalesce(AVG(s.logn_score), 0) as avg_logn,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
 			  JOIN forecasts f
@@ -415,9 +415,9 @@ func (r *PostgresScoreRepository) GetUserCategoryScores(ctx context.Context, use
 
 func (r *PostgresScoreRepository) GetUserOverallScores(ctx context.Context, user_id int64) (*models.UserScores, error) {
 	query := `SELECT 
-				AVG(s.brier_score) as avg_brier,
-				AVG(s.log2_score) as avg_log2,
-				AVG(s.logn_score) as avg_logn,
+				coalesce(AVG(s.brier_score), 0) as avg_brier,
+				coalesce(AVG(s.log2_score), 0) as avg_log2,
+				coalesce(AVG(s.logn_score), 0) as avg_logn,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
 			  WHERE s.user_id = $1`
@@ -438,9 +438,9 @@ func (r *PostgresScoreRepository) GetUserOverallScores(ctx context.Context, user
 
 func (r *PostgresScoreRepository) GetAverageScoreByForecastID(ctx context.Context, forecast_id int64) (*models.ScoreMetrics, error) {
 	query := `SELECT 
-				AVG(brier_score) as avg_brier,
-				AVG(log2_score) as avg_log2,
-				AVG(logn_score) as avg_logn
+				coalesce(AVG(brier_score), 0) as avg_brier,
+				coalesce(AVG(log2_score), 0) as avg_log2,
+				coalesce(AVG(logn_score), 0) as avg_logn
 			  FROM scores
 			  WHERE forecast_id = $1`
 

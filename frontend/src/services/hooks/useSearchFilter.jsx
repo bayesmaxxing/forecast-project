@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 
-export const useSearchFilter = (forecasts, options = {}) => {
+export const useSearchFilter = (forecasts) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { userId = 'all' } = options;
 
   const handleSearch = (term) => {
     setSearchTerm(term);
@@ -11,18 +10,11 @@ export const useSearchFilter = (forecasts, options = {}) => {
   const sortedForecasts = useMemo(() => {
     if (!forecasts) return [];
     
-    // First, filter by user if a specific user is selected
+    // Only apply search term filtering (no user filtering for forecasts)
     let filtered = forecasts;
-    if (userId !== 'all') {
-      filtered = forecasts.filter(forecast => 
-        forecast.user_id === userId || forecast.created_by === userId
-      );
-    }
-    
-    // Then apply search term filtering
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(forecast => 
+      filtered = forecasts.filter(forecast => 
         forecast.question?.toLowerCase().includes(term) || 
         forecast.resolution_criteria?.toLowerCase().includes(term) ||
         forecast.category?.toLowerCase().includes(term)
@@ -33,7 +25,7 @@ export const useSearchFilter = (forecasts, options = {}) => {
     return [...filtered].sort((a, b) => {
       return new Date(b.created) - new Date(a.created);
     });
-  }, [forecasts, searchTerm, userId]);
+  }, [forecasts, searchTerm]);
 
   return {
     handleSearch,
