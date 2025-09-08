@@ -29,8 +29,16 @@ func (h *ScoreHandler) GetScores(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := *request.User_id
-	forecastID := *request.Forecast_id
+	var userID int64
+	var forecastID int64
+
+	if request.User_id != nil {
+		userID = *request.User_id
+	}
+
+	if request.Forecast_id != nil {
+		forecastID = *request.Forecast_id
+	}
 
 	scores, err := h.service.GetScores(r.Context(), userID, forecastID)
 	if err != nil {

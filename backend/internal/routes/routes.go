@@ -13,6 +13,7 @@ type Handlers struct {
 	ForecastPoint *handlers.ForecastPointHandler
 	User          *handlers.UserHandler
 	Score         *handlers.ScoreHandler
+	News          *handlers.NewsHandler
 }
 
 type Services struct {
@@ -20,6 +21,7 @@ type Services struct {
 	ForecastPoint *services.ForecastPointService
 	User          *services.UserService
 	Score         *services.ScoreService
+	News          *services.NewsService
 }
 
 type Repositories struct {
@@ -74,6 +76,9 @@ func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
 	mux.HandleFunc("POST /users", handlers.User.CreateUser)
 	mux.HandleFunc("POST /users/login", handlers.User.Login)
 	// mux.HandleFunc("POST /users/reset-password", handlers.User.AdminResetPassword)
+
+	// news
+	mux.HandleFunc("POST /news", handlers.News.GetNews)
 }
 
 func setupProtectedRoutes(mux *http.ServeMux, handlers *Handlers) {

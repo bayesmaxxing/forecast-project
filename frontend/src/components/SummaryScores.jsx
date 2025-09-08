@@ -38,7 +38,6 @@ function SummaryScores({user_id=null}) {
   }, [user_id]);
 
   const { scores: aggregateScores, loading: aggregateScoresLoading, error: aggregateScoresError } = useAggregateScoresData(
-    null, 
     selectedUser === 'all' ? null : selectedUser
   );
   const { forecasts = [], loading: forecastsLoading, error: forecastsError } = useForecastList({list_type: 'resolved'});
