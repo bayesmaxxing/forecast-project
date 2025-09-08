@@ -154,7 +154,6 @@ func (s *ForecastService) ResolveForecast(ctx context.Context, user_id int64, id
 
 // aggregate forecast operations
 func (s *ForecastService) ForecastList(ctx context.Context, listType string, category string) ([]*models.Forecast, error) {
-	fmt.Println("ForecastList", listType, category)
 	cacheKey := fmt.Sprintf("forecast:list:%s:%s", listType, category)
 
 	if cachedList, found := s.cache.Get(cacheKey); found {
