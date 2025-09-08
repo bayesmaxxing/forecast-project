@@ -62,10 +62,11 @@ func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
 	mux.HandleFunc("GET /scores/average/{id}", handlers.Score.GetAverageScoreByForecastID)
 
 	// scores (aggregate)
+	mux.HandleFunc("GET /scores/aggregate/all", handlers.Score.GetAggregateScores)
 	mux.HandleFunc("GET /scores/aggregate/{user_id}", handlers.Score.GetAggregateScoresByUserID)
 	mux.HandleFunc("GET /scores/aggregate/{user_id}/{category}", handlers.Score.GetAggregateScoresByUserIDAndCategory)
 	mux.HandleFunc("GET /scores/aggregate/users", handlers.Score.GetAggregateScoresByUsers)
-	mux.HandleFunc("GET /scores/aggregate/{category}", handlers.Score.GetAggregateScoresByCategory)
+	mux.HandleFunc("GET /scores/aggregate/category/{category}", handlers.Score.GetAggregateScoresByCategory)
 	mux.HandleFunc("GET /scores/aggregate/users/{category}", handlers.Score.GetAggregateScoresByUsersAndCategory)
 
 	// users

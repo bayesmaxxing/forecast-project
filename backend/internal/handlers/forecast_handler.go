@@ -29,19 +29,19 @@ func (h *ForecastHandler) ListForecasts(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Handle empty values with defaults
-	listType := "ALL"
+	listType := ""
 	if request.ListType != "" {
 		listType = request.ListType
 	}
 
 	// Validate list type
-	validListTypes := map[string]bool{"open": true, "resolved": true, "ALL": true}
+	validListTypes := map[string]bool{"open": true, "resolved": true}
 	if !validListTypes[listType] {
 		http.Error(w, "invalid list_type", http.StatusBadRequest)
 		return
 	}
 
-	category := "ALL"
+	category := ""
 	if request.Category != "" {
 		category = request.Category
 	}

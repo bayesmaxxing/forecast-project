@@ -139,6 +139,15 @@ func (h *ScoreHandler) GetAverageScoreByForecastID(w http.ResponseWriter, r *htt
 	respondJSON(w, http.StatusOK, avgScore)
 }
 
+func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request) {
+	scores, err := h.service.GetOverallScores(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	respondJSON(w, http.StatusOK, scores)
+}
+
 func (h *ScoreHandler) GetAggregateScoresByUserID(w http.ResponseWriter, r *http.Request) {
 	userID := r.PathValue("user_id")
 	if userID == "" {
