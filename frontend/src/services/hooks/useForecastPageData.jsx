@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useForecastList } from './useForecastList';
 import { usePointsData } from './usePointsData';
 import { useSearchFilter } from './useSearchFilter';
-import { useAggregateScoresData } from './useAggregateScoresData';
+import { useAggregateScoresData, useAggregateScoresDataByCategory } from './useAggregateScoresData';
 
 export function useForecastPageData({ categoryFilter, listType, selectedUserId }) {
   // Fetch the data using existing hooks
@@ -17,11 +17,14 @@ export function useForecastPageData({ categoryFilter, listType, selectedUserId }
     useOrderedEndpoint: false
   });
 
-  const { scores, scoresLoading, error: scoresError } = useAggregateScoresData(
-    categoryFilter, 
-    selectedUserId, 
-    false
-  );
+  // Call both hooks (React requires unconditional hook calls)
+  const { scores: allScores, scoresLoading: allScoresLoading, error: allScoresError } = useAggregateScoresData(selectedUserId);
+  const { scores: categoryScores, scoresLoading: categoryScoresLoading, error: categoryScoresError } = useAggregateScoresDataByCategory(selectedUserId, categoryFilter);
+  
+  // Select the appropriate scores based on category filter
+  const scores = categoryFilter ? categoryScores : allScores;
+  const scoresLoading = categoryFilter ? categoryScoresLoading : allScoresLoading;
+  const scoresError = categoryFilter ? categoryScoresError : allScoresError;
 
   // Combine the forecasts and points
   const combined = useMemo(() => {
@@ -33,11 +36,8 @@ export function useForecastPageData({ categoryFilter, listType, selectedUserId }
       : [];
   }, [forecasts, points]);
 
-  // Use search filter on combined data
-  const { handleSearch, sortedForecasts } = useSearchFilter(
-    combined, 
-    { userId: selectedUserId, category: categoryFilter }
-  );
+  // Use search filter on combined data (no user filtering, only search filtering)
+  const { handleSearch, sortedForecasts } = useSearchFilter(combined);
 
   // Function to refetch all relevant data
   const refetchAllData = useCallback(() => {

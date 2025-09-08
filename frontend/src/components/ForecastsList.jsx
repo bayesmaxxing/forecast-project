@@ -16,10 +16,11 @@ function ForecastsList({ forecasts, loading, listType }) {
     return (
       <>
         {[...Array(SKELETON_COUNT)].map((_, index) => (
-          <Grid2 xs={12} key={index}>
+          <Grid2 xs={12} key={index} sx={{ mb: 2 }}>
             <Card sx={{ 
               backgroundColor: 'background.paper',
-              height: '100%',
+              height: '150px',
+              width: '100%', // Fixed width for consistency
             }}>
               <CardContent>
                 <Skeleton variant="text" height={60} />
@@ -47,11 +48,13 @@ function ForecastsList({ forecasts, loading, listType }) {
   return (
     <>
       {forecasts.map(forecast => (
-        <Grid2 xs={12} key={forecast.id}>
-          <ForecastCard 
-            forecast={forecast}  
-            isResolved={listType === 'resolved'}
-          />
+        <Grid2 xs={12} key={forecast.id} sx={{ mb: 2 }}>
+          <Box sx={{ height: '150px', width: '100%' }}> {/* Fixed container height and width */}
+            <ForecastCard 
+              forecast={forecast}  
+              isResolved={listType === 'resolved'}
+            />
+          </Box>
         </Grid2>
       ))}
     </>

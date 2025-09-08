@@ -91,11 +91,13 @@ function ForecastPage() {
           </Grid2>
 
           {/* Forecasts Grid */}
-          <ForecastsList 
-            forecasts={sortedForecasts}
-            loading={loading}
-            listType={listType}
-          />
+          <Grid2 xs={12}>
+            <ForecastsList 
+              forecasts={sortedForecasts}
+              loading={loading}
+              listType={listType}
+            />
+          </Grid2>
         </Grid2>
       </Box>
     </Box>

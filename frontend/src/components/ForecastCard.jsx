@@ -19,6 +19,7 @@ function ForecastCard({ forecast, isResolved = false}) {
     <Card sx={{ 
       backgroundColor: 'background.paper',
       height: '100%',
+      width: '100%',
       transition: 'transform 0.2s',
       '&:hover': {
         transform: 'translateY(-4px)',
