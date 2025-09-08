@@ -2,6 +2,7 @@ import * as forecastService from './forecastService';
 import * as pointsService from './pointsService';
 import * as scoreService from './scoreService';
 import * as userService from './userService';
+import * as newsService from './newsService';
 //import * as blogService from './blogService';
 
 // You can also define shared constants here
@@ -11,6 +12,7 @@ export {
   forecastService,
   pointsService,
   scoreService,
-  userService
+  userService,
+  newsService
  // blogService
 };

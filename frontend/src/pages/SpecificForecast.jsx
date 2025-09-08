@@ -14,6 +14,7 @@ import ResolutionDetails from '../components/ResolutionDetails';
 import UpdateForecast from '../components/UpdateForecast';
 import ResolveForecast from '../components/ResolveForecast';
 import UserSelector from '../components/UserSelector';
+import ForecastNews from '../components/ForecastNews';
 import { useForecastData } from '../services/hooks/useForecastData';
 import { usePointsData } from '../services/hooks/usePointsData';
 import { useScoresData } from '../services/hooks/useScoresData';
@@ -148,6 +149,14 @@ function SpecificForecast() {
           </Typography>
         </Paper>
       )}
+
+      {/* Latest News Section */}
+      <Box sx={{ mt: 3 }}>
+        <ForecastNews 
+          forecastQuestion={"What is the latest news relevant to the following question:" + forecast?.question}
+          forecastId={forecast?.id}
+        />
+      </Box>
 
       <Paper elevation={3} sx={{ p: 3, mb: 3 , mt: 3}}>
         <Typography variant="h6" gutterBottom>Resolution Criteria</Typography>
