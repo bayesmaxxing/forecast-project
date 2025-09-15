@@ -16,7 +16,7 @@ import {
   ExpandLess as ExpandLessIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
-import MarkdownRenderer from 'marked-react';
+import { marked } from 'marked';
 import { newsService } from '../services/api/index';
 
 function ForecastNews({ forecastQuestion, forecastId }) {
@@ -220,7 +220,7 @@ function ForecastNews({ forecastQuestion, forecastId }) {
                 }}
               >
                 {typeof newsContent === 'string' 
-                  ? <MarkdownRenderer>{newsContent}</MarkdownRenderer>
+                  ? <div dangerouslySetInnerHTML={{ __html: marked(newsContent) }} />
                   : <Typography component="pre">{JSON.stringify(newsContent, null, 2)}</Typography>
                 }
               </Box>

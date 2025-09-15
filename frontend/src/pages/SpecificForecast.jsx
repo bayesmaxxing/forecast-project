@@ -105,7 +105,7 @@ function SpecificForecast() {
   
   // Use a 4-hour minimum time window between points
   const chartData = filteredPoints && filteredPoints.length > 0 ? 
-    prepareChartData(filteredPoints, isMultiUserMode, false, 0) : null;
+    prepareChartData(filteredPoints, isMultiUserMode, false, 0, users) : null;
   
   const chartOptions = {
     title: {

@@ -2,10 +2,6 @@ import React from 'react';
 import {
   Typography,
   List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Avatar,
   Box,
   Chip,
   Paper,

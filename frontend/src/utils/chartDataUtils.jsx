@@ -18,7 +18,7 @@ export const lineColors = [
  * @param {Number} minTimeWindowHours - Minimum hours between points (to avoid clustering)
  * @returns {Object} Formatted data for recharts
  */
-export const prepareChartData = (pointsData, multiUser = true, useSequential = true, minTimeWindowHours = 0) => {
+export const prepareChartData = (pointsData, multiUser = true, useSequential = true, minTimeWindowHours = 0, users = []) => {
   if (!pointsData || pointsData.length === 0) return null;
   
   // Format date consistently for display
@@ -102,7 +102,8 @@ export const prepareChartData = (pointsData, multiUser = true, useSequential = t
         filterPointsByTimeWindow(userPoints);
       
       // Get user name or use a generic name
-      const userName = sortedUserPoints[0]?.username || `User ${userId}`;
+      const user = users.find(u => u.id === parseInt(userId, 10));
+      const userName = user ? user.username : (sortedUserPoints[0]?.username || `User ${userId}`);
       
       return {
         label: userName,
