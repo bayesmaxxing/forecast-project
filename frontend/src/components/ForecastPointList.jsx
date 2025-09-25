@@ -6,6 +6,7 @@ import {
   Chip,
   Paper,
 } from '@mui/material';
+import ReactMarkdown from 'react-markdown';
 
 function ForecastPointsList({ points, users }) {
   const formatDate = (dateString) => {
@@ -72,9 +73,45 @@ function ForecastPointsList({ points, users }) {
                 </Typography>
                 
                 {point.reason && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {point.reason}
-                  </Typography>
+                  <Box sx={{
+                    mt: 1,
+                    '& p': {
+                      margin: 0,
+                      fontSize: '0.875rem',
+                      color: 'text.secondary'
+                    },
+                    '& h1, & h2, & h3, & h4, & h5, & h6': {
+                      fontSize: '1rem',
+                      fontWeight: 'medium',
+                      margin: '0.5rem 0 0.25rem 0'
+                    },
+                    '& ul, & ol': {
+                      paddingLeft: '1.5rem',
+                      margin: '0.25rem 0'
+                    },
+                    '& blockquote': {
+                      borderLeft: 3,
+                      borderColor: 'primary.main',
+                      paddingLeft: '0.75rem',
+                      margin: '0.25rem 0',
+                      fontStyle: 'italic'
+                    },
+                    '& code': {
+                      backgroundColor: 'grey.100',
+                      padding: '0.125rem 0.25rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.8125rem'
+                    },
+                    '& pre': {
+                      backgroundColor: 'grey.100',
+                      padding: '0.5rem',
+                      borderRadius: '0.25rem',
+                      overflow: 'auto',
+                      margin: '0.25rem 0'
+                    }
+                  }}>
+                    <ReactMarkdown>{point.reason}</ReactMarkdown>
+                  </Box>
                 )}
               </Paper>
             </Box>
