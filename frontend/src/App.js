@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage';
 import FaqPage from './pages/faqPage';
 import Header from './components/Header';
 import AdminPage from './pages/AdminPage';
+import BlogPage from './pages/BlogPage';
 
 function App() {
   return (
@@ -33,6 +34,8 @@ function App() {
                 <Route path="/questions/resolved" element={<ForecastPage />}/>
                 <Route path="/faq" element={<FaqPage />}/>
                 <Route path='/admin' element={<AdminPage />}/>
+                <Route path="/blog" element={<BlogPage />}/>
+                <Route path="/blog/:slug" element={<BlogPage />}/>
                 <Route path='/login' element={<Login />}/>
                 <Route path='/register' element={<Register />}/>
               </Routes>
