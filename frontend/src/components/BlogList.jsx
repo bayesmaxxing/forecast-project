@@ -25,17 +25,11 @@ const BlogList = () => {
         // For now, we'll use a hardcoded list of blog posts
         const posts = [
           {
-            slug: 'welcome-to-our-blog',
-            title: 'Welcome to Our Blog',
-            excerpt: 'This is the first post on our new blog. Learn about what we\'ll be covering.',
-            date: '2024-01-15'
+            slug: 'ai-agent-forecasting',
+            title: 'AI Agent Forecasting',
+            excerpt: 'An exploration of using AI agents for forecasting.',
+            date: '2025-09-28'
           },
-          {
-            slug: 'forecasting-basics',
-            title: 'Forecasting Basics',
-            excerpt: 'An introduction to the fundamentals of forecasting and prediction markets.',
-            date: '2024-01-20'
-          }
         ];
 
         // Simulate API delay
@@ -74,10 +68,10 @@ const BlogList = () => {
   return (
     <Box sx={{ py: 4 }}>
       <Typography variant="h3" component="h1" gutterBottom>
-        Blog
+        
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Latest insights and updates from our team
+        
       </Typography>
 
       <Grid container spacing={3}>

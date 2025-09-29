@@ -60,7 +60,8 @@ const BlogPost = ({ slug }) => {
           lineHeight: 1.6
         },
         '& pre': {
-          backgroundColor: 'grey.100',
+          backgroundColor: 'grey.800',
+          color: 'grey.100',
           p: 2,
           borderRadius: 1,
           overflow: 'auto'
