@@ -72,6 +72,13 @@ const BlogPost = ({ slug }) => {
           ml: 0,
           pl: 2,
           fontStyle: 'italic'
+        },
+        '& a': {
+          color: 'primary.light',
+          textDecoration: 'none',
+          '&:hover': {
+            textDecoration: 'underline'
+          }
         }
       }}
     >
