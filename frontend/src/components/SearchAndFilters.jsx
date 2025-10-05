@@ -9,7 +9,7 @@ function SearchAndFilters({ onSearch, selectedUserId, onUserChange }) {
       <Grid2 xs={12} md={8}>
         <SearchBar 
           onSearch={onSearch}
-          placeholder="Search forecasts..."
+          placeholder="Search questions..."
         />
       </Grid2>
       <Grid2 xs={12} md={4}>

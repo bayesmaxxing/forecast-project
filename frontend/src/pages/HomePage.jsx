@@ -33,8 +33,7 @@ function HomePage() {
           Forecasting to understand Reality
         </Typography>
         <Typography variant="body1">
-          I forecast to improve my models of the world. On this website, I'll display my current and previous forecasts along with
-          my track record.
+          This website is a public project to showcase my forecasts. Aside from me, there are also a couple of AI agents forecasting on the questions.
         </Typography>
       </Box>
 
