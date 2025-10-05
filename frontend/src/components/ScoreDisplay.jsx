@@ -34,16 +34,25 @@ function ScoreDisplay({
   const formattedValue = value !== null ? value.toFixed(decimals) : 'N/A';
   
   return (
-    <Paper 
-      elevation={2} 
-      sx={{ 
-        p: 2, 
-        backgroundColor: 'background.paper', 
+    <Paper
+      elevation={0}
+      sx={{
+        p: 3,
+        backgroundColor: 'background.paper',
         mb: 2,
-        borderRadius: 2,
+        borderRadius: 3,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        border: '1px solid',
+        borderColor: 'divider',
+        background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.03) 0%, rgba(255, 160, 122, 0.03) 100%)',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          borderColor: 'primary.main',
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 16px -4px rgba(255, 107, 107, 0.2)',
+        }
       }}
     >
       {loading ? (
@@ -51,19 +60,40 @@ function ScoreDisplay({
       ) : (
         <Stack direction="row" spacing={2} alignItems="center" width="100%">
           <Box>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography
+              variant="subtitle2"
+              color="text.secondary"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                fontSize: '0.75rem',
+                mb: 0.5
+              }}
+            >
               {scoreLabel}
               <Tooltip title={scoreDescriptions[type] || 'Score information'}>
-                <InfoIcon fontSize="small" sx={{ ml: 1, opacity: 0.7 }} />
+                <InfoIcon fontSize="small" sx={{ ml: 1, opacity: 0.6, cursor: 'help' }} />
               </Tooltip>
             </Typography>
-            <Typography variant="h5" color="primary.light" fontWeight="medium">
+            <Typography
+              variant="h4"
+              sx={{
+                background: 'linear-gradient(135deg, #FF6B6B 0%, #FFA07A 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontWeight: 700,
+              }}
+            >
               {formattedValue}
             </Typography>
           </Box>
-          
+
           <Box flexGrow={1} />
-        
+
         </Stack>
       )}
     </Paper>

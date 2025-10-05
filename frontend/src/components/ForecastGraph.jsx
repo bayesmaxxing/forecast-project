@@ -12,8 +12,9 @@ import {
 } from 'recharts';
 import { Paper, Typography, useTheme, Box, useMediaQuery, Switch, FormControlLabel } from '@mui/material';
 import { format } from 'date-fns';
+import UserSelector from './UserSelector';
 
-function ForecastGraph({ data, options = {} }) {
+function ForecastGraph({ data, options = {}, selectedUserId, onUserChange }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [useSequentialView, setUseSequentialView] = React.useState(options.useSequential !== false);
@@ -165,45 +166,45 @@ function ForecastGraph({ data, options = {} }) {
   };
 
   return (
-    <Paper 
-      elevation={2} 
-      sx={{ 
-        p: { xs: 1, sm: 2, md: 3 },
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 1.5, sm: 2 },
         width: '100%',
-        backgroundColor: theme.palette.background.paper 
+        backgroundColor: theme.palette.background.paper,
+        mb: 2
       }}
     >
-      {options.title && (
-        <Typography 
-          variant="h6" 
-          component="h3" 
-          align="center" 
-          sx={{ mb: { xs: 1, sm: 2 } }}
-        >
-          {options.title.text}
-        </Typography>
-      )}
-      
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          mb: 1
-        }}
-      >
-        <FormControlLabel
-          control={
-            <Switch
-              checked={useSequentialView}
-              onChange={handleViewChange}
-              color="primary"
-              size="small"
-            />
-          }
-          label={useSequentialView ? "Sequential View" : "Time View"}
-          labelPlacement="start"
-          sx={{ ml: 0, fontSize: '0.8rem' }}
-        />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+        {options.title && (
+          <Typography
+            variant="subtitle1"
+            component="h3"
+            sx={{ fontWeight: 600 }}
+          >
+            {options.title.text}
+          </Typography>
+        )}
+
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          {selectedUserId !== undefined && onUserChange && (
+            <UserSelector onUserChange={onUserChange} selectedUserId={selectedUserId} />
+          )}
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={useSequentialView}
+                onChange={handleViewChange}
+                color="primary"
+                size="small"
+              />
+            }
+            label={useSequentialView ? "Sequential" : "Time"}
+            labelPlacement="start"
+            sx={{ ml: 0, fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+          />
+        </Box>
       </Box>
       
       <Box
@@ -214,9 +215,9 @@ function ForecastGraph({ data, options = {} }) {
             content: '""',
             display: 'block',
             paddingTop: {
-              xs: '85%',
-              sm: '75%',
-              md: '56.25%'
+              xs: '70%',
+              sm: '55%',
+              md: '45%'
             }
           }
         }}
