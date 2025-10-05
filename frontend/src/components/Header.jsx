@@ -35,22 +35,28 @@ const Header = () => {
   ];
 
   return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
-        backgroundColor: theme.palette.background.default,
-        borderBottom: `1px solid ${theme.palette.primary.main}`,
+    <AppBar
+      position="fixed"
+      sx={{
+        backgroundColor: 'rgba(10, 10, 10, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${theme.palette.divider}`,
         zIndex: theme.zIndex.drawer + 1,
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.3)',
       }}
     >
       <Toolbar>
         <Typography
           variant="h6"
           component="div"
-          sx={{ 
-            flexGrow: 1, 
-            fontWeight: 'bold',
-            color: theme.palette.primary.light, 
+          sx={{
+            flexGrow: 1,
+            fontWeight: 700,
+            background: 'linear-gradient(135deg, #FF6B6B 0%, #FFA07A 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.02em',
           }}
         >
           Samuel's Forecasts
@@ -114,9 +120,26 @@ const Header = () => {
                 component={Link}
                 to={item.path}
                 sx={{
-                  color: theme.palette.primary.light,
+                  color: 'text.primary',
+                  fontWeight: 500,
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 0,
+                    height: '2px',
+                    background: 'linear-gradient(90deg, #FF6B6B, #FFA07A)',
+                    transition: 'width 0.3s ease-in-out',
+                  },
                   '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
+                    backgroundColor: 'transparent',
+                    color: 'primary.main',
+                    '&::after': {
+                      width: '80%',
+                    },
                   },
                 }}
               >

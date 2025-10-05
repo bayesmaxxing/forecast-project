@@ -6,8 +6,11 @@ import {
   Typography,
   Paper,
   CircularProgress,
-  Alert
+  Alert,
+  Collapse,
+  IconButton
 } from '@mui/material';
+import { ExpandMore } from '@mui/icons-material';
 import ForecastGraph from '../components/ForecastGraph';
 import ForecastPointList from '../components/ForecastPointList';
 import ResolutionDetails from '../components/ResolutionDetails';
@@ -24,6 +27,7 @@ import { useUserData } from '../services/hooks/useUserData';
 function SpecificForecast() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('all');
+  const [criteriaExpanded, setCriteriaExpanded] = useState(false);
   let { id } = useParams();
   const numericId = parseInt(id, 10);
 
@@ -121,51 +125,67 @@ function SpecificForecast() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, mt: { xs: 5, sm: 8}, mb: 0 }}>
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          {forecast.question}
-        </Typography>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mt={2} mb={2}>
-          <UserSelector onUserChange={handleUserChange} selectedUserId={selectedUserId} />
+    <Container maxWidth="lg" sx={{ py: 2, mt: { xs: 5, sm: 7}, mb: 2 }}>
+      <Paper elevation={0} sx={{ p: 2.5, mb: 2 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
+            {forecast.question}
+          </Typography>
           {isLoggedIn && forecast.resolved == null && (
             <ResolveForecast onSubmitSuccess={refetchAllData} />
           )}
         </Box>
-        
       </Paper>
       {forecast.resolved && (
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Paper elevation={0} sx={{ p: 2.5, mb: 2 }}>
             <ResolutionDetails forecast={forecast} score={scores} />
           </Paper>
         )}
 
       {chartData ? (
-        <ForecastGraph data={chartData} options={chartOptions} />
+        <ForecastGraph
+          data={chartData}
+          options={chartOptions}
+          selectedUserId={selectedUserId}
+          onUserChange={handleUserChange}
+        />
       ) : (
-        <Paper elevation={2} sx={{ p: 3, mb: 3, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
+        <Paper elevation={0} sx={{ p: 2.5, mb: 2, textAlign: 'center' }}>
+          <Typography variant="body1" color="text.secondary">
             No forecast data available for the selected user
           </Typography>
         </Paper>
       )}
 
       {/* Latest News Section */}
-      <Box sx={{ mt: 3 }}>
-        <ForecastNews 
+      <Box sx={{ mt: 2 }}>
+        <ForecastNews
           forecastQuestion={"What is the latest news relevant to the following question:" + forecast?.question}
           forecastId={forecast?.id}
         />
       </Box>
 
-      <Paper elevation={3} sx={{ p: 3, mb: 3 , mt: 3}}>
-        <Typography variant="h6" gutterBottom>Resolution Criteria</Typography>
-        <Typography variant="body1">{forecast.resolution_criteria}</Typography>
+      <Paper elevation={0} sx={{ p: 2.5, mb: 2, mt: 2}}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setCriteriaExpanded(!criteriaExpanded)}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Resolution Criteria</Typography>
+          <IconButton
+            size="small"
+            sx={{
+              transform: criteriaExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s',
+            }}
+          >
+            <ExpandMore />
+          </IconButton>
+        </Box>
+        <Collapse in={criteriaExpanded}>
+          <Typography variant="body2" sx={{ lineHeight: 1.6, mt: 1 }}>{forecast.resolution_criteria}</Typography>
+        </Collapse>
       </Paper>
 
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Forecast Updates</Typography>
+      <Paper elevation={0} sx={{ p: 2.5, mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Forecast Updates</Typography>
           {isLoggedIn && forecast.resolved == null && (
             <UpdateForecast onSubmitSuccess={refetchAllData} />
           )}
@@ -173,7 +193,7 @@ function SpecificForecast() {
         {sortedPoints.length > 0 ? (
           <ForecastPointList points={sortedPoints} users={users}/>
         ) : (
-          <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 1 }}>
             No forecast updates available for the selected user
           </Typography>
         )}

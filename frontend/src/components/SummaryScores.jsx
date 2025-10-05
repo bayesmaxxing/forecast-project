@@ -67,7 +67,10 @@ function SummaryScores({user_id=null}) {
     return new Date(b.resolved) - new Date(a.resolved);
   });
 
-  const combined = sortedForecasts.map(forecast => ({
+  // Limit to most recent 100 forecasts to keep chart readable
+  const limitedForecasts = sortedForecasts.slice(0, 100);
+
+  const combined = limitedForecasts.map(forecast => ({
     ...forecast,
     score: scores.find(score => score.forecast_id === forecast.id)?.[selectedMetric] ?? 0
   }));
@@ -103,17 +106,20 @@ function SummaryScores({user_id=null}) {
   };
 
   return (
-    <Paper 
-      elevation={3} 
-      sx={{ 
-        p: { xs: 2, sm: 3 },
-        m: { xs: 2, sm: 3 },
-        bgcolor: 'background.paper'
+    <Paper
+      elevation={0}
+      sx={{
+        p: 2.5,
+        bgcolor: 'background.paper',
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-          <FormControl sx={{ minWidth: 150, '& .MuiInputBase-root': { height: '55px' } }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <FormControl sx={{ minWidth: 150 }}>
             <Select
               value={selectedMetric}
               onChange={(e) => setSelectedMetric(e.target.value)}
@@ -126,17 +132,25 @@ function SummaryScores({user_id=null}) {
           </FormControl>
           <UserSelector onUserChange={handleUserChange} selectedUserId={selectedUser} />
         </Box>
-        <Typography variant="h6" align="center" sx={{ mb: 2 }}>
-          Average {getMetricLabel(selectedMetric)}: {avgScore.toFixed(3)}
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          Average: {avgScore.toFixed(3)}
         </Typography>
       </Box>
 
       <Box
         sx={{
           width: '100%',
-          height: { xs: 300, sm: 400 },
+          flex: 1,
+          minHeight: 0,
+          cursor: 'pointer',
           '& .recharts-tooltip-wrapper': {
             outline: 'none'
+          },
+          '& .recharts-line': {
+            transition: 'stroke-width 0.2s ease-in-out',
+          },
+          '&:hover .recharts-line': {
+            strokeWidth: 3,
           }
         }}
       >
@@ -144,8 +158,8 @@ function SummaryScores({user_id=null}) {
           <LineChart
             data={chartData}
             margin={{
-              top: 10,
-              right: 30,
+              top: 5,
+              right: 20,
               left: 0,
               bottom: 5,
             }}
@@ -184,8 +198,8 @@ function SummaryScores({user_id=null}) {
               type="monotone"
               dataKey="score"
               stroke={theme.palette.primary.main}
-              dot={{ r: 3 }}
-              activeDot={{ r: 8 }}
+              dot={{ r: 4, cursor: 'pointer' }}
+              activeDot={{ r: 7, cursor: 'pointer' }}
               strokeWidth={2}
             />
           </LineChart>

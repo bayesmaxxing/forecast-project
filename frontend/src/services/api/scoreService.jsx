@@ -107,3 +107,14 @@ export const fetchAggregateScoresByCategory = async (category) => {
   return response.json();
 };
 
+export const fetchAggregateScoresByUsers = async () => {
+  const response = await fetch(`${API_BASE_URL}/scores/aggregate/users`, {
+    method: 'GET',
+    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching aggregate scores: ${response.status}`);
+  }
+  return response.json();
+};
