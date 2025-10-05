@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { fetchAggregateScoresByUserID, 
   fetchAggregateScoresAllUsers, 
   fetchAggregateScoresByUserIDAndCategory, 
-  fetchAggregateScoresByCategory } from '../api/scoreService';
+  fetchAggregateScoresByCategory,
+  fetchAggregateScoresByUsers,
+} from '../api/scoreService';
 
 export const useAggregateScoresData = (userId = null) => {
   const [scores, setScores] = useState([]);
@@ -60,6 +62,33 @@ export const useAggregateScoresDataByCategory = (userId = null, category = null)
 
     fetchScores();
   }, [userId, category]);
+
+  return { scores, scoresLoading, error };
+};
+
+export const useAggregateScoresDataByUsers = () => {
+  const [scores, setScores] = useState([]);
+  const [scoresLoading, setScoresLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchScores = async () => {
+      try {
+        setScoresLoading(true);
+        const data = await fetchAggregateScoresByUsers();
+        setScores(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching scores:', err);
+        setError(err.message || 'Failed to load scores');
+        setScores(null);
+      } finally {
+        setScoresLoading(false);
+      }
+    };
+
+    fetchScores();
+  }, []);
 
   return { scores, scoresLoading, error };
 };
