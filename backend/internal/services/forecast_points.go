@@ -160,15 +160,10 @@ func (f *ForecastPointService) GetOrderedForecastPoints(ctx context.Context, for
 }
 
 func (f *ForecastPointService) GetTodaysForecastPoints(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
-	cacheKey := fmt.Sprintf("point:todays:%d", user_id)
-	if cachedPoints, found := f.cache.Get(cacheKey); found {
-		return cachedPoints.([]*models.ForecastPoint), nil
-	}
 
 	points, err := f.repo.GetTodaysForecastPoints(ctx, user_id)
 	if err != nil {
 		return nil, err
 	}
-	f.cache.Set(cacheKey, points)
 	return points, nil
 }
