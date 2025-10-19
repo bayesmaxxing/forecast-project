@@ -18,6 +18,7 @@ type ForecastPointRepository interface {
 	CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error
 	GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error)
 	GetLatestForecastPointsByUser(ctx context.Context, userID int64) ([]*models.ForecastPoint, error)
+	GetTodaysForecastPoints(ctx context.Context, userID int64) ([]*models.ForecastPoint, error)
 }
 
 // PostgresForecastPointRepository implements the ForecastPointRepository interface
@@ -262,6 +263,45 @@ func (r *PostgresForecastPointRepository) GetOrderedForecastPointsByForecastID(c
 			&fp.PointForecast,
 			&fp.Reason,
 			&fp.CreatedAt,
+			&fp.UserID,
+			&fp.UserName); err != nil {
+			return nil, err
+		}
+		forecast_points = append(forecast_points, &fp)
+	}
+	return forecast_points, rows.Err()
+}
+
+func (r *PostgresForecastPointRepository) GetTodaysForecastPoints(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
+	query := `SELECT distinct on (forecast_id)
+				p.id
+				, p.forecast_id
+				, p.point_forecast
+				, p.created
+				, p.reason
+				, p.user_id
+				, u.username
+				FROM points p
+				left join users u on p.user_id = u.id
+				WHERE p.user_id = $1
+				AND p.created >= current_date
+				ORDER BY p.forecast_id, p.created DESC;`
+
+	rows, err := r.db.QueryContext(ctx, query, user_id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var forecast_points []*models.ForecastPoint
+	for rows.Next() {
+		var fp models.ForecastPoint
+		if err := rows.Scan(&fp.ID,
+			&fp.ForecastID,
+			&fp.PointForecast,
+			&fp.CreatedAt,
+			&fp.Reason,
 			&fp.UserID,
 			&fp.UserName); err != nil {
 			return nil, err

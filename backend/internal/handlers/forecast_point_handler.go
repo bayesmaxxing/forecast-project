@@ -184,3 +184,25 @@ func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, 
 
 	respondJSON(w, http.StatusOK, points)
 }
+
+func (h *ForecastPointHandler) ListTodaysForecastPoints(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.URL.Query().Get("user_id")
+	if userIDStr == "" {
+		http.Error(w, "user_id query parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid user_id format", http.StatusBadRequest)
+		return
+	}
+
+	points, err := h.service.GetTodaysForecastPoints(r.Context(), userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, points)
+}
