@@ -31,7 +31,7 @@ function ResolutionDetails({ forecast, score }) {
       <Typography variant="body1" paragraph>
         Resolved on {formatDate(forecast.resolved)}
         {score ? 
-          ` with a Brier score of ${score.brier_score ? (score.brier_score).toFixed(4) : 0}.` :
+          ` with a Brier score of ${score.brier_score_time_weighted ? (score.brier_score_time_weighted).toFixed(4) : 0}.` :
           `.`
         }
       </Typography>

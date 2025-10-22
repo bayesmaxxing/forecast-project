@@ -51,13 +51,13 @@ function SummaryScores({user_id=null}) {
 
     switch (selectedMetric) {
       case 'brier_score':
-        return aggregateScores.brier_score ?? 0;
+        return aggregateScores.brier_score_time_weighted ?? 0;
       case 'log2_score':
-        return aggregateScores.log2_score ?? 0;
+        return aggregateScores.log2_score_time_weighted ?? 0;
       case 'logn_score':
-        return aggregateScores.logn_score ?? 0;
+        return aggregateScores.logn_score_time_weighted ?? 0;
       default:
-        return aggregateScores.brier_score ?? 0;
+        return aggregateScores.brier_score_time_weighted ?? 0;
     }
   };
 
@@ -72,7 +72,7 @@ function SummaryScores({user_id=null}) {
 
   const combined = limitedForecasts.map(forecast => ({
     ...forecast,
-    score: scores.find(score => score.forecast_id === forecast.id)?.[selectedMetric] ?? 0
+    score: scores.find(score => score.forecast_id === forecast.id)?.[`${selectedMetric}_time_weighted`] ?? 0
   }));
 
   const chartData = combined.map(forecast => ({

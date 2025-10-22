@@ -31,9 +31,9 @@ function UserLeaderboard() {
     return {
       id: scoreData.user_id,
       username: user?.username || `User ${scoreData.user_id}`,
-      brier_score: scoreData.brier_score,
-      log2_score: scoreData.log2_score,
-      logn_score: scoreData.logn_score,
+      brier_score: scoreData.brier_score_time_weighted,
+      log2_score: scoreData.log2_score_time_weighted,
+      logn_score: scoreData.logn_score_time_weighted,
       forecastCount: scoreData.total_forecasts
     };
   }) || [];
