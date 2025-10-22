@@ -181,9 +181,13 @@ func (r *PostgresForecastRepository) UpdateForecast(ctx context.Context, f *mode
 		return err
 	}
 
-	defer tx.Rollback()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
 
-	query := `UPDATE forecasts SET 
+	query := `UPDATE forecasts SET
 				question = $1
 				, category = $2
 				, resolution_criteria = $3
@@ -192,7 +196,7 @@ func (r *PostgresForecastRepository) UpdateForecast(ctx context.Context, f *mode
 				, comment = $6
 			 WHERE id = $7`
 
-	_, err = r.db.ExecContext(ctx, query,
+	_, err = tx.ExecContext(ctx, query,
 		f.Question,
 		f.Category,
 		f.ResolutionCriteria,
@@ -204,7 +208,8 @@ func (r *PostgresForecastRepository) UpdateForecast(ctx context.Context, f *mode
 		return err
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	return err
 }
 
 // user_id filtered methods
@@ -214,7 +219,11 @@ func (r *PostgresForecastRepository) DeleteForecast(ctx context.Context, id int6
 		return err
 	}
 
-	defer tx.Rollback()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
 	//if this delete fails, due to user_id not owning forecast, return and do not delete forecast points.
 	//also checking this in service, but this adds redundancy since I delete all user forecast points.
 	queryForecasts := `DELETE FROM forecasts WHERE id = $1 and user_id = $2`
@@ -229,7 +238,8 @@ func (r *PostgresForecastRepository) DeleteForecast(ctx context.Context, id int6
 		return err
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	return err
 }
 
 func (r *PostgresForecastRepository) GetStaleAndNewForecasts(ctx context.Context, userID int64) ([]*models.Forecast, error) {
@@ -265,7 +275,7 @@ func (r *PostgresForecastRepository) GetStaleAndNewForecasts(ctx context.Context
 }
 
 // Helper function to query forecasts
-func (r *PostgresForecastRepository) queryForecasts(ctx context.Context, query string, args ...interface{}) ([]*models.Forecast, error) {
+func (r *PostgresForecastRepository) queryForecasts(ctx context.Context, query string, args ...any) ([]*models.Forecast, error) {
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err

@@ -41,15 +41,18 @@ func NewScoreRepository(db *database.DB) ScoreRepository {
 
 // Full schema operations
 func (r *PostgresScoreRepository) GetScoreByForecastID(ctx context.Context, forecast_id int64) ([]models.Scores, error) {
-	query := `SELECT 
-					id 
+	query := `SELECT
+					id
 					, brier_score
 					, log2_score
 					, logn_score
+					, brier_score_time_weighted
+					, log2_score_time_weighted
+					, logn_score_time_weighted
 					, user_id
 					, forecast_id
 					, created
-					FROM scores 
+					FROM scores
 					WHERE forecast_id = $1`
 
 	rows, err := r.db.QueryContext(ctx, query, forecast_id)
@@ -66,6 +69,9 @@ func (r *PostgresScoreRepository) GetScoreByForecastID(ctx context.Context, fore
 			&s.BrierScore,
 			&s.Log2Score,
 			&s.LogNScore,
+			&s.BrierScoreTimeWeighted,
+			&s.Log2ScoreTimeWeighted,
+			&s.LogNScoreTimeWeighted,
 			&s.UserID,
 			&s.ForecastID,
 			&s.CreatedAt,
@@ -78,15 +84,18 @@ func (r *PostgresScoreRepository) GetScoreByForecastID(ctx context.Context, fore
 }
 
 func (r *PostgresScoreRepository) GetScoreByForecastAndUser(ctx context.Context, forecast_id int64, user_id int64) (*models.Scores, error) {
-	query := `SELECT 
-					id 
+	query := `SELECT
+					id
 					, brier_score
 					, log2_score
 					, logn_score
+					, brier_score_time_weighted
+					, log2_score_time_weighted
+					, logn_score_time_weighted
 					, user_id
 					, forecast_id
 					, created
-					FROM scores 
+					FROM scores
 					WHERE forecast_id = $1 AND user_id = $2`
 
 	var score models.Scores
@@ -95,6 +104,9 @@ func (r *PostgresScoreRepository) GetScoreByForecastAndUser(ctx context.Context,
 		&score.BrierScore,
 		&score.Log2Score,
 		&score.LogNScore,
+		&score.BrierScoreTimeWeighted,
+		&score.Log2ScoreTimeWeighted,
+		&score.LogNScoreTimeWeighted,
 		&score.UserID,
 		&score.ForecastID,
 		&score.CreatedAt)
@@ -107,23 +119,43 @@ func (r *PostgresScoreRepository) GetScoreByForecastAndUser(ctx context.Context,
 func (r *PostgresScoreRepository) CreateScore(ctx context.Context, score *models.Scores) error {
 	score.CreatedAt = time.Now()
 
-	query := `INSERT INTO scores (brier_score, log2_score, logn_score, user_id, forecast_id, created)
-              VALUES ($1, $2, $3, $4, $5, $6)
+	query := `INSERT INTO scores (brier_score
+					, log2_score
+					, logn_score
+					, brier_score_time_weighted
+					, log2_score_time_weighted
+					, logn_score_time_weighted
+					, user_id
+					, forecast_id
+					, created)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
               RETURNING id`
 
 	return r.db.QueryRowContext(ctx, query,
 		score.BrierScore,
 		score.Log2Score,
 		score.LogNScore,
+		score.BrierScoreTimeWeighted,
+		score.Log2ScoreTimeWeighted,
+		score.LogNScoreTimeWeighted,
 		score.UserID,
 		score.ForecastID,
 		score.CreatedAt).Scan(&score.ID)
 }
 
 func (r *PostgresScoreRepository) GetScoresByUserID(ctx context.Context, user_id int64) ([]models.Scores, error) {
-	query := `SELECT 
-				id, brier_score, log2_score, logn_score, user_id, forecast_id, created
-			  FROM scores 
+	query := `SELECT
+				id
+				, brier_score
+				, log2_score
+				, logn_score
+				, brier_score_time_weighted
+				, log2_score_time_weighted
+				, logn_score_time_weighted
+				, user_id
+				, forecast_id
+				, created
+			  FROM scores
 			  WHERE user_id = $1
 			  ORDER BY created DESC`
 
@@ -141,6 +173,9 @@ func (r *PostgresScoreRepository) GetScoresByUserID(ctx context.Context, user_id
 			&s.BrierScore,
 			&s.Log2Score,
 			&s.LogNScore,
+			&s.BrierScoreTimeWeighted,
+			&s.Log2ScoreTimeWeighted,
+			&s.LogNScoreTimeWeighted,
 			&s.UserID,
 			&s.ForecastID,
 			&s.CreatedAt,
@@ -153,9 +188,18 @@ func (r *PostgresScoreRepository) GetScoresByUserID(ctx context.Context, user_id
 }
 
 func (r *PostgresScoreRepository) GetAllScores(ctx context.Context) ([]models.Scores, error) {
-	query := `SELECT 
-				id, brier_score, log2_score, logn_score, user_id, forecast_id, created
-			  FROM scores 
+	query := `SELECT
+				id
+				, brier_score
+				, log2_score
+				, logn_score
+				, brier_score_time_weighted
+				, log2_score_time_weighted
+				, logn_score_time_weighted
+				, user_id
+				, forecast_id
+				, created
+			  FROM scores
 			  ORDER BY created DESC`
 
 	rows, err := r.db.QueryContext(ctx, query)
@@ -172,6 +216,9 @@ func (r *PostgresScoreRepository) GetAllScores(ctx context.Context) ([]models.Sc
 			&s.BrierScore,
 			&s.Log2Score,
 			&s.LogNScore,
+			&s.BrierScoreTimeWeighted,
+			&s.Log2ScoreTimeWeighted,
+			&s.LogNScoreTimeWeighted,
 			&s.UserID,
 			&s.ForecastID,
 			&s.CreatedAt,
@@ -184,7 +231,16 @@ func (r *PostgresScoreRepository) GetAllScores(ctx context.Context) ([]models.Sc
 }
 
 func (r *PostgresScoreRepository) GetAverageScores(ctx context.Context) ([]models.Scores, error) {
-	query := `SELECT 0 as id, coalesce(AVG(brier_score), 0) as brier_score, coalesce(AVG(log2_score), 0) as log2_score, coalesce(AVG(logn_score), 0) as logn_score, 0 as user_id, forecast_id, max(created) as created
+	query := `SELECT 0 as id
+				, coalesce(AVG(brier_score), 0) as brier_score
+				, coalesce(AVG(log2_score), 0) as log2_score
+				, coalesce(AVG(logn_score), 0) as logn_score
+				, coalesce(AVG(brier_score_time_weighted), 0) as brier_score_time_weighted
+				, coalesce(AVG(log2_score_time_weighted), 0) as log2_score_time_weighted
+				, coalesce(AVG(logn_score_time_weighted), 0) as logn_score_time_weighted
+				, 0 as user_id
+				, forecast_id
+				, max(created) as created
 			  FROM scores
 			  GROUP BY forecast_id, user_id, id`
 
@@ -202,6 +258,9 @@ func (r *PostgresScoreRepository) GetAverageScores(ctx context.Context) ([]model
 			&s.BrierScore,
 			&s.Log2Score,
 			&s.LogNScore,
+			&s.BrierScoreTimeWeighted,
+			&s.Log2ScoreTimeWeighted,
+			&s.LogNScoreTimeWeighted,
 			&s.UserID,
 			&s.ForecastID,
 			&s.CreatedAt,
@@ -214,14 +273,22 @@ func (r *PostgresScoreRepository) GetAverageScores(ctx context.Context) ([]model
 }
 
 func (r *PostgresScoreRepository) UpdateScore(ctx context.Context, score *models.Scores) error {
-	query := `UPDATE scores 
-			  SET brier_score = $1, log2_score = $2, logn_score = $3
-			  WHERE id = $4`
+	query := `UPDATE scores
+			  SET brier_score = $1
+			  , log2_score = $2
+			  , logn_score = $3
+			  , brier_score_time_weighted = $4
+			  , log2_score_time_weighted = $5
+			  , logn_score_time_weighted = $6
+			  WHERE id = $7`
 
 	result, err := r.db.ExecContext(ctx, query,
 		score.BrierScore,
 		score.Log2Score,
 		score.LogNScore,
+		score.BrierScoreTimeWeighted,
+		score.Log2ScoreTimeWeighted,
+		score.LogNScoreTimeWeighted,
 		score.ID)
 	if err != nil {
 		return err
@@ -262,6 +329,9 @@ func (r *PostgresScoreRepository) GetOverallScores(ctx context.Context) (*models
 				coalesce(AVG(brier_score), 0) as avg_brier,
 				coalesce(AVG(log2_score), 0) as avg_log2,
 				coalesce(AVG(logn_score), 0) as avg_logn,
+				coalesce(AVG(brier_score_time_weighted), 0) as avg_brier_time_weighted,
+				coalesce(AVG(log2_score_time_weighted), 0) as avg_log2_time_weighted,
+				coalesce(AVG(logn_score_time_weighted), 0) as avg_logn_time_weighted,
 				COUNT(DISTINCT user_id) as total_users,
 				COUNT(DISTINCT forecast_id) as total_forecasts
 			  FROM scores`
@@ -271,6 +341,9 @@ func (r *PostgresScoreRepository) GetOverallScores(ctx context.Context) (*models
 		&overallScores.BrierScore,
 		&overallScores.Log2Score,
 		&overallScores.LogNScore,
+		&overallScores.BrierScoreTimeWeighted,
+		&overallScores.Log2ScoreTimeWeighted,
+		&overallScores.LogNScoreTimeWeighted,
 		&overallScores.TotalUsers,
 		&overallScores.TotalForecasts,
 	)
@@ -286,6 +359,9 @@ func (r *PostgresScoreRepository) GetCategoryScores(ctx context.Context, categor
 				coalesce(AVG(s.brier_score), 0) as avg_brier,
 				coalesce(AVG(s.log2_score), 0) as avg_log2,
 				coalesce(AVG(s.logn_score), 0) as avg_logn,
+				coalesce(AVG(s.brier_score_time_weighted), 0) as avg_brier_time_weighted,
+				coalesce(AVG(s.log2_score_time_weighted), 0) as avg_log2_time_weighted,
+				coalesce(AVG(s.logn_score_time_weighted), 0) as avg_logn_time_weighted,
 				COUNT(DISTINCT s.user_id) as total_users,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
@@ -300,6 +376,9 @@ func (r *PostgresScoreRepository) GetCategoryScores(ctx context.Context, categor
 		&categoryScores.BrierScore,
 		&categoryScores.Log2Score,
 		&categoryScores.LogNScore,
+		&categoryScores.BrierScoreTimeWeighted,
+		&categoryScores.Log2ScoreTimeWeighted,
+		&categoryScores.LogNScoreTimeWeighted,
 		&categoryScores.TotalUsers,
 		&categoryScores.TotalForecasts,
 	)
@@ -316,6 +395,9 @@ func (r *PostgresScoreRepository) GetCategoryScoresByUsers(ctx context.Context, 
 				coalesce(AVG(s.brier_score), 0) as avg_brier,
 				coalesce(AVG(s.log2_score), 0) as avg_log2,
 				coalesce(AVG(s.logn_score), 0) as avg_logn,
+				coalesce(AVG(s.brier_score_time_weighted), 0) as avg_brier_time_weighted,
+				coalesce(AVG(s.log2_score_time_weighted), 0) as avg_log2_time_weighted,
+				coalesce(AVG(s.logn_score_time_weighted), 0) as avg_logn_time_weighted,
 				s.user_id,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
@@ -339,6 +421,9 @@ func (r *PostgresScoreRepository) GetCategoryScoresByUsers(ctx context.Context, 
 			&u.BrierScore,
 			&u.Log2Score,
 			&u.LogNScore,
+			&u.BrierScoreTimeWeighted,
+			&u.Log2ScoreTimeWeighted,
+			&u.LogNScoreTimeWeighted,
 			&u.UserID,
 			&u.TotalForecasts,
 		); err != nil {
@@ -355,6 +440,9 @@ func (r *PostgresScoreRepository) GetOverallScoresByUsers(ctx context.Context) (
 				coalesce(AVG(brier_score), 0) as avg_brier,
 				coalesce(AVG(log2_score), 0) as avg_log2,
 				coalesce(AVG(logn_score), 0) as avg_logn,
+				coalesce(AVG(brier_score_time_weighted), 0) as avg_brier_time_weighted,
+				coalesce(AVG(log2_score_time_weighted), 0) as avg_log2_time_weighted,
+				coalesce(AVG(logn_score_time_weighted), 0) as avg_logn_time_weighted,
 				user_id,
 				COUNT(DISTINCT forecast_id) as total_forecasts
 			  FROM scores
@@ -373,6 +461,9 @@ func (r *PostgresScoreRepository) GetOverallScoresByUsers(ctx context.Context) (
 			&u.BrierScore,
 			&u.Log2Score,
 			&u.LogNScore,
+			&u.BrierScoreTimeWeighted,
+			&u.Log2ScoreTimeWeighted,
+			&u.LogNScoreTimeWeighted,
 			&u.UserID,
 			&u.TotalForecasts,
 		); err != nil {
@@ -389,6 +480,9 @@ func (r *PostgresScoreRepository) GetUserCategoryScores(ctx context.Context, use
 				coalesce(AVG(s.brier_score), 0) as avg_brier,
 				coalesce(AVG(s.log2_score), 0) as avg_log2,
 				coalesce(AVG(s.logn_score), 0) as avg_logn,
+				coalesce(AVG(s.brier_score_time_weighted), 0) as avg_brier_time_weighted,
+				coalesce(AVG(s.log2_score_time_weighted), 0) as avg_log2_time_weighted,
+				coalesce(AVG(s.logn_score_time_weighted), 0) as avg_logn_time_weighted,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
 			  JOIN forecasts f
@@ -402,6 +496,9 @@ func (r *PostgresScoreRepository) GetUserCategoryScores(ctx context.Context, use
 		&userCategoryScores.BrierScore,
 		&userCategoryScores.Log2Score,
 		&userCategoryScores.LogNScore,
+		&userCategoryScores.BrierScoreTimeWeighted,
+		&userCategoryScores.Log2ScoreTimeWeighted,
+		&userCategoryScores.LogNScoreTimeWeighted,
 		&userCategoryScores.TotalForecasts,
 	)
 	if err != nil {
@@ -418,6 +515,9 @@ func (r *PostgresScoreRepository) GetUserOverallScores(ctx context.Context, user
 				coalesce(AVG(s.brier_score), 0) as avg_brier,
 				coalesce(AVG(s.log2_score), 0) as avg_log2,
 				coalesce(AVG(s.logn_score), 0) as avg_logn,
+				coalesce(AVG(s.brier_score_time_weighted), 0) as avg_brier_time_weighted,
+				coalesce(AVG(s.log2_score_time_weighted), 0) as avg_log2_time_weighted,
+				coalesce(AVG(s.logn_score_time_weighted), 0) as avg_logn_time_weighted,
 				COUNT(DISTINCT s.forecast_id) as total_forecasts
 			  FROM scores s
 			  WHERE s.user_id = $1`
@@ -427,6 +527,9 @@ func (r *PostgresScoreRepository) GetUserOverallScores(ctx context.Context, user
 		&userScores.BrierScore,
 		&userScores.Log2Score,
 		&userScores.LogNScore,
+		&userScores.BrierScoreTimeWeighted,
+		&userScores.Log2ScoreTimeWeighted,
+		&userScores.LogNScoreTimeWeighted,
 		&userScores.TotalForecasts,
 	)
 	if err != nil {
@@ -440,7 +543,10 @@ func (r *PostgresScoreRepository) GetAverageScoreByForecastID(ctx context.Contex
 	query := `SELECT 
 				coalesce(AVG(brier_score), 0) as avg_brier,
 				coalesce(AVG(log2_score), 0) as avg_log2,
-				coalesce(AVG(logn_score), 0) as avg_logn
+				coalesce(AVG(logn_score), 0) as avg_logn,
+				coalesce(AVG(brier_score_time_weighted), 0) as avg_brier_time_weighted,
+				coalesce(AVG(log2_score_time_weighted), 0) as avg_log2_time_weighted,
+				coalesce(AVG(logn_score_time_weighted), 0) as avg_logn_time_weighted,
 			  FROM scores
 			  WHERE forecast_id = $1`
 
@@ -449,6 +555,9 @@ func (r *PostgresScoreRepository) GetAverageScoreByForecastID(ctx context.Contex
 		&scoreMetrics.BrierScore,
 		&scoreMetrics.Log2Score,
 		&scoreMetrics.LogNScore,
+		&scoreMetrics.BrierScoreTimeWeighted,
+		&scoreMetrics.Log2ScoreTimeWeighted,
+		&scoreMetrics.LogNScoreTimeWeighted,
 	)
 	if err != nil {
 		return nil, err

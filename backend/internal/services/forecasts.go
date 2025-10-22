@@ -106,10 +106,13 @@ func (s *ForecastService) ResolveForecast(ctx context.Context, user_id int64, id
 		return errors.New("no forecast points found")
 	}
 
-	// Group points by user
-	userPoints := make(map[int64][]float64)
+	// Group points and created at by user
+	userPoints := make(map[int64][]models.TimePoint)
 	for _, point := range points {
-		userPoints[point.UserID] = append(userPoints[point.UserID], point.PointForecast)
+		userPoints[point.UserID] = append(userPoints[point.UserID], models.TimePoint{
+			PointForecast: point.PointForecast,
+			CreatedAt:     point.CreatedAt,
+		})
 	}
 
 	// Update the forecast with resolution status
@@ -133,7 +136,7 @@ func (s *ForecastService) ResolveForecast(ctx context.Context, user_id int64, id
 			continue
 		}
 
-		score, err := models.CalcForecastScore(probabilities, outcome, userID, forecast.ID)
+		score, err := models.CalcForecastScore(probabilities, outcome, userID, forecast.ID, forecast.CreatedAt, forecast.ResolvedAt)
 		if err != nil {
 			return err
 		}
