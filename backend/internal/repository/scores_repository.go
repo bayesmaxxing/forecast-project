@@ -546,7 +546,7 @@ func (r *PostgresScoreRepository) GetAverageScoreByForecastID(ctx context.Contex
 				coalesce(AVG(logn_score), 0) as avg_logn,
 				coalesce(AVG(brier_score_time_weighted), 0) as avg_brier_time_weighted,
 				coalesce(AVG(log2_score_time_weighted), 0) as avg_log2_time_weighted,
-				coalesce(AVG(logn_score_time_weighted), 0) as avg_logn_time_weighted,
+				coalesce(AVG(logn_score_time_weighted), 0) as avg_logn_time_weighted
 			  FROM scores
 			  WHERE forecast_id = $1`
 
