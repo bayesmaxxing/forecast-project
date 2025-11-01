@@ -69,9 +69,11 @@ func CalcForecastScore(points []TimePoint, outcome bool, userID int64, forecastI
 		return Scores{}, errors.New("no probabilities provided")
 	}
 
-	closeDate := forecastClosingDate
-	if forecastResolvedAt != nil && forecastResolvedAt.Before(*closeDate) {
-		closeDate = forecastResolvedAt
+	var closeDate time.Time
+	if forecastClosingDate != nil && forecastClosingDate.Before(*forecastResolvedAt) {
+		closeDate = *forecastClosingDate
+	} else {
+		closeDate = *forecastResolvedAt
 	}
 
 	var brierSum, log2Sum, logNSum float64
