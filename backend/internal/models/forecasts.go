@@ -11,6 +11,7 @@ type Forecast struct {
 	CreatedAt          time.Time  `json:"created"`
 	UserID             int64      `json:"user_id"`
 	ResolutionCriteria string     `json:"resolution_criteria"`
+	ClosingDate        *time.Time `json:"closing_date,omitempty"`
 	Resolution         *string    `json:"resolution,omitempty"`
 	ResolvedAt         *time.Time `json:"resolved,omitempty"`
 	ResolutionComment  *string    `json:"comment,omitempty"`

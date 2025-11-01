@@ -136,7 +136,7 @@ func (s *ForecastService) ResolveForecast(ctx context.Context, user_id int64, id
 			continue
 		}
 
-		score, err := models.CalcForecastScore(probabilities, outcome, userID, forecast.ID, forecast.CreatedAt, forecast.ResolvedAt)
+		score, err := models.CalcForecastScore(probabilities, outcome, userID, forecast.ID, forecast.CreatedAt, forecast.ClosingDate, forecast.ResolvedAt)
 		if err != nil {
 			return err
 		}
