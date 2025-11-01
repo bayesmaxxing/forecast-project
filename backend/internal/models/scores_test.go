@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Tests using resolvedAt as the close date
 func TestCalcForecastScore_SinglePoint(t *testing.T) {
 	forecastCreated := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	forecastResolved := time.Date(2024, 1, 8, 0, 0, 0, 0, time.UTC) // 7 days later
@@ -15,7 +16,7 @@ func TestCalcForecastScore_SinglePoint(t *testing.T) {
 	}
 
 	// Test positive outcome (forecast resolves to YES)
-	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastResolved)
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -30,7 +31,7 @@ func TestCalcForecastScore_SinglePoint(t *testing.T) {
 	}
 
 	// Test negative outcome (forecast resolves to NO)
-	score, err = CalcForecastScore(points, false, 1, 1, forecastCreated, &forecastResolved)
+	score, err = CalcForecastScore(points, false, 1, 1, forecastCreated, nil, &forecastResolved)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -52,7 +53,7 @@ func TestCalcForecastScore_MultiplePointsEqualDuration(t *testing.T) {
 		{PointForecast: 0.7, CreatedAt: time.Date(2024, 1, 3, 0, 0, 0, 0, time.UTC)},
 	}
 
-	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastResolved)
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -82,7 +83,7 @@ func TestCalcForecastScore_MultiplePointsUnequalDuration(t *testing.T) {
 		{PointForecast: 0.1, CreatedAt: time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)},
 	}
 
-	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastResolved)
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -122,7 +123,7 @@ func TestCalcForecastScore_WeightsSumToOne(t *testing.T) {
 
 	weight1 := points[1].CreatedAt.Sub(points[0].CreatedAt).Seconds() / totalOpenTime // 2 days
 	weight2 := points[2].CreatedAt.Sub(points[1].CreatedAt).Seconds() / totalOpenTime // 5 days
-	weight3 := forecastResolved.Sub(points[2].CreatedAt).Seconds() / totalOpenTime     // 3 days
+	weight3 := forecastResolved.Sub(points[2].CreatedAt).Seconds() / totalOpenTime    // 3 days
 
 	sumWeights := weight1 + weight2 + weight3
 	if math.Abs(sumWeights-1.0) > 0.0001 {
@@ -138,7 +139,7 @@ func TestCalcForecastScore_LogScores(t *testing.T) {
 		{PointForecast: 0.8, CreatedAt: forecastCreated},
 	}
 
-	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastResolved)
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -155,7 +156,7 @@ func TestCalcForecastScore_LogScores(t *testing.T) {
 	}
 
 	// Test negative outcome
-	score, err = CalcForecastScore(points, false, 1, 1, forecastCreated, &forecastResolved)
+	score, err = CalcForecastScore(points, false, 1, 1, forecastCreated, nil, &forecastResolved)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -181,12 +182,12 @@ func TestCalcForecastScore_EdgeCaseProbabilities(t *testing.T) {
 		prob      float64
 		shouldErr bool
 	}{
-		{0.0, true},   // exactly 0
-		{1.0, true},   // exactly 1
+		{0.0, true},    // exactly 0
+		{1.0, true},    // exactly 1
 		{0.001, false}, // just above 0
 		{0.999, false}, // just below 1
-		{-0.1, true},  // negative
-		{1.1, true},   // above 1
+		{-0.1, true},   // negative
+		{1.1, true},    // above 1
 	}
 
 	for _, tc := range testCases {
@@ -194,7 +195,7 @@ func TestCalcForecastScore_EdgeCaseProbabilities(t *testing.T) {
 			{PointForecast: tc.prob, CreatedAt: forecastCreated},
 		}
 
-		_, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastResolved)
+		_, err := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
 		if tc.shouldErr && err == nil {
 			t.Errorf("Expected error for probability %v, got nil", tc.prob)
 		}
@@ -210,7 +211,7 @@ func TestCalcForecastScore_EmptyPoints(t *testing.T) {
 
 	points := []TimePoint{}
 
-	_, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastResolved)
+	_, err := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
 	if err == nil {
 		t.Error("Expected error for empty points slice, got nil")
 	}
@@ -237,8 +238,8 @@ func TestCalcForecastScore_TimeWeightingFavorsLongerHeldPredictions(t *testing.T
 	}
 
 	// Outcome = true (YES)
-	goodScore, _ := CalcForecastScore(goodForecaster, true, 1, 1, forecastCreated, &forecastResolved)
-	badScore, _ := CalcForecastScore(badForecaster, true, 1, 1, forecastCreated, &forecastResolved)
+	goodScore, _ := CalcForecastScore(goodForecaster, true, 1, 1, forecastCreated, nil, &forecastResolved)
+	badScore, _ := CalcForecastScore(badForecaster, true, 1, 1, forecastCreated, nil, &forecastResolved)
 
 	// Naive scores should be identical (same probabilities, different order)
 	if math.Abs(goodScore.BrierScore-badScore.BrierScore) > 0.0001 {
@@ -269,7 +270,7 @@ func TestCalcForecastScore_MetadataCorrect(t *testing.T) {
 	var userID int64 = 42
 	var forecastID int64 = 123
 
-	score, err := CalcForecastScore(points, true, userID, forecastID, forecastCreated, &forecastResolved)
+	score, err := CalcForecastScore(points, true, userID, forecastID, forecastCreated, nil, &forecastResolved)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -282,5 +283,158 @@ func TestCalcForecastScore_MetadataCorrect(t *testing.T) {
 	}
 	if score.CreatedAt.IsZero() {
 		t.Error("CreatedAt should be set")
+	}
+}
+
+// Tests for closeDate calculation logic
+
+func TestCalcForecastScore_CloseDateNil(t *testing.T) {
+	// When forecastClosingDate is nil, should use forecastResolvedAt as closeDate
+	forecastCreated := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	forecastResolved := time.Date(2024, 1, 11, 0, 0, 0, 0, time.UTC) // 10 days later
+
+	// Point 1: held for 5 days (50% of time from creation to resolve)
+	// Point 2: held for 5 days (50% of time from creation to resolve)
+	points := []TimePoint{
+		{PointForecast: 0.9, CreatedAt: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)},
+		{PointForecast: 0.1, CreatedAt: time.Date(2024, 1, 6, 0, 0, 0, 0, time.UTC)},
+	}
+
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// When closeDate is nil, it uses forecastResolvedAt
+	// Point 1: 5 days / 10 days = 0.5
+	// Point 2: 5 days / 10 days = 0.5
+	expectedTimeWeighted := math.Pow(0.9-1, 2)*0.5 + math.Pow(0.1-1, 2)*0.5
+	if math.Abs(score.BrierScoreTimeWeighted-expectedTimeWeighted) > 0.0001 {
+		t.Errorf("BrierScoreTimeWeighted = %v, want %v (should use forecastResolvedAt as closeDate when closingDate is nil)",
+			score.BrierScoreTimeWeighted, expectedTimeWeighted)
+	}
+}
+
+func TestCalcForecastScore_CloseDateBeforeResolved(t *testing.T) {
+	// When forecastClosingDate is before forecastResolvedAt, should use forecastClosingDate
+	forecastCreated := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	forecastClosing := time.Date(2024, 1, 6, 0, 0, 0, 0, time.UTC)   // 5 days after creation
+	forecastResolved := time.Date(2024, 1, 11, 0, 0, 0, 0, time.UTC) // 10 days after creation, 5 days after closing
+
+	// Point 1: held for 2 days (40% of the 5-day closing window)
+	// Point 2: held for 3 days (60% of the 5-day closing window)
+	points := []TimePoint{
+		{PointForecast: 0.9, CreatedAt: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)},
+		{PointForecast: 0.1, CreatedAt: time.Date(2024, 1, 3, 0, 0, 0, 0, time.UTC)},
+	}
+
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastClosing, &forecastResolved)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Time weights based on closing date (5 days total)
+	// Point 1: 2 days / 5 days = 0.4
+	// Point 2: 3 days / 5 days = 0.6
+	expectedTimeWeighted := math.Pow(0.9-1, 2)*0.4 + math.Pow(0.1-1, 2)*0.6
+	if math.Abs(score.BrierScoreTimeWeighted-expectedTimeWeighted) > 0.0001 {
+		t.Errorf("BrierScoreTimeWeighted = %v, want %v (should use forecastClosingDate as closeDate)",
+			score.BrierScoreTimeWeighted, expectedTimeWeighted)
+	}
+}
+
+func TestCalcForecastScore_CloseDateAfterResolved(t *testing.T) {
+	// When forecastClosingDate is after forecastResolvedAt, should use forecastResolvedAt as closeDate
+	forecastCreated := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	forecastResolved := time.Date(2024, 1, 6, 0, 0, 0, 0, time.UTC) // 5 days after creation
+	forecastClosing := time.Date(2024, 1, 11, 0, 0, 0, 0, time.UTC) // 10 days after creation, after resolved
+
+	points := []TimePoint{
+		{PointForecast: 0.7, CreatedAt: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)},
+		{PointForecast: 0.3, CreatedAt: time.Date(2024, 1, 3, 0, 0, 0, 0, time.UTC)},
+	}
+
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastClosing, &forecastResolved)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// When closeDate=forecastClosing is after resolution, should fall back to forecastResolvedAt
+	// Point 1: 2 days / 5 days = 0.4
+	// Point 2: 3 days / 5 days = 0.6
+	expectedTimeWeighted := math.Pow(0.7-1, 2)*0.4 + math.Pow(0.3-1, 2)*0.6
+	if math.Abs(score.BrierScoreTimeWeighted-expectedTimeWeighted) > 0.0001 {
+		t.Errorf("BrierScoreTimeWeighted = %v, want %v (should use forecastResolvedAt when closingDate is after resolvedAt)",
+			score.BrierScoreTimeWeighted, expectedTimeWeighted)
+	}
+}
+
+func TestCalcForecastScore_CloseDateEqualsResolved(t *testing.T) {
+	// When forecastClosingDate equals forecastResolvedAt (not Before), should use forecastResolvedAt
+	forecastCreated := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	forecastResolved := time.Date(2024, 1, 6, 0, 0, 0, 0, time.UTC)
+	forecastClosing := forecastResolved // Same time
+
+	points := []TimePoint{
+		{PointForecast: 0.8, CreatedAt: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)},
+		{PointForecast: 0.4, CreatedAt: time.Date(2024, 1, 3, 0, 0, 0, 0, time.UTC)},
+	}
+
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastClosing, &forecastResolved)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Since closingDate.Before(resolvedAt) is false when they're equal,
+	// should use forecastResolvedAt
+	// Point 1: 2 days / 5 days = 0.4
+	// Point 2: 3 days / 5 days = 0.6
+	expectedTimeWeighted := math.Pow(0.8-1, 2)*0.4 + math.Pow(0.4-1, 2)*0.6
+	if math.Abs(score.BrierScoreTimeWeighted-expectedTimeWeighted) > 0.0001 {
+		t.Errorf("BrierScoreTimeWeighted = %v, want %v (should use forecastResolvedAt when closingDate equals resolvedAt)",
+			score.BrierScoreTimeWeighted, expectedTimeWeighted)
+	}
+}
+
+func TestCalcForecastScore_AllPointsBeforeCloseDate(t *testing.T) {
+	// All forecast points are made before the closing date
+	forecastCreated := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	forecastClosing := time.Date(2024, 1, 11, 0, 0, 0, 0, time.UTC)  // 10 days after creation
+	forecastResolved := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC) // 14 days after creation
+
+	// All points before closing date with UNEQUAL durations
+	// Point 1: Days 1-3 (2 days = 20%)
+	// Point 2: Days 3-11 (8 days = 80%)
+	points := []TimePoint{
+		{PointForecast: 0.2, CreatedAt: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)},
+		{PointForecast: 0.8, CreatedAt: time.Date(2024, 1, 3, 0, 0, 0, 0, time.UTC)},
+	}
+
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, &forecastClosing, &forecastResolved)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Time-weighted based on 10-day closing window
+	// Point 1: 2 days / 10 days = 0.2
+	// Point 2: 8 days / 10 days = 0.8
+	expectedTimeWeighted := math.Pow(0.2-1, 2)*0.2 + math.Pow(0.8-1, 2)*0.8
+	if math.Abs(score.BrierScoreTimeWeighted-expectedTimeWeighted) > 0.0001 {
+		t.Errorf("BrierScoreTimeWeighted = %v, want %v",
+			score.BrierScoreTimeWeighted, expectedTimeWeighted)
+	}
+
+	// Verify that using closing date affects the score differently than using resolved date
+	scoreWithoutClosing, _ := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
+
+	// When closeDate is nil, it uses forecastResolvedAt (14 days), resulting in:
+	// Point 1: 2 days / 14 days ≈ 0.143
+	// Point 2: 12 days / 14 days ≈ 0.857
+	// This is different from using closingDate (10 days):
+	// Point 1: 2 days / 10 days = 0.2
+	// Point 2: 8 days / 10 days = 0.8
+	// These should be different
+	if math.Abs(score.BrierScoreTimeWeighted-scoreWithoutClosing.BrierScoreTimeWeighted) < 0.0001 {
+		t.Error("Closing date should affect time-weighted scores differently than no closing date")
 	}
 }
