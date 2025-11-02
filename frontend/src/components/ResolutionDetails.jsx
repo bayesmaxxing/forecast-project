@@ -35,6 +35,11 @@ function ResolutionDetails({ forecast, score }) {
           `.`
         }
       </Typography>
+      {forecast.closing_date && (
+        <Typography variant="body1" paragraph>
+          <strong>Closing Date:</strong> {formatDate(forecast.closing_date)}
+        </Typography>
+      )}
       {forecast.comment && (
         <Typography variant="body1" paragraph>
           <strong>Comment:</strong> {forecast.comment}
