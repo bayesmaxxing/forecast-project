@@ -56,12 +56,22 @@ func (f *ForecastPointService) GetOrderedForecastPointsByForecastID(ctx context.
 
 func (f *ForecastPointService) CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error {
 	// Check if the forecast exists
-	_, err := f.f_repo.GetForecastByID(ctx, fp.ForecastID)
+	forecast, err := f.f_repo.GetForecastByID(ctx, fp.ForecastID)
 	if err == sql.ErrNoRows {
 		return errors.New("forecast not found")
 	}
 	if err != nil {
 		return err
+	}
+
+	// Check if forecast is already resolved
+	if forecast.ResolvedAt != nil {
+		return errors.New("forecast has already been resolved")
+	}
+
+	// Check if forecast closing date has passed
+	if forecast.ClosingDate != nil && forecast.ClosingDate.Before(time.Now()) {
+		return errors.New("forecast has already closed")
 	}
 
 	f.cache.Delete(fmt.Sprintf("point:list:%d", fp.ForecastID))

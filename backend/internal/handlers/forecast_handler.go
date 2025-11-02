@@ -87,7 +87,7 @@ func (h *ForecastHandler) CreateForecast(w http.ResponseWriter, r *http.Request)
 	}
 
 	if forecast.Question == "" || forecast.ResolutionCriteria == "" || forecast.Category == "" {
-		http.Error(w, "Question, resolution criteria, and category are required", http.StatusBadRequest)
+		http.Error(w, "Question, resolution criteria, category, and closing date are required", http.StatusBadRequest)
 		return
 	}
 
