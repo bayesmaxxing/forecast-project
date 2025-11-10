@@ -64,15 +64,22 @@ type TimePoint struct {
 	CreatedAt     time.Time
 }
 
-func CalcForecastScore(points []TimePoint, outcome bool, userID int64, forecastID int64, forecastCreatedAt time.Time, forecastResolvedAt *time.Time) (Scores, error) {
+func CalcForecastScore(points []TimePoint, outcome bool, userID int64, forecastID int64, forecastCreatedAt time.Time, forecastClosingDate *time.Time, forecastResolvedAt *time.Time) (Scores, error) {
 	if len(points) == 0 {
 		return Scores{}, errors.New("no probabilities provided")
+	}
+
+	var closeDate time.Time
+	if forecastClosingDate != nil && forecastClosingDate.Before(*forecastResolvedAt) {
+		closeDate = *forecastClosingDate
+	} else {
+		closeDate = *forecastResolvedAt
 	}
 
 	var brierSum, log2Sum, logNSum float64
 	var brierSumTimeWeighted, log2SumTimeWeighted, logNSumTimeWeighted float64
 	pointsCount := float64(len(points))
-	totalOpenTime := forecastResolvedAt.Sub(forecastCreatedAt).Seconds()
+	totalOpenTime := closeDate.Sub(forecastCreatedAt).Seconds()
 
 	// Edge case: if forecast was created and resolved at the same time (or very close),
 	// fall back to naive (equal-weighted) scoring for time-weighted scores
@@ -91,7 +98,7 @@ func CalcForecastScore(points []TimePoint, outcome bool, userID int64, forecastI
 			if i < len(points)-1 {
 				duration = points[i+1].CreatedAt.Sub(point.CreatedAt).Seconds()
 			} else {
-				duration = forecastResolvedAt.Sub(point.CreatedAt).Seconds()
+				duration = closeDate.Sub(point.CreatedAt).Seconds()
 			}
 			timeWeight = duration / totalOpenTime
 		} else {

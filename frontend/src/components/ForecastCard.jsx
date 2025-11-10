@@ -133,6 +133,11 @@ function ForecastCard({ forecast, isResolved = false}) {
               Created: {formatDate(forecast.created)}
             </Typography>
           )}
+          {forecast.closing_date && (
+            <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+              Closing on: {formatDate(forecast.closing_date)}
+            </Typography>
+          )}
         </Box>
       </CardContent>
     </Card>

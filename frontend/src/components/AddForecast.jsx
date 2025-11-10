@@ -17,7 +17,8 @@ const AddForecast = ({ onSubmitSuccess }) => {
   const [forecastData, setForecastData] = useState({
     question: '',
     category: '',
-    resolution_criteria: ''
+    resolution_criteria: '',
+    closing_date: ''
   });
   const [submitStatus, setSubmitStatus] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -52,7 +53,8 @@ const AddForecast = ({ onSubmitSuccess }) => {
         setForecastData({
           question: '',
           category: '',
-          resolution_criteria: ''
+          resolution_criteria: '',
+          closing_date: ''
         });
         handleClose();
         
@@ -136,6 +138,21 @@ const AddForecast = ({ onSubmitSuccess }) => {
               multiline
               rows={3}
               helperText="Enter the resolution criteria"
+            />
+            <TextField
+              label="Closing Date"
+              id="closing_date"
+              name="closing_date"
+              type="date"
+              value={forecastData.closing_date}
+              onChange={handleChange}
+              required
+              fullWidth
+              size="small"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              helperText="Select the date when the forecast closes"
             />
           </Box>
         </DialogContent>

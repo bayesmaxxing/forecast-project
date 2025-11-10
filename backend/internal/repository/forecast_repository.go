@@ -43,6 +43,7 @@ func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int
 					, created
 					, user_id
 					, resolution_criteria
+					, closing_date
 					, resolution
 					, resolved
 					, comment
@@ -58,6 +59,7 @@ func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int
 		&f.UserID,
 		&f.ResolutionCriteria,
 		&f.Resolution,
+		&f.ClosingDate,
 		&f.ResolvedAt,
 		&f.ResolutionComment)
 
@@ -95,11 +97,12 @@ func (r *PostgresForecastRepository) CreateForecast(ctx context.Context, f *mode
 				, created
 				, user_id
 				, resolution_criteria
+				, closing_date
 				)
-				VALUES ($1, $2, $3, $4, $5) 
+				VALUES ($1, $2, $3, $4, $5, $6) 
 				RETURNING id`
 
-	err := r.db.QueryRowContext(ctx, query, f.Question, f.Category, f.CreatedAt, f.UserID, f.ResolutionCriteria).Scan(&f.ID)
+	err := r.db.QueryRowContext(ctx, query, f.Question, f.Category, f.CreatedAt, f.UserID, f.ResolutionCriteria, f.ClosingDate).Scan(&f.ID)
 	return err
 }
 
@@ -111,9 +114,10 @@ func (r *PostgresForecastRepository) ListOpenForecasts(ctx context.Context) ([]*
 				, created
 				, user_id
 				, resolution_criteria
+				, closing_date
 				, resolution
 				, resolved
-				, comment 
+				, comment
 				FROM forecasts
 				WHERE resolved is null`
 
@@ -128,6 +132,7 @@ func (r *PostgresForecastRepository) ListResolvedForecasts(ctx context.Context) 
 				, created
 				, user_id
 				, resolution_criteria
+				, closing_date
 				, resolution
 				, resolved
 				, comment 
@@ -145,6 +150,7 @@ func (r *PostgresForecastRepository) ListOpenForecastsWithCategory(ctx context.C
 				, created
 				, user_id
 				, resolution_criteria
+				, closing_date
 				, resolution
 				, resolved
 				, comment 
@@ -164,6 +170,7 @@ func (r *PostgresForecastRepository) ListResolvedForecastsWithCategory(ctx conte
 				, created
 				, user_id
 				, resolution_criteria
+				, closing_date
 				, resolution
 				, resolved
 				, comment 
@@ -191,19 +198,22 @@ func (r *PostgresForecastRepository) UpdateForecast(ctx context.Context, f *mode
 				question = $1
 				, category = $2
 				, resolution_criteria = $3
-				, resolution = $4
-				, resolved = $5
-				, comment = $6
-			 WHERE id = $7`
+				, closing_date = $4
+				, resolution = $5
+				, resolved = $6
+				, comment = $7
+			 WHERE id = $8`
 
 	_, err = tx.ExecContext(ctx, query,
 		f.Question,
 		f.Category,
 		f.ResolutionCriteria,
+		f.ClosingDate,
 		f.Resolution,
 		f.ResolvedAt,
 		f.ResolutionComment,
-		f.ID)
+		f.ID,
+	)
 	if err != nil {
 		return err
 	}
@@ -259,6 +269,7 @@ func (r *PostgresForecastRepository) GetStaleAndNewForecasts(ctx context.Context
 							, f.created
 							, f.user_id
 							, f.resolution_criteria
+							, f.closing_date
 							, f.resolution
 							, f.resolved
 							, f.comment
@@ -294,6 +305,7 @@ func (r *PostgresForecastRepository) queryForecasts(ctx context.Context, query s
 			&f.CreatedAt,
 			&f.UserID,
 			&f.ResolutionCriteria,
+			&f.ClosingDate,
 			&f.Resolution,
 			&f.ResolvedAt,
 			&f.ResolutionComment)
