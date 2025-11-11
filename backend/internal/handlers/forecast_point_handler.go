@@ -185,10 +185,11 @@ func (h *ForecastPointHandler) ListOrderedForecastPoints(w http.ResponseWriter, 
 	respondJSON(w, http.StatusOK, points)
 }
 
-func (h *ForecastPointHandler) ListTodaysForecastPoints(w http.ResponseWriter, r *http.Request) {
-	userIDStr := r.URL.Query().Get("user_id")
+func (h *ForecastPointHandler) ListForecastPointsByDate(w http.ResponseWriter, r *http.Request) {
+	// Extract user_id from path
+	userIDStr := r.PathValue("user_id")
 	if userIDStr == "" {
-		http.Error(w, "user_id query parameter is required", http.StatusBadRequest)
+		http.Error(w, "user_id path parameter is required", http.StatusBadRequest)
 		return
 	}
 
@@ -198,7 +199,19 @@ func (h *ForecastPointHandler) ListTodaysForecastPoints(w http.ResponseWriter, r
 		return
 	}
 
-	points, err := h.service.GetTodaysForecastPoints(r.Context(), userID)
+	// Parse optional date query parameter (format: YYYY-MM-DD)
+	var date *time.Time
+	dateStr := r.URL.Query().Get("date")
+	if dateStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			http.Error(w, "invalid date format, expected YYYY-MM-DD", http.StatusBadRequest)
+			return
+		}
+		date = &parsedDate
+	}
+
+	points, err := h.service.GetForecastPointsByDate(r.Context(), userID, date)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

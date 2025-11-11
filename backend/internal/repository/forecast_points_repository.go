@@ -18,7 +18,7 @@ type ForecastPointRepository interface {
 	CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error
 	GetLatestForecastPoints(ctx context.Context) ([]*models.ForecastPoint, error)
 	GetLatestForecastPointsByUser(ctx context.Context, userID int64) ([]*models.ForecastPoint, error)
-	GetTodaysForecastPoints(ctx context.Context, userID int64) ([]*models.ForecastPoint, error)
+	GetForecastPointsByDate(ctx context.Context, userID int64, date *time.Time) ([]*models.ForecastPoint, error)
 }
 
 // PostgresForecastPointRepository implements the ForecastPointRepository interface
@@ -272,7 +272,16 @@ func (r *PostgresForecastPointRepository) GetOrderedForecastPointsByForecastID(c
 	return forecast_points, rows.Err()
 }
 
-func (r *PostgresForecastPointRepository) GetTodaysForecastPoints(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
+func (r *PostgresForecastPointRepository) GetForecastPointsByDate(ctx context.Context, user_id int64, date *time.Time) ([]*models.ForecastPoint, error) {
+	// Use provided date or default to today
+	targetDate := time.Now()
+	if date != nil {
+		targetDate = *date
+	}
+	// Truncate to start of day for date comparison
+	targetDate = time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, targetDate.Location())
+	nextDay := targetDate.AddDate(0, 0, 1)
+
 	query := `SELECT distinct on (forecast_id)
 				p.id
 				, p.forecast_id
@@ -284,10 +293,11 @@ func (r *PostgresForecastPointRepository) GetTodaysForecastPoints(ctx context.Co
 				FROM points p
 				left join users u on p.user_id = u.id
 				WHERE p.user_id = $1
-				AND p.created >= current_date
+				AND p.created >= $2
+				AND p.created < $3
 				ORDER BY p.forecast_id, p.created DESC;`
 
-	rows, err := r.db.QueryContext(ctx, query, user_id)
+	rows, err := r.db.QueryContext(ctx, query, user_id, targetDate, nextDay)
 	if err != nil {
 		return nil, err
 	}

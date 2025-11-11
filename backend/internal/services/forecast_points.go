@@ -169,9 +169,8 @@ func (f *ForecastPointService) GetOrderedForecastPoints(ctx context.Context, for
 	return graphPoints, nil
 }
 
-func (f *ForecastPointService) GetTodaysForecastPoints(ctx context.Context, user_id int64) ([]*models.ForecastPoint, error) {
-
-	points, err := f.repo.GetTodaysForecastPoints(ctx, user_id)
+func (f *ForecastPointService) GetForecastPointsByDate(ctx context.Context, user_id int64, date *time.Time) ([]*models.ForecastPoint, error) {
+	points, err := f.repo.GetForecastPointsByDate(ctx, user_id, date)
 	if err != nil {
 		return nil, err
 	}
