@@ -97,7 +97,7 @@ func (s *ForecastService) ResolveForecast(ctx context.Context, user_id int64, id
 		return errors.New("forecast is already resolved")
 	}
 
-	points, err := s.pointRepo.GetForecastPointsByForecastID(ctx, id)
+	points, err := s.pointRepo.GetForecastPoints(ctx, models.PointFilters{ForecastID: &id})
 	if err != nil {
 		return err
 	}
