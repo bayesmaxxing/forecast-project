@@ -157,7 +157,17 @@ func (s *ForecastService) ResolveForecast(ctx context.Context, user_id int64, id
 
 // aggregate forecast operations
 func (s *ForecastService) GetForecasts(ctx context.Context, filters models.ForecastFilters) ([]*models.Forecast, error) {
-	cacheKey := fmt.Sprintf("forecast:list:%s:%s", *filters.Status, *filters.Category)
+	status := ""
+	if filters.Status != nil {
+		status = *filters.Status
+	}
+
+	category := ""
+	if filters.Category != nil {
+		category = *filters.Category
+	}
+
+	cacheKey := fmt.Sprintf("forecast:list:%s:%s", status, category)
 
 	if cachedList, found := s.cache.Get(cacheKey); found {
 		return cachedList.([]*models.Forecast), nil

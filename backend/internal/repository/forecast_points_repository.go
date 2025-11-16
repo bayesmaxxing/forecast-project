@@ -108,7 +108,19 @@ func (r *PostgresForecastPointRepository) GetForecastPoints(ctx context.Context,
 		return nil, err
 	}
 
-	rows, err := r.db.QueryContext(ctx, query)
+	args := []any{}
+	if filters.UserID != nil {
+		args = append(args, *filters.UserID)
+	}
+	if filters.ForecastID != nil {
+		args = append(args, *filters.ForecastID)
+	}
+	if filters.Date != nil {
+		args = append(args, *filters.Date)
+		args = append(args, filters.Date.AddDate(0, 0, 1))
+	}
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

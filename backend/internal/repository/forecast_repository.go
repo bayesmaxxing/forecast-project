@@ -100,7 +100,12 @@ func (r *PostgresForecastRepository) GetForecasts(ctx context.Context, filters m
 		return nil, err
 	}
 
-	return r.queryForecasts(ctx, query)
+	args := []any{}
+	if filters.Category != nil {
+		args = append(args, *filters.Category)
+	}
+
+	return r.queryForecasts(ctx, query, args...)
 }
 
 func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error) {

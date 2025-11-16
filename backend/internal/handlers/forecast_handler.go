@@ -41,14 +41,13 @@ func (h *ForecastHandler) ListForecasts(w http.ResponseWriter, r *http.Request) 
 
 	status := queryParams.Get("status")
 	if status != "" {
+		// validate status
+		validStatuses := []string{"open", "resolved", "closed"}
+		if !slices.Contains(validStatuses, status) {
+			http.Error(w, "invalid status", http.StatusBadRequest)
+			return
+		}
 		filters.Status = &status
-	}
-
-	// validate status
-	validStatuses := []string{"open", "resolved", "closed"}
-	if !slices.Contains(validStatuses, status) {
-		http.Error(w, "invalid status", http.StatusBadRequest)
-		return
 	}
 
 	category := queryParams.Get("category")
