@@ -46,7 +46,14 @@ const AddForecast = ({ onSubmitSuccess }) => {
     setSnackbarOpen(true);
 
     try {
-      const response = await createForecast(forecastData);
+      const payload = {
+        ...forecastData,
+        closing_date: forecastData.closing_date
+          ? `${forecastData.closing_date}T00:00:00Z`
+          : forecastData.closing_date
+      };
+
+      const response = await createForecast(payload);
 
       if (response==='forecast created') {
         setSubmitStatus('Forecast added successfully');
