@@ -17,6 +17,12 @@ type Forecast struct {
 	ResolutionComment  *string    `json:"comment,omitempty"`
 }
 
+type ForecastFilters struct {
+	ForecastID *int64
+	Status     *string
+	Category   *string
+}
+
 // Check if forecast has resolved
 func (f *Forecast) IsResolved() bool {
 	return f.ResolvedAt != nil

@@ -5,7 +5,6 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -85,11 +84,11 @@ func (f *ForecastPointService) GetForecastPointsByForecastIDAndUser(ctx context.
 func (f *ForecastPointService) CreateForecastPoint(ctx context.Context, fp *models.ForecastPoint) error {
 	// Check if the forecast exists
 	forecast, err := f.f_repo.GetForecastByID(ctx, fp.ForecastID)
-	if err == sql.ErrNoRows {
-		return errors.New("forecast not found")
-	}
 	if err != nil {
 		return err
+	}
+	if forecast == nil {
+		return errors.New("forecast not found")
 	}
 
 	// Check if forecast is already resolved

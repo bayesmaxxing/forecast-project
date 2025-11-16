@@ -156,47 +156,24 @@ func (s *ForecastService) ResolveForecast(ctx context.Context, user_id int64, id
 }
 
 // aggregate forecast operations
-func (s *ForecastService) ForecastList(ctx context.Context, listType string, category string) ([]*models.Forecast, error) {
-	cacheKey := fmt.Sprintf("forecast:list:%s:%s", listType, category)
+func (s *ForecastService) GetForecasts(ctx context.Context, filters models.ForecastFilters) ([]*models.Forecast, error) {
+	cacheKey := fmt.Sprintf("forecast:list:%s:%s", *filters.Status, *filters.Category)
 
 	if cachedList, found := s.cache.Get(cacheKey); found {
 		return cachedList.([]*models.Forecast), nil
 	}
 
-	switch listType {
-	case "open":
-		if category != "" {
-			forecasts, err := s.repo.ListOpenForecastsWithCategory(ctx, category)
-			if err != nil {
-				return nil, err
-			}
-			s.cache.Set(cacheKey, forecasts)
-			return forecasts, nil
-		}
-		forecasts, err := s.repo.ListOpenForecasts(ctx)
-		if err != nil {
-			return nil, err
-		}
-		s.cache.Set(cacheKey, forecasts)
-		return forecasts, nil
-	case "resolved":
-		if category != "" {
-			forecasts, err := s.repo.ListResolvedForecastsWithCategory(ctx, category)
-			if err != nil {
-				return nil, err
-			}
-			s.cache.Set(cacheKey, forecasts)
-			return forecasts, nil
-		}
-		forecasts, err := s.repo.ListResolvedForecasts(ctx)
-		if err != nil {
-			return nil, err
-		}
-		s.cache.Set(cacheKey, forecasts)
-		return forecasts, nil
-	default:
-		return nil, errors.New("invalid resolved status")
+	if filters.ForecastID != nil {
+		return nil, errors.New("forecast ID is not supported for this operation")
 	}
+
+	forecasts, err := s.repo.GetForecasts(ctx, filters)
+	if err != nil {
+		return nil, err
+	}
+
+	s.cache.Set(cacheKey, forecasts)
+	return forecasts, nil
 }
 
 func (s *ForecastService) GetStaleAndNewForecasts(ctx context.Context, userID int64) ([]*models.Forecast, error) {

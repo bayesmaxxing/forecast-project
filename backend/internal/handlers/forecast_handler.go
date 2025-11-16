@@ -6,6 +6,7 @@ import (
 	"backend/internal/services"
 	"encoding/json"
 	"net/http"
+	"slices"
 	"strconv"
 )
 
@@ -19,34 +20,43 @@ func NewForecastHandler(s *services.ForecastService) *ForecastHandler {
 
 // handlers for lists of forecasts
 func (h *ForecastHandler) ListForecasts(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ListType string `json:"list_type"`
-		Category string `json:"category"`
+	queryParams := r.URL.Query()
+
+	// ensure forecast_id is not part of the query params
+	forecastIDstr := queryParams.Get("forecast_id")
+	if forecastIDstr != "" {
+		forecastID, err := strconv.ParseInt(forecastIDstr, 10, 64)
+		if err != nil {
+			http.Error(w, "invalid forecast_id format", http.StatusBadRequest)
+			return
+		}
+
+		if forecastID == 0 {
+			http.Error(w, "forecast_id is not supported for this operation", http.StatusBadRequest)
+			return
+		}
 	}
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+
+	filters := models.ForecastFilters{}
+
+	status := queryParams.Get("status")
+	if status != "" {
+		filters.Status = &status
+	}
+
+	// validate status
+	validStatuses := []string{"open", "resolved", "closed"}
+	if !slices.Contains(validStatuses, status) {
+		http.Error(w, "invalid status", http.StatusBadRequest)
 		return
 	}
 
-	// Handle empty values with defaults
-	listType := ""
-	if request.ListType != "" {
-		listType = request.ListType
+	category := queryParams.Get("category")
+	if category != "" {
+		filters.Category = &category
 	}
 
-	// Validate list type
-	validListTypes := map[string]bool{"open": true, "resolved": true}
-	if !validListTypes[listType] {
-		http.Error(w, "invalid list_type", http.StatusBadRequest)
-		return
-	}
-
-	category := ""
-	if request.Category != "" {
-		category = request.Category
-	}
-
-	forecasts, err := h.service.ForecastList(r.Context(), listType, category)
+	forecasts, err := h.service.GetForecasts(r.Context(), filters)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

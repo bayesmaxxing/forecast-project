@@ -4,6 +4,8 @@ import (
 	"backend/internal/database"
 	"backend/internal/models"
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v5"
@@ -11,14 +13,11 @@ import (
 
 // ForecastRepository defines the interface for forecast data operations
 type ForecastRepository interface {
+	GetForecasts(ctx context.Context, filters models.ForecastFilters) ([]*models.Forecast, error)
 	GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error)
 	CheckForecastOwnership(ctx context.Context, id int64, userID int64) (bool, error)
 	CheckForecastStatus(ctx context.Context, id int64) (bool, error)
 	CreateForecast(ctx context.Context, f *models.Forecast) error
-	ListOpenForecasts(ctx context.Context) ([]*models.Forecast, error)
-	ListResolvedForecasts(ctx context.Context) ([]*models.Forecast, error)
-	ListOpenForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error)
-	ListResolvedForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error)
 	UpdateForecast(ctx context.Context, f *models.Forecast) error
 	DeleteForecast(ctx context.Context, id int64, userID int64) error
 	GetStaleAndNewForecasts(ctx context.Context, userID int64) ([]*models.Forecast, error)
@@ -34,39 +33,96 @@ func NewForecastRepository(db *database.DB) ForecastRepository {
 	return &PostgresForecastRepository{db: db}
 }
 
-// Methods without user_id filtering
-func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error) {
-	query := `SELECT 
-					id
-					, question
-					, category
-					, created
-					, user_id
-					, resolution_criteria
-					, closing_date
-					, resolution
-					, resolved
-					, comment
-				FROM forecasts 
-				WHERE id = $1`
+func buildForecastQuery(filters models.ForecastFilters) (string, error) {
+	selectFields := []string{
+		"id",
+		"question",
+		"category",
+		"created",
+		"user_id",
+		"resolution_criteria",
+		"closing_date",
+		"resolution",
+		"resolved",
+		"comment",
+	}
 
-	var f models.Forecast
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&f.ID,
-		&f.Question,
-		&f.Category,
-		&f.CreatedAt,
-		&f.UserID,
-		&f.ResolutionCriteria,
-		&f.Resolution,
-		&f.ClosingDate,
-		&f.ResolvedAt,
-		&f.ResolutionComment)
+	fromClause := "forecasts"
 
+	whereConditions := []string{"1=1"}
+	argsCounter := 1
+	if filters.ForecastID != nil {
+		whereConditions = append(whereConditions, "id = "+fmt.Sprintf("$%d", argsCounter))
+		argsCounter++
+	}
+
+	//status filtering
+	switch {
+	case filters.Status != nil && *filters.Status == "open":
+		whereConditions = append(whereConditions, "resolved is null")
+	case filters.Status != nil && *filters.Status == "resolved":
+		whereConditions = append(whereConditions, "resolved is not null")
+	case filters.Status != nil && *filters.Status == "open":
+		whereConditions = append(whereConditions, "current_date < closing_date")
+	case filters.Status != nil && *filters.Status == "closed":
+		whereConditions = append(whereConditions, "current_date > closing_date")
+	default:
+		// Do nothing if there is no status
+	}
+
+	//category filtering
+	if filters.Category != nil {
+		whereConditions = append(whereConditions, "lower(category) like "+fmt.Sprintf("$%d", argsCounter))
+		argsCounter++
+	}
+
+	query := fmt.Sprintf(
+		`select
+		%s
+		from %s
+		where %s`,
+		strings.Join(selectFields, ", "),
+		fromClause,
+		strings.Join(whereConditions, " and "),
+	)
+
+	return query, nil
+}
+
+func (r *PostgresForecastRepository) GetForecasts(ctx context.Context, filters models.ForecastFilters) ([]*models.Forecast, error) {
+	if filters.Category != nil && *filters.Category != "" {
+		categoryPattern := "%" + *filters.Category + "%"
+		filters.Category = &categoryPattern
+	}
+
+	query, err := buildForecastQuery(filters)
 	if err != nil {
 		return nil, err
 	}
-	return &f, nil
+
+	return r.queryForecasts(ctx, query)
+}
+
+func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error) {
+	query, err := buildForecastQuery(models.ForecastFilters{ForecastID: &id})
+	if err != nil {
+		return nil, err
+	}
+	var forecast models.Forecast
+	err = r.db.QueryRowContext(ctx, query, id).Scan(&forecast.ID,
+		&forecast.Question,
+		&forecast.Category,
+		&forecast.CreatedAt,
+		&forecast.UserID,
+		&forecast.ResolutionCriteria,
+		&forecast.ClosingDate,
+		&forecast.Resolution,
+		&forecast.ResolvedAt,
+		&forecast.ResolutionComment)
+	if err != nil {
+		return nil, err
+	}
+	return &forecast, nil
 }
 
 func (r *PostgresForecastRepository) CheckForecastOwnership(ctx context.Context, id int64, user_id int64) (bool, error) {
@@ -104,82 +160,6 @@ func (r *PostgresForecastRepository) CreateForecast(ctx context.Context, f *mode
 
 	err := r.db.QueryRowContext(ctx, query, f.Question, f.Category, f.CreatedAt, f.UserID, f.ResolutionCriteria, f.ClosingDate).Scan(&f.ID)
 	return err
-}
-
-func (r *PostgresForecastRepository) ListOpenForecasts(ctx context.Context) ([]*models.Forecast, error) {
-	query := `SELECT 
-				id
-				, question
-				, category
-				, created
-				, user_id
-				, resolution_criteria
-				, closing_date
-				, resolution
-				, resolved
-				, comment
-				FROM forecasts
-				WHERE resolved is null`
-
-	return r.queryForecasts(ctx, query)
-}
-
-func (r *PostgresForecastRepository) ListResolvedForecasts(ctx context.Context) ([]*models.Forecast, error) {
-	query := `SELECT 
-				id
-				, question
-				, category
-				, created
-				, user_id
-				, resolution_criteria
-				, closing_date
-				, resolution
-				, resolved
-				, comment 
-				FROM forecasts
-				WHERE resolved is not null`
-
-	return r.queryForecasts(ctx, query)
-}
-
-func (r *PostgresForecastRepository) ListOpenForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
-	query := `SELECT 
-				id
-				, question
-				, category
-				, created
-				, user_id
-				, resolution_criteria
-				, closing_date
-				, resolution
-				, resolved
-				, comment 
-				FROM forecasts
-				WHERE resolved is null
-				AND lower(category) like $1`
-	categoryPattern := "%" + category + "%"
-
-	return r.queryForecasts(ctx, query, categoryPattern)
-}
-
-func (r *PostgresForecastRepository) ListResolvedForecastsWithCategory(ctx context.Context, category string) ([]*models.Forecast, error) {
-	query := `SELECT
-				id
-				, question
-				, category
-				, created
-				, user_id
-				, resolution_criteria
-				, closing_date
-				, resolution
-				, resolved
-				, comment 
-				FROM forecasts
-				WHERE resolved is not null
-				AND lower(category) like $1`
-	categoryPattern := "%" + category + "%"
-
-	return r.queryForecasts(ctx, query, categoryPattern)
 }
 
 func (r *PostgresForecastRepository) UpdateForecast(ctx context.Context, f *models.Forecast) error {

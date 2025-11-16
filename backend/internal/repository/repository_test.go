@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Forecast Point Queries tests
 func TestBuildForecastPointQueryAllFilters(t *testing.T) {
 
 	userID := int64(2)
@@ -457,6 +458,138 @@ func TestBuildForecastPointQuery_OrderingVariations(t *testing.T) {
 					normalizeSQL(tt.expectedOrderBy), normalizedQuery)
 			}
 		})
+	}
+}
+
+// Forecast queries tests
+func TestBuildForecastQueryAllFilters(t *testing.T) {
+	forecastID := int64(1)
+	category := "finance"
+	status := "open"
+	filters := models.ForecastFilters{
+		ForecastID: &forecastID,
+		Status:     &status,
+		Category:   &category,
+	}
+
+	query, err := buildForecastQuery(filters)
+	if err != nil {
+		t.Fatalf("Error building forecast query: %v", err)
+	}
+
+	expectedQuery := `select
+		id,
+		question,
+		category,
+		created,
+		user_id,
+		resolution_criteria,
+		closing_date,
+		resolution,
+		resolved, 
+		comment 
+		from forecasts
+		where 1=1 and id = $1 
+		and resolved is null
+		and lower(category) like $2`
+
+	normalizedExpected := normalizeSQL(expectedQuery)
+	normalizedActual := normalizeSQL(query)
+
+	if normalizedActual != normalizedExpected {
+		t.Errorf("Query mismatch:\nExpected: %s\nGot: %s", normalizedExpected, normalizedActual)
+	}
+}
+
+func TestBuildForecastQuery_WithClosedStatus(t *testing.T) {
+	status := "closed"
+	filters := models.ForecastFilters{
+		Status: &status,
+	}
+	query, err := buildForecastQuery(filters)
+	if err != nil {
+		t.Fatalf("Error building forecast query: %v", err)
+	}
+	expectedQuery := `select
+		id,
+		question,
+		category,
+		created,
+		user_id,
+		resolution_criteria,
+		closing_date,
+		resolution,
+		resolved, 
+		comment 
+		from forecasts
+		where 1=1
+		and current_date > closing_date`
+	normalizedExpected := normalizeSQL(expectedQuery)
+	normalizedActual := normalizeSQL(query)
+
+	if normalizedActual != normalizedExpected {
+		t.Errorf("Query mismatch:\nExpected: %s\nGot: %s", normalizedExpected, normalizedActual)
+	}
+}
+
+func TestBuildForecastQuery_WithCategoryAndResolvedStatus(t *testing.T) {
+	category := "finance"
+	status := "resolved"
+	filters := models.ForecastFilters{
+		Category: &category,
+		Status:   &status,
+	}
+	query, err := buildForecastQuery(filters)
+	if err != nil {
+		t.Fatalf("Error building forecast query: %v", err)
+	}
+	expectedQuery := `select
+		id,
+		question,
+		category,
+		created,
+		user_id,
+		resolution_criteria,
+		closing_date,
+		resolution,
+		resolved, 
+		comment 
+		from forecasts
+		where 1=1
+		and resolved is not null
+		and lower(category) like $1`
+	normalizedExpected := normalizeSQL(expectedQuery)
+	normalizedActual := normalizeSQL(query)
+
+	if normalizedActual != normalizedExpected {
+		t.Errorf("Query mismatch:\nExpected: %s\nGot: %s", normalizedExpected, normalizedActual)
+	}
+}
+
+func TestBuildForecastQuery_NoFilters(t *testing.T) {
+	filters := models.ForecastFilters{}
+	query, err := buildForecastQuery(filters)
+	if err != nil {
+		t.Fatalf("Error building forecast query: %v", err)
+	}
+	expectedQuery := `select
+		id,
+		question,
+		category,
+		created,
+		user_id,
+		resolution_criteria,
+		closing_date,
+		resolution,
+		resolved, 
+		comment 
+		from forecasts
+		where 1=1`
+	normalizedExpected := normalizeSQL(expectedQuery)
+	normalizedActual := normalizeSQL(query)
+
+	if normalizedActual != normalizedExpected {
+		t.Errorf("Query mismatch:\nExpected: %s\nGot: %s", normalizedExpected, normalizedActual)
 	}
 }
 
