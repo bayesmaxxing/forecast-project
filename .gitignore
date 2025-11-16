@@ -25,3 +25,5 @@ forcast_database.py
 app.yaml 
 copy_rds_to_local.sh
 db_copy_log.txt
+
+frontend/dist/*

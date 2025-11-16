@@ -9,31 +9,38 @@ export function usePointsData({ id, userId, useOrderedEndpoint = true, useLatest
   // Create a fetchData function using useCallback
   const fetchData = useCallback(() => {
     setLoading(true);
-    const user = userId === 'all' ? null : userId;
-    let pointsPromise; 
     
-    if (useLatestPoints && !user) {
-      pointsPromise = pointsService.fetchLatestPoints();
-    } else if (useLatestPoints && user) {
-      pointsPromise = pointsService.fetchLatestPointsByUser(user);
-    } else {
-      pointsPromise = useOrderedEndpoint 
-        ? pointsService.fetchOrderedPointsByID(id)
-        : pointsService.fetchPointsByID(id);
+    // Build filter options based on hook parameters
+    const options = {};
+    
+    // Handle user ID (convert 'all' to null)
+    const user = userId === 'all' ? null : userId;
+    if (user !== null && user !== undefined) {
+      options.userId = user;
     }
     
-    return Promise.all([
-      pointsPromise
-    ])
-    .then(([pointsDataJson]) => {
-      setPoints(pointsDataJson);
-      setLoading(false);
-    })
-    .catch(error => {
-      console.error('Error fetching data: ', error);
-      setError(error);
-      setLoading(false);
-    });
+    // Handle forecast ID
+    if (id !== null && id !== undefined) {
+      options.forecastId = id;
+    }
+    
+    // Handle latest points (distinct on forecast_id with ordering)
+    if (useLatestPoints) {
+      options.distinct = true;
+      options.orderByForecastId = true;
+    }
+    
+    // Use the unified fetchForecastPoints function
+    return pointsService.fetchForecastPoints(options)
+      .then((pointsDataJson) => {
+        setPoints(pointsDataJson);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching data: ', error);
+        setError(error);
+        setLoading(false);
+      });
   }, [id, useOrderedEndpoint, userId, useLatestPoints]);
 
   // Initial data fetch

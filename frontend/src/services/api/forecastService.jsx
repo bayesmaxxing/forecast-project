@@ -1,18 +1,28 @@
 import { API_BASE_URL } from './index';
 
 export const fetchForecasts = async (list_type = null, category = null) => {
-  // Build request body with only non-null parameters
-  const requestBody = {};
-  if (list_type) requestBody.list_type = list_type;
-  if (category) requestBody.category = category;
+  // Build query parameters (list_type maps to status in backend)
+  const params = new URLSearchParams();
   
-  const response = await fetch(`${API_BASE_URL}/forecasts`, {
-    method: 'POST',
+  if (list_type !== null && list_type !== undefined) {
+    // Map frontend 'list_type' to backend 'status'
+    params.append('status', list_type);
+  }
+  
+  if (category !== null && category !== undefined) {
+    params.append('category', category);
+  }
+  
+  const queryString = params.toString();
+  const url = queryString 
+    ? `${API_BASE_URL}/forecasts?${queryString}`
+    : `${API_BASE_URL}/forecasts`;
+  
+  const response = await fetch(url, {
+    method: 'GET',
     headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(requestBody)
+      "Accept": "application/json"
+    }
   });
   
   if (!response.ok) {
