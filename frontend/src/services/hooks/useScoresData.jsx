@@ -27,7 +27,7 @@ export const useScoresData = ({ user_id=null, forecast_id=null, shouldFetch=true
       } else if (useAverageEndpoint && !forecast_id) {
         data = await fetchAverageScores();
       } else if (user) {
-        data = await fetchScores(user);
+        data = await fetchScores(user, null);
       } else {
         data = [];
       }

@@ -1,16 +1,14 @@
 import { API_BASE_URL } from './index';
 export const fetchScores = async (user_id, forecast_id) => {
-    const requestBody = {};
-    if (user_id) requestBody.user_id = user_id;
-    if (forecast_id) requestBody.forecast_id = forecast_id;
+    const params = new URLSearchParams();
+    if (user_id) params.append('user_id', user_id);
+    if (forecast_id) params.append('forecast_id', forecast_id);
     
-    const response = await fetch(`${API_BASE_URL}/scores`, {
-      method: 'POST',
+    const response = await fetch(`${API_BASE_URL}/scores?${params.toString()}`, {
+      method: 'GET',
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(requestBody)
+        "Accept": "application/json"
+      }
     });
     
     if (!response.ok) {
@@ -58,11 +56,16 @@ export const fetchAverageScores = async () => {
 
 
 
-export const fetchAggregateScoresAllUsers = async () => {
+// New unified aggregate scores endpoint with flexible query parameters
+export const fetchAggregateScores = async ({ user_id, forecast_id, category } = {}) => {
+  const params = new URLSearchParams();
+  if (user_id) params.append('user_id', user_id);
+  if (forecast_id) params.append('forecast_id', forecast_id);
+  if (category) params.append('category', category);
   
-  const response = await fetch(`${API_BASE_URL}/scores/aggregate/all`, {
+  const response = await fetch(`${API_BASE_URL}/scores/aggregate?${params.toString()}`, {
     method: 'GET',
-    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+    headers: { "Accept": "application/json" },
   });
   
   if (!response.ok) {
@@ -70,51 +73,36 @@ export const fetchAggregateScoresAllUsers = async () => {
   }
 
   return response.json();
+};
+
+// Legacy function names for backward compatibility
+export const fetchAggregateScoresAllUsers = async () => {
+  return fetchAggregateScores();
 };
 
 export const fetchAggregateScoresByUserID = async (user_id) => {
-  const response = await fetch(`${API_BASE_URL}/scores/aggregate/${user_id}`, {
-    method: 'GET',
-    headers: { "Accept": "application/json", "Content-Type": "application/json" },
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Error fetching aggregate scores: ${response.status}`);
-  }
-  return response.json();
+  return fetchAggregateScores({ user_id });
 };
 
 export const fetchAggregateScoresByUserIDAndCategory = async (user_id, category) => {
-  const response = await fetch(`${API_BASE_URL}/scores/aggregate/${user_id}/${category}`, {
-    method: 'GET',
-    headers: { "Accept": "application/json", "Content-Type": "application/json" },
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Error fetching aggregate scores: ${response.status}`);
-  }
-  return response.json();
+  return fetchAggregateScores({ user_id, category });
 };
 
 export const fetchAggregateScoresByCategory = async (category) => {
-  const response = await fetch(`${API_BASE_URL}/scores/aggregate/category/${category}`, {
-    method: 'GET',
-    headers: { "Accept": "application/json", "Content-Type": "application/json" },
-  });
-  if (!response.ok) {
-    throw new Error(`Error fetching aggregate scores: ${response.status}`);
-  }
-  return response.json();
+  return fetchAggregateScores({ category });
 };
 
-export const fetchAggregateScoresByUsers = async () => {
-  const response = await fetch(`${API_BASE_URL}/scores/aggregate/users`, {
+export const fetchAggregateScoresByUsers = async (category = null) => {
+  const params = new URLSearchParams();
+  if (category) params.append('category', category);
+  
+  const response = await fetch(`${API_BASE_URL}/scores/aggregate/users?${params.toString()}`, {
     method: 'GET',
-    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+    headers: { "Accept": "application/json" },
   });
   
   if (!response.ok) {
-    throw new Error(`Error fetching aggregate scores: ${response.status}`);
+    throw new Error(`Error fetching aggregate scores by users: ${response.status}`);
   }
   return response.json();
 };
