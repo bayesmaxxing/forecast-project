@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 )
 
 type ScoreService struct {
@@ -27,19 +26,19 @@ func (s *ScoreService) GetScores(ctx context.Context, user_id int64, forecast_id
 		if cachedData, found := s.cache.Get(cacheKey); found {
 			return cachedData.([]models.Scores), nil
 		}
-		scores, err := s.repo.GetScoreByForecastAndUser(ctx, forecast_id, user_id)
+		scores, err := s.repo.GetScores(ctx, models.ScoreFilters{UserID: &user_id, ForecastID: &forecast_id})
 		if err != nil {
 			return nil, err
 		}
 		s.cache.Set(cacheKey, scores)
-		return []models.Scores{*scores}, nil
+		return scores, nil
 
 	case user_id != 0 && forecast_id == 0:
 		cacheKey := fmt.Sprintf("score:by_user:%d", user_id)
 		if cachedData, found := s.cache.Get(cacheKey); found {
 			return cachedData.([]models.Scores), nil
 		}
-		scores, err := s.repo.GetScoresByUserID(ctx, user_id)
+		scores, err := s.repo.GetScores(ctx, models.ScoreFilters{UserID: &user_id})
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +49,7 @@ func (s *ScoreService) GetScores(ctx context.Context, user_id int64, forecast_id
 		if cachedData, found := s.cache.Get(cacheKey); found {
 			return cachedData.([]models.Scores), nil
 		}
-		scores, err := s.repo.GetScoreByForecastID(ctx, forecast_id)
+		scores, err := s.repo.GetScores(ctx, models.ScoreFilters{ForecastID: &forecast_id})
 		if err != nil {
 			return nil, err
 		}
@@ -61,7 +60,7 @@ func (s *ScoreService) GetScores(ctx context.Context, user_id int64, forecast_id
 		if cachedData, found := s.cache.Get(cacheKey); found {
 			return cachedData.([]models.Scores), nil
 		}
-		scores, err := s.repo.GetAllScores(ctx)
+		scores, err := s.repo.GetScores(ctx, models.ScoreFilters{})
 		if err != nil {
 			return nil, err
 		}
@@ -69,33 +68,6 @@ func (s *ScoreService) GetScores(ctx context.Context, user_id int64, forecast_id
 		return scores, nil
 	}
 	return nil, errors.New("no scores found")
-}
-
-func (s *ScoreService) GetScoreByForecastID(ctx context.Context, forecast_id int64) ([]models.Scores, error) {
-	return s.repo.GetScoreByForecastID(ctx, forecast_id)
-}
-
-func (s *ScoreService) GetScoreByForecastAndUser(ctx context.Context, forecast_id int64, user_id int64) (*models.Scores, error) {
-	return s.repo.GetScoreByForecastAndUser(ctx, forecast_id, user_id)
-}
-
-func (s *ScoreService) GetAverageScoreByForecastID(ctx context.Context, forecast_id int64) (*models.ScoreMetrics, error) {
-	cacheKey := "score:detail:average:" + strconv.FormatInt(forecast_id, 10)
-
-	// Try to get from cache first
-	if cachedData, found := s.cache.Get(cacheKey); found {
-		return cachedData.(*models.ScoreMetrics), nil
-	}
-	score, err := s.repo.GetAverageScoreByForecastID(ctx, forecast_id)
-	if err != nil {
-		return nil, err
-	}
-	s.cache.Set(cacheKey, score)
-	return score, nil
-}
-
-func (s *ScoreService) GetScoresByUserID(ctx context.Context, user_id int64) ([]models.Scores, error) {
-	return s.repo.GetScoresByUserID(ctx, user_id)
 }
 
 // manipulate score model
@@ -115,22 +87,6 @@ func (s *ScoreService) DeleteScore(ctx context.Context, score_id int64) error {
 	return s.repo.DeleteScore(ctx, score_id)
 }
 
-func (s *ScoreService) GetAllScores(ctx context.Context) ([]models.Scores, error) {
-	cacheKey := "score:all"
-
-	// Try to get from cache first
-	if cachedData, found := s.cache.Get(cacheKey); found {
-		return cachedData.([]models.Scores), nil
-	}
-	scores, err := s.repo.GetAllScores(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	s.cache.Set(cacheKey, scores)
-	return scores, nil
-}
-
 func (s *ScoreService) GetAverageScores(ctx context.Context) ([]models.Scores, error) {
 	cacheKey := "score:all:average"
 
@@ -146,16 +102,31 @@ func (s *ScoreService) GetAverageScores(ctx context.Context) ([]models.Scores, e
 	return scores, nil
 }
 
-// Aggregate Scores
-func (s *ScoreService) GetAggregateScoresByUserID(ctx context.Context, user_id int64) (*models.UserScores, error) {
+// Aggregate Scores router
+func (s *ScoreService) GetAggregateScores(ctx context.Context, user_id *int64, forecast_id *int64, category *string) (*models.OverallScores, error) {
+	switch {
+	case user_id != nil && category != nil:
+		return s.GetAggregateScoresByUserIDAndCategory(ctx, models.ScoreFilters{UserID: user_id, Category: category})
+	case user_id != nil:
+		return s.GetAggregateScoresByUserID(ctx, models.ScoreFilters{UserID: user_id})
+	case category != nil:
+		return s.GetAggregateScoresByCategory(ctx, models.ScoreFilters{Category: category})
+	case forecast_id != nil:
+		return s.GetAggregateScoresByForecastID(ctx, models.ScoreFilters{ForecastID: forecast_id})
+	default:
+		return s.GetOverallScores(ctx)
+	}
+}
 
-	cacheKey := fmt.Sprintf("score:aggregate:%d", user_id)
+func (s *ScoreService) GetAggregateScoresByUserID(ctx context.Context, filters models.ScoreFilters) (*models.OverallScores, error) {
+
+	cacheKey := fmt.Sprintf("score:aggregate:%d", filters.UserID)
 
 	if cachedData, found := s.cache.Get(cacheKey); found {
-		return cachedData.(*models.UserScores), nil
+		return cachedData.(*models.OverallScores), nil
 	}
 
-	scores, err := s.repo.GetUserOverallScores(ctx, user_id)
+	scores, err := s.repo.GetAggregateScores(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -163,13 +134,21 @@ func (s *ScoreService) GetAggregateScoresByUserID(ctx context.Context, user_id i
 	return scores, nil
 }
 
-func (s *ScoreService) GetAggregateScoresByUserIDAndCategory(ctx context.Context, user_id int64, category string) (*models.UserCategoryScores, error) {
-	cacheKey := fmt.Sprintf("score:aggregate:%d:%s", user_id, category)
+func (s *ScoreService) GetAggregateScoresByUserIDAndCategory(ctx context.Context, filters models.ScoreFilters) (*models.OverallScores, error) {
+	userID := int64(0)
+	if filters.UserID != nil {
+		userID = *filters.UserID
+	}
+	category := ""
+	if filters.Category != nil {
+		category = *filters.Category
+	}
+	cacheKey := fmt.Sprintf("score:aggregate:%d:%s", userID, category)
 
 	if cachedData, found := s.cache.Get(cacheKey); found {
-		return cachedData.(*models.UserCategoryScores), nil
+		return cachedData.(*models.OverallScores), nil
 	}
-	scores, err := s.repo.GetUserCategoryScores(ctx, user_id, category)
+	scores, err := s.repo.GetAggregateScores(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -177,41 +156,32 @@ func (s *ScoreService) GetAggregateScoresByUserIDAndCategory(ctx context.Context
 	return scores, nil
 }
 
-func (s *ScoreService) GetAggregateScoresByUsers(ctx context.Context) ([]models.UserScores, error) {
-	cacheKey := "score:aggregate:users"
+func (s *ScoreService) GetAggregateScoresByForecastID(ctx context.Context, filters models.ScoreFilters) (*models.OverallScores, error) {
+	cacheKey := fmt.Sprintf("score:aggregate:%d", filters.ForecastID)
 
+	// Try to get from cache first
 	if cachedData, found := s.cache.Get(cacheKey); found {
-		return cachedData.([]models.UserScores), nil
+		return cachedData.(*models.OverallScores), nil
 	}
-	scores, err := s.repo.GetOverallScoresByUsers(ctx)
+	score, err := s.repo.GetAggregateScores(ctx, models.ScoreFilters{ForecastID: filters.ForecastID})
 	if err != nil {
 		return nil, err
 	}
-	s.cache.Set(cacheKey, scores)
-	return scores, nil
+	s.cache.Set(cacheKey, score)
+	return score, nil
 }
 
-func (s *ScoreService) GetAggregateScoresByCategory(ctx context.Context, category string) (*models.CategoryScores, error) {
+func (s *ScoreService) GetAggregateScoresByCategory(ctx context.Context, filters models.ScoreFilters) (*models.OverallScores, error) {
+	category := ""
+	if filters.Category != nil {
+		category = *filters.Category
+	}
 	cacheKey := fmt.Sprintf("score:aggregate:%s", category)
 
 	if cachedData, found := s.cache.Get(cacheKey); found {
-		return cachedData.(*models.CategoryScores), nil
+		return cachedData.(*models.OverallScores), nil
 	}
-	scores, err := s.repo.GetCategoryScores(ctx, category)
-	if err != nil {
-		return nil, err
-	}
-	s.cache.Set(cacheKey, scores)
-	return scores, nil
-}
-
-func (s *ScoreService) GetAggregateScoresByUsersAndCategory(ctx context.Context, category string) ([]models.UserCategoryScores, error) {
-	cacheKey := fmt.Sprintf("score:aggregate:users:%s", category)
-
-	if cachedData, found := s.cache.Get(cacheKey); found {
-		return cachedData.([]models.UserCategoryScores), nil
-	}
-	scores, err := s.repo.GetCategoryScoresByUsers(ctx, category)
+	scores, err := s.repo.GetAggregateScores(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -220,26 +190,56 @@ func (s *ScoreService) GetAggregateScoresByUsersAndCategory(ctx context.Context,
 }
 
 func (s *ScoreService) GetOverallScores(ctx context.Context) (*models.OverallScores, error) {
-	return s.repo.GetOverallScores(ctx)
+	cacheKey := "score:aggregate:overall"
+	if cachedData, found := s.cache.Get(cacheKey); found {
+		return cachedData.(*models.OverallScores), nil
+	}
+	scores, err := s.repo.GetAggregateScores(ctx, models.ScoreFilters{})
+	if err != nil {
+		return nil, err
+	}
+	s.cache.Set(cacheKey, scores)
+	return scores, nil
 }
 
-func (s *ScoreService) GetCategoryScores(ctx context.Context, category string) (*models.CategoryScores, error) {
-	return s.repo.GetCategoryScores(ctx, category)
+// router for group by user aggregate scores
+func (s *ScoreService) GetAggregateScoresGroupedByUsers(ctx context.Context, category *string) ([]models.UserScores, error) {
+	groupByUserID := true
+	if category != nil {
+		return s.GetAggregateScoresByUsersAndCategory(ctx, models.ScoreFilters{Category: category, GroupByUserID: &groupByUserID})
+	} else {
+		return s.GetAggregateScoresByUsers(ctx, models.ScoreFilters{GroupByUserID: &groupByUserID})
+	}
 }
 
-func (s *ScoreService) GetCategoryScoresByUsers(ctx context.Context, category string) ([]models.UserCategoryScores, error) {
-	return s.repo.GetCategoryScoresByUsers(ctx, category)
+func (s *ScoreService) GetAggregateScoresByUsers(ctx context.Context, filters models.ScoreFilters) ([]models.UserScores, error) {
+	cacheKey := "score:aggregate:users"
+
+	if cachedData, found := s.cache.Get(cacheKey); found {
+		return cachedData.([]models.UserScores), nil
+	}
+	scores, err := s.repo.GetAggregateScoresByUsers(ctx, filters)
+	if err != nil {
+		return nil, err
+	}
+	s.cache.Set(cacheKey, scores)
+	return scores, nil
 }
 
-func (s *ScoreService) GetOverallScoresByUsers(ctx context.Context) ([]models.UserScores, error) {
-	return s.repo.GetOverallScoresByUsers(ctx)
-}
+func (s *ScoreService) GetAggregateScoresByUsersAndCategory(ctx context.Context, filters models.ScoreFilters) ([]models.UserScores, error) {
+	category := ""
+	if filters.Category != nil {
+		category = *filters.Category
+	}
+	cacheKey := fmt.Sprintf("score:aggregate:users:%s", category)
 
-// user-specific aggregate scores
-func (s *ScoreService) GetUserOverallScores(ctx context.Context, user_id int64) (*models.UserScores, error) {
-	return s.repo.GetUserOverallScores(ctx, user_id)
-}
-
-func (s *ScoreService) GetUserCategoryScores(ctx context.Context, user_id int64, category string) (*models.UserCategoryScores, error) {
-	return s.repo.GetUserCategoryScores(ctx, user_id, category)
+	if cachedData, found := s.cache.Get(cacheKey); found {
+		return cachedData.([]models.UserScores), nil
+	}
+	scores, err := s.repo.GetAggregateScoresByUsers(ctx, filters)
+	if err != nil {
+		return nil, err
+	}
+	s.cache.Set(cacheKey, scores)
+	return scores, nil
 }
