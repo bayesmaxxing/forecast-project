@@ -29,6 +29,13 @@ type ScoreMetrics struct {
 	LogNScoreTimeWeighted  float64 `json:"logn_score_time_weighted"`
 }
 
+type ScoreFilters struct {
+	UserID        *int64
+	ForecastID    *int64
+	Category      *string
+	GroupByUserID *bool
+}
+
 // Overall platform averages
 type OverallScores struct {
 	ScoreMetrics
