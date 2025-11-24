@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"math"
+	"sort"
 	"time"
 )
 
@@ -75,6 +76,11 @@ func CalcForecastScore(points []TimePoint, outcome bool, userID int64, forecastI
 	if len(points) == 0 {
 		return Scores{}, errors.New("no probabilities provided")
 	}
+
+	// Sort points by CreatedAt to ensure correct time weighting
+	sort.Slice(points, func(i, j int) bool {
+		return points[i].CreatedAt.Before(points[j].CreatedAt)
+	})
 
 	var closeDate time.Time
 	if forecastClosingDate != nil && forecastClosingDate.Before(*forecastResolvedAt) {
