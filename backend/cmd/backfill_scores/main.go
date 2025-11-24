@@ -32,11 +32,11 @@ func main() {
 			s.user_id,
 			s.forecast_id,
 			f.created as forecast_created,
-			f.resolved as forecast_resolved
+			f.resolved as forecast_resolved,
+			f.closing_date as forecast_closing
 		FROM scores s
 		JOIN forecasts f ON s.forecast_id = f.id
-		WHERE s.brier_score_time_weighted IS NULL
-		AND f.resolved IS NOT NULL
+		WHERE f.resolved IS NOT NULL
 		ORDER BY s.id
 	`
 
@@ -52,12 +52,13 @@ func main() {
 		ForecastID       int64
 		ForecastCreated  time.Time
 		ForecastResolved time.Time
+		ForecastClosing  *time.Time
 	}
 
 	var scoresToBackfill []ScoreToBackfill
 	for rows.Next() {
 		var s ScoreToBackfill
-		if err := rows.Scan(&s.ScoreID, &s.UserID, &s.ForecastID, &s.ForecastCreated, &s.ForecastResolved); err != nil {
+		if err := rows.Scan(&s.ScoreID, &s.UserID, &s.ForecastID, &s.ForecastCreated, &s.ForecastResolved, &s.ForecastClosing); err != nil {
 			log.Fatalf("Failed to scan row: %v", err)
 		}
 		scoresToBackfill = append(scoresToBackfill, s)
@@ -151,6 +152,7 @@ func main() {
 			scoreToBackfill.UserID,
 			scoreToBackfill.ForecastID,
 			scoreToBackfill.ForecastCreated,
+			scoreToBackfill.ForecastClosing,
 			&scoreToBackfill.ForecastResolved,
 		)
 		if err != nil {
