@@ -8,7 +8,8 @@ import {
   CircularProgress,
   Alert,
   Collapse,
-  IconButton
+  IconButton,
+  Grid
 } from '@mui/material';
 import { ExpandMore } from '@mui/icons-material';
 import ForecastGraph from '../components/ForecastGraph';
@@ -18,6 +19,7 @@ import UpdateForecast from '../components/UpdateForecast';
 import ResolveForecast from '../components/ResolveForecast';
 import UserSelector from '../components/UserSelector';
 import ForecastNews from '../components/ForecastNews';
+import ForecastLeaderboard from '../components/ForecastLeaderboard';
 import { useForecastData } from '../services/hooks/useForecastData';
 import { usePointsData } from '../services/hooks/usePointsData';
 import { useScoresData } from '../services/hooks/useScoresData';
@@ -137,10 +139,20 @@ function SpecificForecast() {
         </Box>
       </Paper>
       {forecast.resolved && (
-          <Paper elevation={0} sx={{ p: 2.5, mb: 2 }}>
-            <ResolutionDetails forecast={forecast} score={scores} />
-          </Paper>
-        )}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid item xs={12} md={6}>
+            <Paper elevation={0} sx={{ p: 2.5, height: '100%' }}>
+              <ResolutionDetails forecast={forecast} score={scores} />
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <ForecastLeaderboard
+              forecastId={numericId}
+              isResolved={forecast.resolved != null}
+            />
+          </Grid>
+        </Grid>
+      )}
 
       {chartData ? (
         <ForecastGraph
