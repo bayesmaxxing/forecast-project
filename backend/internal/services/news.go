@@ -1,12 +1,14 @@
 package services
 
 import (
+	"backend/internal/logger"
 	"backend/internal/models"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 )
@@ -19,7 +21,7 @@ func NewNewsService() *NewsService {
 }
 
 func (s *NewsService) GetNews(ctx context.Context, query string) (*models.PerplexityResponse, error) {
-
+	log := logger.FromContext(ctx)
 	r := &models.PerplexityResponse{}
 	request := models.PerplexityRequest{
 		Messages: []models.Message{
@@ -44,6 +46,7 @@ func (s *NewsService) GetNews(ctx context.Context, query string) (*models.Perple
 	httpReq.Header.Set("Authorization", "Bearer "+os.Getenv("PERPLEXITY_API_KEY"))
 	httpReq.Header.Set("Content-Type", "application/json")
 
+	log.Info("sending request to perplexity api", slog.String("request", string(requestBody)))
 	resp, err := http.DefaultClient.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
@@ -53,12 +56,15 @@ func (s *NewsService) GetNews(ctx context.Context, query string) (*models.Perple
 	// Check return status code
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusUnauthorized {
+			log.Error("unauthorized", slog.Int("status_code", resp.StatusCode))
 			return nil, fmt.Errorf("unauthorized")
 		}
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
+			log.Error("failed to read response body", slog.Int("status_code", resp.StatusCode), slog.String("error", err.Error()))
 			return nil, fmt.Errorf("unexpected status code (%d) and cannot read response: %w", resp.StatusCode, err)
 		}
+		log.Error("unexpected status code", slog.Int("status_code", resp.StatusCode), slog.String("body", string(body)))
 		return nil, fmt.Errorf("unexpected status code (%d): %s", resp.StatusCode, string(body))
 	}
 	body, err := io.ReadAll(resp.Body)

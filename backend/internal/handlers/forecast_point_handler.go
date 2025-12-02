@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"backend/internal/auth"
+	"backend/internal/logger"
 	"backend/internal/models"
 	"backend/internal/services"
 	"database/sql"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,6 +23,8 @@ func NewForecastPointHandler(s *services.ForecastPointService) *ForecastPointHan
 }
 
 func (h *ForecastPointHandler) ListForecastPoints(w http.ResponseWriter, r *http.Request) {
+	log := logger.FromContext(r.Context())
+
 	filters := models.PointFilters{}
 	//parse query params
 	queryParams := r.URL.Query()
@@ -30,6 +34,7 @@ func (h *ForecastPointHandler) ListForecastPoints(w http.ResponseWriter, r *http
 	if userIDstr != "" {
 		userID, err := strconv.ParseInt(userIDstr, 10, 64)
 		if err != nil {
+			log.Error("invalid user_id format", slog.String("error", err.Error()))
 			http.Error(w, "invalid user_id format", http.StatusBadRequest)
 			return
 		}
@@ -40,6 +45,7 @@ func (h *ForecastPointHandler) ListForecastPoints(w http.ResponseWriter, r *http
 	if forecastIDstr != "" {
 		forecastID, err := strconv.ParseInt(forecastIDstr, 10, 64)
 		if err != nil {
+			log.Error("invalid forecast_id format", slog.String("error", err.Error()))
 			http.Error(w, "invalid forecast_id format", http.StatusBadRequest)
 			return
 		}
@@ -50,6 +56,7 @@ func (h *ForecastPointHandler) ListForecastPoints(w http.ResponseWriter, r *http
 	if dateStr != "" {
 		date, err := time.Parse("2006-01-02T15:04:05Z", dateStr)
 		if err != nil {
+			log.Error("invalid date format", slog.String("error", err.Error()))
 			http.Error(w, "invalid date format, expected YYYY-MM-DDTHH:MM:SSZ", http.StatusBadRequest)
 			return
 		}
@@ -90,12 +97,15 @@ func (h *ForecastPointHandler) ListForecastPoints(w http.ResponseWriter, r *http
 		filters.CreatedDirection = &createdDirectionString
 	}
 
+	log.Info("getting forecast points", slog.Any("filters", filters))
 	points, err := h.service.GetForecastPoints(r.Context(), filters)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			log.Error("no forecast points found for these query parameters", slog.String("error", err.Error()))
 			http.Error(w, "No forecast points found for these query parameters", http.StatusNotFound)
 			return
 		}
+		log.Error("error getting forecast points", slog.String("error", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -104,15 +114,19 @@ func (h *ForecastPointHandler) ListForecastPoints(w http.ResponseWriter, r *http
 }
 
 func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *http.Request) {
+	log := logger.FromContext(r.Context())
+
 	// Get claims from context
 	claims, ok := r.Context().Value(auth.UserContextKey).(*auth.Claims)
 	if !ok {
+		log.Error("unauthorized")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	var point models.ForecastPoint
 	if err := json.NewDecoder(r.Body).Decode(&point); err != nil {
+		log.Error("invalid request body", slog.String("error", err.Error()))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -120,8 +134,10 @@ func (h *ForecastPointHandler) CreateForecastPoint(w http.ResponseWriter, r *htt
 	// Set the user ID from the JWT claims
 	point.UserID = claims.UserID
 
+	log.Info("creating forecast point", slog.Any("point", point))
 	err := h.service.CreateForecastPoint(r.Context(), &point)
 	if err != nil {
+		log.Error("failed to create forecast point", slog.String("error", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

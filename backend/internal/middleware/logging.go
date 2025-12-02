@@ -1,31 +1,46 @@
 package middleware
 
 import (
-	"log"
+	"backend/internal/logger"
+	"crypto/rand"
+	"encoding/hex"
+	"log/slog"
 	"net/http"
 	"time"
 )
 
-// RequestLogger is middleware that logs HTTP requests
+func generateRequestID() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+		requestID := generateRequestID()
 
-		// Create a response wrapper to capture the status code
+		log := slog.Default().With(
+			slog.String("request_id", requestID),
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+		)
+
+		// store logger in context
+		ctx := logger.WithContext(r.Context(), log)
+
+		r = r.WithContext(ctx)
+
 		rw := &responseWriter{w, http.StatusOK}
 
+		log.Info("request started")
 		// Call the next handler
 		next.ServeHTTP(rw, r)
 
 		// Log the request details after it's processed
-		duration := time.Since(start)
-		log.Printf(
-			"[%s] %s %s %d %v",
-			r.Method,
-			r.URL.Path,
-			r.RemoteAddr,
-			rw.status,
-			duration,
+		log.Info("request completed",
+			slog.Int("status", rw.status),
+			slog.Duration("duration", time.Since(start)),
 		)
 	})
 }

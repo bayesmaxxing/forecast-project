@@ -2,9 +2,11 @@ package repository
 
 import (
 	"backend/internal/database"
+	"backend/internal/logger"
 	"backend/internal/models"
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -103,6 +105,8 @@ func buildForecastPointQuery(filters models.PointFilters) (string, error) {
 }
 
 func (r *PostgresForecastPointRepository) GetForecastPoints(ctx context.Context, filters models.PointFilters) ([]*models.ForecastPoint, error) {
+	log := logger.FromContext(ctx)
+
 	query, err := buildForecastPointQuery(filters)
 	if err != nil {
 		return nil, err
@@ -120,10 +124,12 @@ func (r *PostgresForecastPointRepository) GetForecastPoints(ctx context.Context,
 		args = append(args, filters.Date.AddDate(0, 0, 1))
 	}
 
+	start := time.Now()
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
+	log.Info("executed query", slog.Duration("duration", time.Since(start)), slog.Bool("success", err == nil))
 
 	defer rows.Close()
 
@@ -141,7 +147,7 @@ func (r *PostgresForecastPointRepository) GetForecastPoints(ctx context.Context,
 		}
 		forecast_points = append(forecast_points, &fp)
 	}
-
+	log.Info("query results", slog.Int("count", len(forecast_points)))
 	return forecast_points, rows.Err()
 }
 

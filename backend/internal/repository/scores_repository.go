@@ -2,11 +2,13 @@ package repository
 
 import (
 	"backend/internal/database"
+	"backend/internal/logger"
 	"backend/internal/models"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -80,6 +82,9 @@ func buildScoreQuery(filters models.ScoreFilters) (string, error) {
 }
 
 func (r *PostgresScoreRepository) GetScores(ctx context.Context, filters models.ScoreFilters) ([]models.Scores, error) {
+
+	log := logger.FromContext(ctx)
+
 	query, err := buildScoreQuery(filters)
 	if err != nil {
 		return nil, err
@@ -92,11 +97,12 @@ func (r *PostgresScoreRepository) GetScores(ctx context.Context, filters models.
 	if filters.ForecastID != nil {
 		args = append(args, *filters.ForecastID)
 	}
-
+	start := time.Now()
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
+	log.Info("executed query", slog.Duration("duration", time.Since(start)), slog.Bool("success", err == nil))
 	defer rows.Close()
 
 	var scores []models.Scores
@@ -118,6 +124,7 @@ func (r *PostgresScoreRepository) GetScores(ctx context.Context, filters models.
 		}
 		scores = append(scores, s)
 	}
+	log.Info("query results", slog.Int("count", len(scores)))
 	return scores, rows.Err()
 }
 
@@ -292,6 +299,9 @@ func buildAggregateScoreQuery(filters models.ScoreFilters) (string, error) {
 }
 
 func (r *PostgresScoreRepository) GetAggregateScores(ctx context.Context, filters models.ScoreFilters) (*models.OverallScores, error) {
+
+	log := logger.FromContext(ctx)
+
 	query, err := buildAggregateScoreQuery(filters)
 	if err != nil {
 		return nil, err
@@ -312,6 +322,7 @@ func (r *PostgresScoreRepository) GetAggregateScores(ctx context.Context, filter
 		return nil, errors.New("group by user id is not supported")
 	}
 
+	start := time.Now()
 	var aggregateScores models.OverallScores
 	err = r.db.QueryRowContext(ctx, query, args...).Scan(
 		&aggregateScores.BrierScore,
@@ -326,10 +337,13 @@ func (r *PostgresScoreRepository) GetAggregateScores(ctx context.Context, filter
 	if err != nil {
 		return nil, err
 	}
+	log.Info("executed query", slog.Duration("duration", time.Since(start)), slog.Bool("success", err == nil))
 	return &aggregateScores, nil
 }
 
 func (r *PostgresScoreRepository) GetAggregateScoresByUsers(ctx context.Context, filters models.ScoreFilters) ([]models.UserScores, error) {
+	log := logger.FromContext(ctx)
+
 	query, err := buildAggregateScoreQuery(filters)
 	fmt.Println(query)
 	if err != nil {
@@ -345,10 +359,12 @@ func (r *PostgresScoreRepository) GetAggregateScoresByUsers(ctx context.Context,
 		args = append(args, categoryPattern)
 	}
 
+	start := time.Now()
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
+	log.Info("executed query", slog.Duration("duration", time.Since(start)), slog.Bool("success", err == nil))
 	defer rows.Close()
 
 	var userScores []models.UserScores
@@ -368,5 +384,6 @@ func (r *PostgresScoreRepository) GetAggregateScoresByUsers(ctx context.Context,
 		}
 		userScores = append(userScores, u)
 	}
+	log.Info("query results", slog.Int("count", len(userScores)))
 	return userScores, rows.Err()
 }

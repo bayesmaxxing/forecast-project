@@ -2,9 +2,11 @@ package repository
 
 import (
 	"backend/internal/database"
+	"backend/internal/logger"
 	"backend/internal/models"
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -109,10 +111,14 @@ func (r *PostgresForecastRepository) GetForecasts(ctx context.Context, filters m
 }
 
 func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int64) (*models.Forecast, error) {
+	log := logger.FromContext(ctx)
+
 	query, err := buildForecastQuery(models.ForecastFilters{ForecastID: &id})
 	if err != nil {
 		return nil, err
 	}
+
+	start := time.Now()
 	var forecast models.Forecast
 	err = r.db.QueryRowContext(ctx, query, id).Scan(&forecast.ID,
 		&forecast.Question,
@@ -127,6 +133,7 @@ func (r *PostgresForecastRepository) GetForecastByID(ctx context.Context, id int
 	if err != nil {
 		return nil, err
 	}
+	log.Info("executed query", slog.Duration("duration", time.Since(start)), slog.Bool("success", err == nil))
 	return &forecast, nil
 }
 
@@ -272,11 +279,14 @@ func (r *PostgresForecastRepository) GetStaleAndNewForecasts(ctx context.Context
 
 // Helper function to query forecasts
 func (r *PostgresForecastRepository) queryForecasts(ctx context.Context, query string, args ...any) ([]*models.Forecast, error) {
+	log := logger.FromContext(ctx)
+
+	start := time.Now()
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
-
+	log.Info("executed query", slog.Duration("duration", time.Since(start)), slog.Bool("success", err == nil))
 	defer rows.Close()
 
 	var forecasts []*models.Forecast
@@ -299,5 +309,6 @@ func (r *PostgresForecastRepository) queryForecasts(ctx context.Context, query s
 		}
 		forecasts = append(forecasts, &f)
 	}
+	log.Info("query results", slog.Int("count", len(forecasts)))
 	return forecasts, rows.Err()
 }
