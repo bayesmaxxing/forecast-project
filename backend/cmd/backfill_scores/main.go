@@ -10,7 +10,8 @@ import (
 	"time"
 )
 
-// This script backfills time-weighted scores for existing score records
+// This script recalculates all scores for existing score records
+// Used to fix time-weighting bug where denominator now uses user's first point time
 // Run with: go run cmd/backfill_scores/main.go
 
 func main() {
@@ -161,17 +162,23 @@ func main() {
 			continue
 		}
 
-		// Update only the time-weighted columns
+		// Update all score columns
 		updateQuery := `
 			UPDATE scores
 			SET
-				brier_score_time_weighted = $1,
-				log2_score_time_weighted = $2,
-				logn_score_time_weighted = $3
-			WHERE id = $4
+				brier_score = $1,
+				log2_score = $2,
+				logn_score = $3,
+				brier_score_time_weighted = $4,
+				log2_score_time_weighted = $5,
+				logn_score_time_weighted = $6
+			WHERE id = $7
 		`
 
 		_, err = db.ExecContext(ctx, updateQuery,
+			recalculatedScore.BrierScore,
+			recalculatedScore.Log2Score,
+			recalculatedScore.LogNScore,
 			recalculatedScore.BrierScoreTimeWeighted,
 			recalculatedScore.Log2ScoreTimeWeighted,
 			recalculatedScore.LogNScoreTimeWeighted,
