@@ -92,11 +92,12 @@ func CalcForecastScore(points []TimePoint, outcome bool, userID int64, forecastI
 	var brierSum, log2Sum, logNSum float64
 	var brierSumTimeWeighted, log2SumTimeWeighted, logNSumTimeWeighted float64
 	pointsCount := float64(len(points))
-	totalOpenTime := closeDate.Sub(forecastCreatedAt).Seconds()
+	firstPointCreatedAt := points[0].CreatedAt
+	totalTimeInForecast := closeDate.Sub(firstPointCreatedAt).Seconds()
 
 	// Edge case: if forecast was created and resolved at the same time (or very close),
 	// fall back to naive (equal-weighted) scoring for time-weighted scores
-	useTimeWeighting := totalOpenTime > 1.0 // At least 1 second open
+	useTimeWeighting := totalTimeInForecast > 1.0 // At least 1 second open
 
 	for i, point := range points {
 		if point.PointForecast <= 0.0 || point.PointForecast >= 1.0 {
@@ -113,7 +114,7 @@ func CalcForecastScore(points []TimePoint, outcome bool, userID int64, forecastI
 			} else {
 				duration = closeDate.Sub(point.CreatedAt).Seconds()
 			}
-			timeWeight = duration / totalOpenTime
+			timeWeight = duration / totalTimeInForecast
 		} else {
 			// Fall back to equal weighting if no time elapsed
 			timeWeight = 1.0 / pointsCount
