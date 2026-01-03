@@ -109,7 +109,6 @@ func TestCalcForecastScore_MultiplePointsUnequalDuration(t *testing.T) {
 }
 
 func TestCalcForecastScore_WeightsSumToOne(t *testing.T) {
-	forecastCreated := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	forecastResolved := time.Date(2024, 1, 11, 0, 0, 0, 0, time.UTC)
 
 	points := []TimePoint{
@@ -119,7 +118,8 @@ func TestCalcForecastScore_WeightsSumToOne(t *testing.T) {
 	}
 
 	// Manually calculate weights to verify they sum to 1.0
-	totalOpenTime := forecastResolved.Sub(forecastCreated).Seconds()
+	// Use user's first point time (points[0].CreatedAt), not forecast creation time
+	totalOpenTime := forecastResolved.Sub(points[0].CreatedAt).Seconds()
 
 	weight1 := points[1].CreatedAt.Sub(points[0].CreatedAt).Seconds() / totalOpenTime // 2 days
 	weight2 := points[2].CreatedAt.Sub(points[1].CreatedAt).Seconds() / totalOpenTime // 5 days
@@ -436,5 +436,37 @@ func TestCalcForecastScore_AllPointsBeforeCloseDate(t *testing.T) {
 	// These should be different
 	if math.Abs(score.BrierScoreTimeWeighted-scoreWithoutClosing.BrierScoreTimeWeighted) < 0.0001 {
 		t.Error("Closing date should affect time-weighted scores differently than no closing date")
+	}
+}
+
+func TestCalcForecastScore_UserStartedLate(t *testing.T) {
+	// Test that time weighting uses user's first point time, not forecast creation time
+	forecastCreated := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	forecastResolved := time.Date(2024, 1, 11, 0, 0, 0, 0, time.UTC) // 10 days after forecast creation
+
+	// User starts forecasting 5 days late
+	points := []TimePoint{
+		{PointForecast: 0.9, CreatedAt: time.Date(2024, 1, 6, 0, 0, 0, 0, time.UTC)}, // 5 days after forecast created
+		{PointForecast: 0.1, CreatedAt: time.Date(2024, 1, 8, 0, 0, 0, 0, time.UTC)}, // held until resolve
+	}
+
+	score, err := CalcForecastScore(points, true, 1, 1, forecastCreated, nil, &forecastResolved)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Time weights should be based on user's participation window (5 days: Jan 6-11)
+	// Point 1: 2 days / 5 days = 0.4
+	// Point 2: 3 days / 5 days = 0.6
+	expectedTimeWeighted := math.Pow(0.9-1, 2)*0.4 + math.Pow(0.1-1, 2)*0.6
+	if math.Abs(score.BrierScoreTimeWeighted-expectedTimeWeighted) > 0.0001 {
+		t.Errorf("BrierScoreTimeWeighted = %v, want %v (should use user's first point time, not forecast creation)",
+			score.BrierScoreTimeWeighted, expectedTimeWeighted)
+	}
+
+	// Naive score should be unaffected - just average of the two predictions
+	expectedNaive := (math.Pow(0.9-1, 2) + math.Pow(0.1-1, 2)) / 2
+	if math.Abs(score.BrierScore-expectedNaive) > 0.0001 {
+		t.Errorf("BrierScore = %v, want %v", score.BrierScore, expectedNaive)
 	}
 }
