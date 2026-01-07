@@ -1,24 +1,23 @@
 import { useState, useEffect } from 'react';
-import { fetchAggregateScoresByUserID, 
-  fetchAggregateScoresAllUsers, 
-  fetchAggregateScoresByUserIDAndCategory, 
-  fetchAggregateScoresByCategory,
+import { fetchAggregateScores,
   fetchAggregateScoresByUsers,
 } from '../api/scoreService';
 
-export const useAggregateScoresData = (userId = null) => {
+export const useAggregateScoresData = (userId = null, dateRange = null) => {
   const [scores, setScores] = useState([]);
   const [scoresLoading, setScoresLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchScores = async () => {
+    const fetchScoresData = async () => {
       try {
         setScoresLoading(true);
-        // Pass the userId to get scores for a specific user
-        const data = userId !== null && userId !== 'all'
-          ? await fetchAggregateScoresByUserID(userId)
-          : await fetchAggregateScoresAllUsers();
+        // Pass the userId and dateRange to get scores
+        const params = { dateRange };
+        if (userId !== null && userId !== 'all') {
+          params.user_id = userId;
+        }
+        const data = await fetchAggregateScores(params);
         setScores(data);
         setError(null);
       } catch (err) {
@@ -30,8 +29,8 @@ export const useAggregateScoresData = (userId = null) => {
       }
     };
 
-    fetchScores();
-  }, [userId]);
+    fetchScoresData();
+  }, [userId, dateRange]);
 
   return { scores, scoresLoading, error };
 }; 

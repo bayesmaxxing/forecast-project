@@ -17,13 +17,13 @@ import { EmojiEvents } from '@mui/icons-material';
 import { useUserData } from '../services/hooks/useUserData';
 import { useAggregateScoresByUsers } from '../services/hooks/useAggregateScoresByUsers';
 
-function UserLeaderboard() {
+function UserLeaderboard({ dateRange = null }) {
   const [selectedMetric, setSelectedMetric] = useState('brier_score');
   const theme = useTheme();
   const { users, usersLoading, usersError } = useUserData();
 
   // Fetch aggregate scores for all users
-  const { scores, loading: scoresLoading, error: scoresError } = useAggregateScoresByUsers();
+  const { scores, loading: scoresLoading, error: scoresError } = useAggregateScoresByUsers(dateRange);
 
   // Map user data with scores
   const userScores = scores?.map(scoreData => {

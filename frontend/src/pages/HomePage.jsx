@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SummaryScores from '../components/SummaryScores';
 import UserLeaderboard from '../components/UserLeaderboard';
+import DateRangeSelector from '../components/DateRangeSelector';
+import { DATE_RANGE_OPTIONS } from '../services/api/scoreService';
 import {
   Container,
   Typography,
@@ -12,6 +14,7 @@ import {
 
 function HomePage() {
   const theme = useTheme();
+  const [dateRange, setDateRange] = useState(DATE_RANGE_OPTIONS.ALL_TIME);
 
   return (
     <Container
@@ -38,9 +41,12 @@ function HomePage() {
       </Box>
 
       <Box component="section" sx={{ mb: 6 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          Scores
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+          <Typography variant="h3" component="h1" sx={{ mb: 0 }}>
+            Scores
+          </Typography>
+          <DateRangeSelector value={dateRange} onChange={setDateRange} />
+        </Box>
         <Typography variant="body1" sx={{ mb: 2 }}>
           Forecasts are scored on their accuracy. The closer each score is to 0, the better. For more information, see
           <Link to="/faq"> FAQ</Link>. Click on a datapoint to see information about the forecast.
@@ -48,10 +54,10 @@ function HomePage() {
 
         <Grid2 container spacing={2} sx={{ minHeight: { xs: '600px', md: 'calc(100vh - 400px)' } }}>
           <Grid2 xs={12} md sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: 'calc(100% - 370px)' } }}>
-            <SummaryScores />
+            <SummaryScores dateRange={dateRange} />
           </Grid2>
           <Grid2 xs={12} sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: '350px' } }}>
-            <UserLeaderboard />
+            <UserLeaderboard dateRange={dateRange} />
           </Grid2>
         </Grid2>
       </Box>
