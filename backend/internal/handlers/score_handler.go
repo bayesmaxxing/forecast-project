@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ScoreHandler struct {
@@ -170,8 +171,32 @@ func (h *ScoreHandler) GetAggregateScores(w http.ResponseWriter, r *http.Request
 		categoryPtr = &category
 	}
 
-	log.Info("getting aggregate scores", slog.Any("user_id", userIDPtr), slog.Any("forecast_id", forecastIDPtr), slog.Any("category", categoryPtr))
-	scores, err := h.service.GetAggregateScores(r.Context(), userIDPtr, forecastIDPtr, categoryPtr)
+	var startDatePtr *time.Time
+	startDateStr := queryParams.Get("start_date")
+	if startDateStr != "" {
+		startDate, err := time.Parse(time.RFC3339, startDateStr)
+		if err != nil {
+			log.Error("invalid start_date", slog.String("error", err.Error()))
+			http.Error(w, "invalid start_date, expected RFC3339 format", http.StatusBadRequest)
+			return
+		}
+		startDatePtr = &startDate
+	}
+
+	var endDatePtr *time.Time
+	endDateStr := queryParams.Get("end_date")
+	if endDateStr != "" {
+		endDate, err := time.Parse(time.RFC3339, endDateStr)
+		if err != nil {
+			log.Error("invalid end_date", slog.String("error", err.Error()))
+			http.Error(w, "invalid end_date, expected RFC3339 format", http.StatusBadRequest)
+			return
+		}
+		endDatePtr = &endDate
+	}
+
+	log.Info("getting aggregate scores", slog.Any("user_id", userIDPtr), slog.Any("forecast_id", forecastIDPtr), slog.Any("category", categoryPtr), slog.Any("start_date", startDatePtr), slog.Any("end_date", endDatePtr))
+	scores, err := h.service.GetAggregateScores(r.Context(), userIDPtr, forecastIDPtr, categoryPtr, startDatePtr, endDatePtr)
 	if err != nil {
 		log.Error("failed to get aggregate scores", slog.String("error", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -192,8 +217,32 @@ func (h *ScoreHandler) GetAggregateScoresGroupedByUsers(w http.ResponseWriter, r
 		categoryPtr = &category
 	}
 
-	log.Info("getting aggregate scores grouped by users", slog.Any("category", categoryPtr))
-	scores, err := h.service.GetAggregateScoresGroupedByUsers(r.Context(), categoryPtr)
+	var startDatePtr *time.Time
+	startDateStr := queryParams.Get("start_date")
+	if startDateStr != "" {
+		startDate, err := time.Parse(time.RFC3339, startDateStr)
+		if err != nil {
+			log.Error("invalid start_date", slog.String("error", err.Error()))
+			http.Error(w, "invalid start_date, expected RFC3339 format", http.StatusBadRequest)
+			return
+		}
+		startDatePtr = &startDate
+	}
+
+	var endDatePtr *time.Time
+	endDateStr := queryParams.Get("end_date")
+	if endDateStr != "" {
+		endDate, err := time.Parse(time.RFC3339, endDateStr)
+		if err != nil {
+			log.Error("invalid end_date", slog.String("error", err.Error()))
+			http.Error(w, "invalid end_date, expected RFC3339 format", http.StatusBadRequest)
+			return
+		}
+		endDatePtr = &endDate
+	}
+
+	log.Info("getting aggregate scores grouped by users", slog.Any("category", categoryPtr), slog.Any("start_date", startDatePtr), slog.Any("end_date", endDatePtr))
+	scores, err := h.service.GetAggregateScoresGroupedByUsers(r.Context(), categoryPtr, startDatePtr, endDatePtr)
 	if err != nil {
 		log.Error("failed to get aggregate scores grouped by users", slog.String("error", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)

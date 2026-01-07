@@ -35,6 +35,8 @@ type ScoreFilters struct {
 	ForecastID    *int64
 	Category      *string
 	GroupByUserID *bool
+	StartDate     *time.Time
+	EndDate       *time.Time
 }
 
 // Overall platform averages
