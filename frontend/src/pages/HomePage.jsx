@@ -41,16 +41,16 @@ function HomePage() {
       </Box>
 
       <Box component="section" sx={{ mb: 6 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-          <Typography variant="h3" component="h1" sx={{ mb: 0 }}>
-            Scores
-          </Typography>
-          <DateRangeSelector value={dateRange} onChange={setDateRange} />
-        </Box>
+        <Typography variant="h3" component="h1" gutterBottom>
+          Scores
+        </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
           Forecasts are scored on their accuracy. The closer each score is to 0, the better. For more information, see
           <Link to="/faq"> FAQ</Link>. Click on a datapoint to see information about the forecast.
         </Typography>
+        <Box sx={{ mb: 2 }}>
+          <DateRangeSelector value={dateRange} onChange={setDateRange} />
+        </Box>
 
         <Grid2 container spacing={2} sx={{ minHeight: { xs: '600px', md: 'calc(100vh - 400px)' } }}>
           <Grid2 xs={12} md sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: 'calc(100% - 370px)' } }}>

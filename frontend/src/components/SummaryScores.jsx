@@ -22,6 +22,7 @@ import {
 import { useAggregateScoresData } from '../services/hooks/useAggregateScoresData';
 import { useForecastList } from '../services/hooks/useForecastList';
 import { useScoresData } from '../services/hooks/useScoresData';
+import { getStartDateForRange } from '../services/api/scoreService';
 import UserSelector from './UserSelector';
 
 function SummaryScores({user_id=null, dateRange=null}) {
@@ -68,8 +69,14 @@ function SummaryScores({user_id=null, dateRange=null}) {
     return new Date(b.resolved) - new Date(a.resolved);
   });
 
+  // Filter forecasts by date range
+  const startDate = getStartDateForRange(dateRange);
+  const filteredForecasts = startDate
+    ? sortedForecasts.filter(f => new Date(f.resolved) >= startDate)
+    : sortedForecasts;
+
   // Limit to most recent 100 forecasts to keep chart readable
-  const limitedForecasts = sortedForecasts.slice(0, 100);
+  const limitedForecasts = filteredForecasts.slice(0, 100);
 
   const combined = limitedForecasts.map(forecast => ({
     ...forecast,
