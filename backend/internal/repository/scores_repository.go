@@ -286,6 +286,14 @@ func buildAggregateScoreQuery(filters models.ScoreFilters) (string, error) {
 		whereConditions = append(whereConditions, "lower(f.category) like "+fmt.Sprintf("$%d", argsCounter))
 		argsCounter++
 	}
+	if filters.StartDate != nil {
+		whereConditions = append(whereConditions, "s.created >= "+fmt.Sprintf("$%d", argsCounter))
+		argsCounter++
+	}
+	if filters.EndDate != nil {
+		whereConditions = append(whereConditions, "s.created <= "+fmt.Sprintf("$%d", argsCounter))
+		argsCounter++
+	}
 
 	query := fmt.Sprintf(
 		`select %s from %s %s where %s %s`,
@@ -317,6 +325,12 @@ func (r *PostgresScoreRepository) GetAggregateScores(ctx context.Context, filter
 	if filters.Category != nil {
 		categoryPattern := "%" + *filters.Category + "%"
 		args = append(args, categoryPattern)
+	}
+	if filters.StartDate != nil {
+		args = append(args, *filters.StartDate)
+	}
+	if filters.EndDate != nil {
+		args = append(args, *filters.EndDate)
 	}
 	if filters.GroupByUserID != nil && *filters.GroupByUserID {
 		return nil, errors.New("group by user id is not supported")
@@ -357,6 +371,12 @@ func (r *PostgresScoreRepository) GetAggregateScoresByUsers(ctx context.Context,
 	if filters.Category != nil {
 		categoryPattern := "%" + *filters.Category + "%"
 		args = append(args, categoryPattern)
+	}
+	if filters.StartDate != nil {
+		args = append(args, *filters.StartDate)
+	}
+	if filters.EndDate != nil {
+		args = append(args, *filters.EndDate)
 	}
 
 	start := time.Now()
