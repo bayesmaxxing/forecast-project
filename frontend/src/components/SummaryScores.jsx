@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LineChart,
@@ -23,29 +23,21 @@ import { useAggregateScoresData } from '../services/hooks/useAggregateScoresData
 import { useForecastList } from '../services/hooks/useForecastList';
 import { useScoresData } from '../services/hooks/useScoresData';
 import { getStartDateForRange } from '../services/api/scoreService';
-import UserSelector from './UserSelector';
 
-function SummaryScores({user_id=null, dateRange=null}) {
+function SummaryScores({user_id='all', dateRange=null}) {
 
   const [selectedMetric, setSelectedMetric] = useState('brier_score');
-  const [selectedUser, setSelectedUser] = useState(user_id || 'all');
   const navigate = useNavigate();
   const theme = useTheme();
 
-  useEffect(() => {
-    if (user_id !== null) {
-      setSelectedUser(user_id);
-    }
-  }, [user_id]);
-
   const { scores: aggregateScores, loading: aggregateScoresLoading, error: aggregateScoresError } = useAggregateScoresData(
-    selectedUser === 'all' ? null : selectedUser,
+    user_id === 'all' ? null : user_id,
     dateRange
   );
   const { forecasts = [], loading: forecastsLoading, error: forecastsError } = useForecastList({list_type: 'resolved'});
   const { scores, scoresLoading, error: scoresError } = useScoresData({
-    user_id: selectedUser === 'all' ? null : selectedUser, 
-    useAverageEndpoint: selectedUser === 'all' ? true : false
+    user_id: user_id === 'all' ? null : user_id,
+    useAverageEndpoint: user_id === 'all' ? true : false
   });
   
   const getScore = () => {
@@ -109,10 +101,6 @@ function SummaryScores({user_id=null, dateRange=null}) {
     }
   };
 
-  const handleUserChange = (newUserId) => {
-    setSelectedUser(newUserId || 'all');
-  };
-
   return (
     <Paper
       elevation={0}
@@ -126,20 +114,17 @@ function SummaryScores({user_id=null, dateRange=null}) {
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <FormControl sx={{ minWidth: 150 }}>
-            <Select
-              value={selectedMetric}
-              onChange={(e) => setSelectedMetric(e.target.value)}
-              size="small"
-            >
-              <MenuItem value="brier_score">Brier Score</MenuItem>
-              <MenuItem value="log2_score">Binary Log Score</MenuItem>
-              <MenuItem value="logn_score">Natural Log Score</MenuItem>
-            </Select>
-          </FormControl>
-          <UserSelector onUserChange={handleUserChange} selectedUserId={selectedUser} />
-        </Box>
+        <FormControl sx={{ minWidth: 150 }}>
+          <Select
+            value={selectedMetric}
+            onChange={(e) => setSelectedMetric(e.target.value)}
+            size="small"
+          >
+            <MenuItem value="brier_score">Brier Score</MenuItem>
+            <MenuItem value="log2_score">Binary Log Score</MenuItem>
+            <MenuItem value="logn_score">Natural Log Score</MenuItem>
+          </Select>
+        </FormControl>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           Average: {avgScore.toFixed(3)}
         </Typography>
