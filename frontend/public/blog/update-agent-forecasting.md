@@ -43,7 +43,7 @@ This is partly due to the prompt not being very opinonated on how the agent shou
 As I've already hinted above, there are lots of things that could be improved with these agents and the architectures. I've also realized that I'm a little bit hindered by how much I'm willing to spend on tokens. Unless someone wants to sponsor my API bills (my DMs are open), I'm going to focus on only two agents going forward: one single-model agent that only uses the current SOTA model and Condorcet, the multi-agent system I've designed. This will allow me to focus on the architectures to improve performance.
 
 More specifically, I want to explore ways to improve coherence over longer periods of time and longer workflows. My current ideas to do this are:
-- give agents access to a persistent filesystem which can make context ~infinite
+- give agents access to a persistent filesystem which can make context close to infinite with clever context management and exploration tools.
 - improve management and "oversight" of subagents for the Orchestrator agent
 - give agents tools to crate their own data sources. Forecasting is heavily influenced by the available data and just having Perplexity as a data source is not good enough, especially if I want agents to rely on statistical methods as well as qualitative forecasting.
 - work on methods to rapidly test and improve prompts. It is clear that prompting is very important for good and consistent performance and I haven't really experimented much with the prompts so far.
