@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SummaryScores from '../components/SummaryScores';
 import UserLeaderboard from '../components/UserLeaderboard';
+import LatestForecastPoints from '../components/LatestForecastPoints';
 import DateRangeSelector from '../components/DateRangeSelector';
+import UserSelector from '../components/UserSelector';
 import { DATE_RANGE_OPTIONS } from '../services/api/scoreService';
 import {
   Container,
@@ -15,6 +17,7 @@ import {
 function HomePage() {
   const theme = useTheme();
   const [dateRange, setDateRange] = useState(DATE_RANGE_OPTIONS.ALL_TIME);
+  const [selectedUserId, setSelectedUserId] = useState('all');
 
   return (
     <Container
@@ -48,18 +51,26 @@ function HomePage() {
           Forecasts are scored on their accuracy. The closer each score is to 0, the better. For more information, see
           <Link to="/faq"> FAQ</Link>. Click on a datapoint to see information about the forecast.
         </Typography>
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <DateRangeSelector value={dateRange} onChange={setDateRange} />
+          <UserSelector onUserChange={setSelectedUserId} selectedUserId={selectedUserId} />
         </Box>
 
         <Grid2 container spacing={2} sx={{ minHeight: { xs: '600px', md: 'calc(100vh - 400px)' } }}>
           <Grid2 xs={12} md sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: 'calc(100% - 370px)' } }}>
-            <SummaryScores dateRange={dateRange} />
+            <SummaryScores dateRange={dateRange} user_id={selectedUserId} />
           </Grid2>
           <Grid2 xs={12} sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: '350px' } }}>
             <UserLeaderboard dateRange={dateRange} />
           </Grid2>
         </Grid2>
+      </Box>
+
+      <Box component="section" sx={{ mb: 6 }}>
+        <Typography variant="h4" component="h2" gutterBottom>
+          Recent Activity
+        </Typography>
+        <LatestForecastPoints userId={selectedUserId} />
       </Box>
 
       <Typography variant="h4" component="h2" gutterBottom>
