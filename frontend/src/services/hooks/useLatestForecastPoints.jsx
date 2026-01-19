@@ -22,8 +22,12 @@ export function useLatestForecastPoints({ userId = 'all', limit = 10 } = {}) {
 
     return pointsService.fetchForecastPoints(options)
       .then((pointsData) => {
+        // Sort by created date descending to ensure latest points are first
+        const sortedPoints = [...pointsData].sort((a, b) =>
+          new Date(b.created) - new Date(a.created)
+        );
         // Slice to limit results since backend doesn't support limit param
-        setPoints(pointsData.slice(0, limit));
+        setPoints(sortedPoints.slice(0, limit));
         setLoading(false);
       })
       .catch(error => {
