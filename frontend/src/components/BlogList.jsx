@@ -25,6 +25,12 @@ const BlogList = () => {
         // For now, we'll use a hardcoded list of blog posts
         const posts = [
           {
+            slug: 'update-agent-forecasting',
+            title: 'Update on AI Agent Forecasting',
+            excerpt: 'An update on the performance of the AI agents running on this website.',
+            date: '2026-01-19'
+          },
+          {
             slug: 'ai-agent-forecasting',
             title: 'AI Agent Forecasting',
             excerpt: 'An exploration of using AI agents for forecasting.',

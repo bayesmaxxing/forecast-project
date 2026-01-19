@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Box, CircularProgress, Alert, Paper } from '@mui/material';
 
 const BlogPost = ({ slug }) => {
@@ -79,10 +80,29 @@ const BlogPost = ({ slug }) => {
           '&:hover': {
             textDecoration: 'underline'
           }
+        },
+        '& table': {
+          width: '100%',
+          borderCollapse: 'collapse',
+          mb: 3
+        },
+        '& th, & td': {
+          border: 1,
+          borderColor: 'grey.600',
+          px: 2,
+          py: 1,
+          textAlign: 'left'
+        },
+        '& th': {
+          backgroundColor: 'grey.800',
+          fontWeight: 'bold'
+        },
+        '& tr:nth-of-type(even)': {
+          backgroundColor: 'grey.900'
         }
       }}
     >
-      <ReactMarkdown>{content}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     </Paper>
   );
 };
