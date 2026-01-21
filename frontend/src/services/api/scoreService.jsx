@@ -23,30 +23,35 @@ export const getStartDateForRange = (rangeOption) => {
       return null;
   }
 };
+
+/**
+ * Fetch basic scores filtered by user and/or forecast
+ */
 export const fetchScores = async (user_id, forecast_id) => {
-    const params = new URLSearchParams();
-    if (user_id) params.append('user_id', user_id);
-    if (forecast_id) params.append('forecast_id', forecast_id);
-    
-    const response = await fetch(`${API_BASE_URL}/scores?${params.toString()}`, {
-      method: 'GET',
-      headers: {
-        "Accept": "application/json"
-      }
-    });
-    
-    if (!response.ok) {
-        throw new Error(`Error fetching scores: ${response.status}`);
-    }
-  
-    return response.json();
+  const params = new URLSearchParams();
+  if (user_id) params.append('user_id', user_id);
+  if (forecast_id) params.append('forecast_id', forecast_id);
+
+  const response = await fetch(`${API_BASE_URL}/scores?${params.toString()}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching scores: ${response.status}`);
+  }
+
+  return response.json();
 };
 
+/**
+ * Fetch average scores for a specific forecast
+ */
 export const fetchAverageScoresById = async (id) => {
   const response = await fetch(`${API_BASE_URL}/scores/average/${id}`, {
-    headers: { "Accept": "application/json" }
+    headers: { 'Accept': 'application/json' },
   });
-  
+
   if (!response.ok) {
     throw new Error(`Error fetching average scores: ${response.status}`);
   }
@@ -54,23 +59,14 @@ export const fetchAverageScoresById = async (id) => {
   return response.json();
 };
 
-export const fetchAllScores = async () => {
-  const response = await fetch(`${API_BASE_URL}/scores/all`, {
-    headers: { "Accept": "application/json" }
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Error fetching all scores: ${response.status}`);
-  }
-
-  return response.json();
-};
-
+/**
+ * Fetch all average scores
+ */
 export const fetchAverageScores = async () => {
   const response = await fetch(`${API_BASE_URL}/scores/average`, {
-    headers: { "Accept": "application/json" }
+    headers: { 'Accept': 'application/json' },
   });
-  
+
   if (!response.ok) {
     throw new Error(`Error fetching average scores: ${response.status}`);
   }
@@ -78,11 +74,24 @@ export const fetchAverageScores = async () => {
   return response.json();
 };
 
-
-
-// New unified aggregate scores endpoint with flexible query parameters
-// Accepts optional date range: either a predefined range option or custom start_date/end_date
-export const fetchAggregateScores = async ({ user_id, forecast_id, category, dateRange, start_date, end_date } = {}) => {
+/**
+ * Fetch aggregate scores with flexible filtering
+ * @param {Object} options
+ * @param {string|number} options.user_id - Filter by user ID
+ * @param {string|number} options.forecast_id - Filter by forecast ID
+ * @param {string} options.category - Filter by category
+ * @param {string} options.dateRange - Predefined date range (from DATE_RANGE_OPTIONS)
+ * @param {Date|string} options.start_date - Custom start date
+ * @param {Date|string} options.end_date - Custom end date
+ */
+export const fetchAggregateScores = async ({
+  user_id,
+  forecast_id,
+  category,
+  dateRange,
+  start_date,
+  end_date,
+} = {}) => {
   const params = new URLSearchParams();
   if (user_id) params.append('user_id', user_id);
   if (forecast_id) params.append('forecast_id', forecast_id);
@@ -103,7 +112,7 @@ export const fetchAggregateScores = async ({ user_id, forecast_id, category, dat
 
   const response = await fetch(`${API_BASE_URL}/scores/aggregate?${params.toString()}`, {
     method: 'GET',
-    headers: { "Accept": "application/json" },
+    headers: { 'Accept': 'application/json' },
   });
 
   if (!response.ok) {
@@ -113,24 +122,20 @@ export const fetchAggregateScores = async ({ user_id, forecast_id, category, dat
   return response.json();
 };
 
-// Legacy function names for backward compatibility
-export const fetchAggregateScoresAllUsers = async () => {
-  return fetchAggregateScores();
-};
-
-export const fetchAggregateScoresByUserID = async (user_id) => {
-  return fetchAggregateScores({ user_id });
-};
-
-export const fetchAggregateScoresByUserIDAndCategory = async (user_id, category) => {
-  return fetchAggregateScores({ user_id, category });
-};
-
-export const fetchAggregateScoresByCategory = async (category) => {
-  return fetchAggregateScores({ category });
-};
-
-export const fetchAggregateScoresByUsers = async ({ category, dateRange, start_date, end_date } = {}) => {
+/**
+ * Fetch aggregate scores grouped by users (for leaderboard)
+ * @param {Object} options
+ * @param {string} options.category - Filter by category
+ * @param {string} options.dateRange - Predefined date range (from DATE_RANGE_OPTIONS)
+ * @param {Date|string} options.start_date - Custom start date
+ * @param {Date|string} options.end_date - Custom end date
+ */
+export const fetchAggregateScoresByUsers = async ({
+  category,
+  dateRange,
+  start_date,
+  end_date,
+} = {}) => {
   const params = new URLSearchParams();
   if (category) params.append('category', category);
 
@@ -149,11 +154,12 @@ export const fetchAggregateScoresByUsers = async ({ category, dateRange, start_d
 
   const response = await fetch(`${API_BASE_URL}/scores/aggregate/users?${params.toString()}`, {
     method: 'GET',
-    headers: { "Accept": "application/json" },
+    headers: { 'Accept': 'application/json' },
   });
 
   if (!response.ok) {
     throw new Error(`Error fetching aggregate scores by users: ${response.status}`);
   }
+
   return response.json();
 };

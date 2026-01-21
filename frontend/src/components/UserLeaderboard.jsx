@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { EmojiEvents } from '@mui/icons-material';
 import { useUserData } from '../services/hooks/useUserData';
-import { useAggregateScoresByUsers } from '../services/hooks/useAggregateScoresByUsers';
+import { useScores } from '../services/hooks/useScores';
 
 function UserLeaderboard({ dateRange = null }) {
   const [selectedMetric, setSelectedMetric] = useState('brier_score');
@@ -23,7 +23,10 @@ function UserLeaderboard({ dateRange = null }) {
   const { users, usersLoading, usersError } = useUserData();
 
   // Fetch aggregate scores for all users
-  const { scores, loading: scoresLoading, error: scoresError } = useAggregateScoresByUsers(dateRange);
+  const { scores, loading: scoresLoading, error: scoresError } = useScores({
+    type: 'aggregate-by-users',
+    dateRange
+  });
 
   // Map user data with scores
   const userScores = scores?.map(scoreData => {

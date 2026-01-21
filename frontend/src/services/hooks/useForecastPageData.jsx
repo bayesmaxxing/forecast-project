@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useForecastList } from './useForecastList';
 import { usePointsData } from './usePointsData';
 import { useSearchFilter } from './useSearchFilter';
-import { useAggregateScoresData, useAggregateScoresDataByCategory } from './useAggregateScoresData';
+import { useScores } from './useScores';
 
 export function useForecastPageData({ categoryFilter, listType, selectedUserId }) {
   // Fetch the data using existing hooks
@@ -17,14 +17,12 @@ export function useForecastPageData({ categoryFilter, listType, selectedUserId }
     useOrderedEndpoint: false
   });
 
-  // Call both hooks (React requires unconditional hook calls)
-  const { scores: allScores, scoresLoading: allScoresLoading, error: allScoresError } = useAggregateScoresData(selectedUserId);
-  const { scores: categoryScores, scoresLoading: categoryScoresLoading, error: categoryScoresError } = useAggregateScoresDataByCategory(selectedUserId, categoryFilter);
-  
-  // Select the appropriate scores based on category filter
-  const scores = categoryFilter ? categoryScores : allScores;
-  const scoresLoading = categoryFilter ? categoryScoresLoading : allScoresLoading;
-  const scoresError = categoryFilter ? categoryScoresError : allScoresError;
+  // Fetch aggregate scores with optional category filter
+  const { scores, loading: scoresLoading, error: scoresError } = useScores({
+    type: 'aggregate',
+    userId: selectedUserId,
+    category: categoryFilter
+  });
 
   // Combine the forecasts and points
   const combined = useMemo(() => {
