@@ -21,7 +21,7 @@ import UserSelector from '../components/UserSelector';
 import ForecastLeaderboard from '../components/ForecastLeaderboard';
 import { useForecastData } from '../services/hooks/useForecastData';
 import { usePointsData } from '../services/hooks/usePointsData';
-import { useScoresData } from '../services/hooks/useScoresData';
+import { useScores } from '../services/hooks/useScores';
 import { prepareChartData } from '../utils/chartDataUtils';
 import { useUserData } from '../services/hooks/useUserData';
 
@@ -55,10 +55,10 @@ function SpecificForecast() {
     useLatestPoints: false
   });
   
-  const { scores, scoreLoading, scoreError, refetchScores } = useScoresData({
-    user_id: isMultiUserMode ? null : selectedUserId,
-    forecast_id: numericId,
-    useAverageEndpoint: isMultiUserMode,
+  const { scores, loading: scoreLoading, error: scoreError, refetch: refetchScores } = useScores({
+    type: isMultiUserMode ? 'average' : 'basic',
+    userId: isMultiUserMode ? null : selectedUserId,
+    forecastId: numericId,
     shouldFetch: forecast?.resolved != null // Only fetch if the forecast has been resolved
   });
   

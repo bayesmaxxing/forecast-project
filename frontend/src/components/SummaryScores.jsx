@@ -19,9 +19,8 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
-import { useAggregateScoresData } from '../services/hooks/useAggregateScoresData';
+import { useScores } from '../services/hooks/useScores';
 import { useForecastList } from '../services/hooks/useForecastList';
-import { useScoresData } from '../services/hooks/useScoresData';
 import { getStartDateForRange } from '../services/api/scoreService';
 
 function SummaryScores({user_id='all', dateRange=null}) {
@@ -30,14 +29,15 @@ function SummaryScores({user_id='all', dateRange=null}) {
   const navigate = useNavigate();
   const theme = useTheme();
 
-  const { scores: aggregateScores, loading: aggregateScoresLoading, error: aggregateScoresError } = useAggregateScoresData(
-    user_id === 'all' ? null : user_id,
+  const { scores: aggregateScores, loading: aggregateScoresLoading, error: aggregateScoresError } = useScores({
+    type: 'aggregate',
+    userId: user_id,
     dateRange
-  );
+  });
   const { forecasts = [], loading: forecastsLoading, error: forecastsError } = useForecastList({list_type: 'resolved'});
-  const { scores, scoresLoading, error: scoresError } = useScoresData({
-    user_id: user_id === 'all' ? null : user_id,
-    useAverageEndpoint: user_id === 'all' ? true : false
+  const { scores, loading: scoresLoading, error: scoresError } = useScores({
+    type: user_id === 'all' ? 'average' : 'basic',
+    userId: user_id
   });
   
   const getScore = () => {
