@@ -109,9 +109,8 @@ function SpecificForecast() {
     
   const sortedPoints = [...filteredPoints].sort((a, b) => new Date(a.created) - new Date(b.created));
   
-  // Use a 4-hour minimum time window between points
-  const chartData = filteredPoints && filteredPoints.length > 0 ? 
-    prepareChartData(filteredPoints, isMultiUserMode, false, 0, users) : null;
+  const chartData = filteredPoints && filteredPoints.length > 0 ?
+    prepareChartData(filteredPoints, isMultiUserMode, 0, users) : null;
   
   const chartOptions = {
     title: {
@@ -122,8 +121,7 @@ function SpecificForecast() {
         min: 0,
         max: 1,
       }
-    },
-    useSequential: false // Use date-based x-axis
+    }
   };
 
   return (
