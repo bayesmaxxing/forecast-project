@@ -18,7 +18,6 @@ import ResolutionDetails from '../components/ResolutionDetails';
 import UpdateForecast from '../components/UpdateForecast';
 import ResolveForecast from '../components/ResolveForecast';
 import UserSelector from '../components/UserSelector';
-import ForecastNews from '../components/ForecastNews';
 import ForecastLeaderboard from '../components/ForecastLeaderboard';
 import { useForecastData } from '../services/hooks/useForecastData';
 import { usePointsData } from '../services/hooks/usePointsData';
@@ -168,14 +167,6 @@ function SpecificForecast() {
           </Typography>
         </Paper>
       )}
-
-      {/* Latest News Section */}
-      <Box sx={{ mt: 2 }}>
-        <ForecastNews
-          forecastQuestion={"What is the latest news relevant to the following question:" + forecast?.question}
-          forecastId={forecast?.id}
-        />
-      </Box>
 
       <Paper elevation={0} sx={{ p: 2.5, mb: 2, mt: 2}}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setCriteriaExpanded(!criteriaExpanded)}>
