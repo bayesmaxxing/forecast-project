@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   fetchScores,
   fetchAverageScores,
-  fetchAverageScoresById,
   fetchAggregateScores,
   fetchAggregateScoresByUsers,
 } from '../api/scoreService';
@@ -74,7 +73,8 @@ export const useScores = ({
         case 'average':
           // Average scores - optionally filtered by forecast ID
           if (forecastId) {
-            data = await fetchAverageScoresById(forecastId);
+            // Use aggregate endpoint for per-forecast averages across all users
+            data = await fetchAggregateScores({ forecast_id: forecastId });
           } else {
             data = await fetchAverageScores();
           }
