@@ -64,7 +64,6 @@ func main() {
 		ForecastPoint: services.NewForecastPointService(repositories.ForecastPoint, repositories.Forecast, cache),
 		User:          services.NewUserService(repositories.User, cache),
 		Score:         services.NewScoreService(repositories.Score, cache),
-		News:          services.NewNewsService(),
 	}
 
 	handlers := &routes.Handlers{
@@ -72,7 +71,6 @@ func main() {
 		ForecastPoint: handlers.NewForecastPointHandler(services.ForecastPoint),
 		User:          handlers.NewUserHandler(services.User),
 		Score:         handlers.NewScoreHandler(services.Score),
-		News:          handlers.NewNewsHandler(services.News),
 	}
 
 	mux := http.NewServeMux()
