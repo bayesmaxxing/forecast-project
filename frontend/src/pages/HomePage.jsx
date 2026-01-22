@@ -23,7 +23,7 @@ function HomePage() {
     <Container
       maxWidth="lg"
       sx={{
-        mt: { xs: 6, sm: 8 }, // Add top margin to prevent header overlap
+        mt: { xs: 8, sm: 10 }, // Add top margin to prevent header overlap
         mb: 4,
         '& a': {
           textDecoration: 'none',

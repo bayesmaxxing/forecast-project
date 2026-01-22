@@ -36,7 +36,7 @@ const BlogPage = () => {
   // If viewing a specific post
   if (slug) {
     return (
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ mt: { xs: 6, sm: 8 } }}>
         <Box sx={{ py: 4 }}>
           <Button
             startIcon={<ArrowBack />}
@@ -53,7 +53,7 @@ const BlogPage = () => {
 
   // Blog list view
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" sx={{ mt: { xs: 6, sm: 8 } }}>
       <Box sx={{ py: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
           Blog
