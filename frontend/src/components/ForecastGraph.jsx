@@ -7,162 +7,99 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  ReferenceArea
+  ResponsiveContainer
 } from 'recharts';
-import { Paper, Typography, useTheme, Box, useMediaQuery, Switch, FormControlLabel } from '@mui/material';
+import { Paper, Typography, useTheme, Box, useMediaQuery } from '@mui/material';
 import { format } from 'date-fns';
 import UserSelector from './UserSelector';
 
 function ForecastGraph({ data, options = {}, selectedUserId, onUserChange }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [useSequentialView, setUseSequentialView] = React.useState(options.useSequential !== false);
-
-  // Toggle between date and sequential views
-  const handleViewChange = (event) => {
-    setUseSequentialView(event.target.checked);
-  };
 
   const transformData = () => {
-    if (!data || !data.labels || !data.datasets || data.datasets.length === 0) {
-      console.log('Invalid chart data format:', data);
+    if (!data || !data.datasets || data.datasets.length === 0) {
       return [];
     }
-    
-    // For sequential view, use the existing sequential data
-    if (useSequentialView && data._isSequenced) {
-      return data.labels.map((label, index) => {
-        const dataPoint = { name: label };
-        data.datasets.forEach(dataset => {
-          if (index < dataset.data.length) {
-            dataPoint[dataset.label] = dataset.data[index];
-            if (dataset.dates && dataset.dates[index]) {
-              dataPoint[`${dataset.label}_date`] = dataset.dates[index];
-            }
-          }
-        });
-        return dataPoint;
-      });
-    }
-    
-    // For date-based view
+
+    // Time-based view using timestamps
     if (data._timestamps && data._timestamps.length > 0) {
-      return data._timestamps.map((timestamp, index) => {
-        const dataPoint = { 
-          timestamp: timestamp,
-          // Format the time for display in tooltips
+      return data._timestamps.map((timestamp) => {
+        const dataPoint = {
+          timestamp,
           formattedTime: format(new Date(timestamp), 'MM/dd/yyyy HH:mm')
         };
-        
-        // Add dataset values matching this timestamp
+
         data.datasets.forEach(dataset => {
-          const datasetIndex = dataset.timestamps ? 
-            dataset.timestamps.indexOf(timestamp) : -1;
-          
+          const datasetIndex = dataset.timestamps?.indexOf(timestamp) ?? -1;
           if (datasetIndex !== -1) {
             dataPoint[dataset.label] = dataset.data[datasetIndex];
-            if (dataset.dates && dataset.dates[datasetIndex]) {
+            if (dataset.dates?.[datasetIndex]) {
               dataPoint[`${dataset.label}_date`] = dataset.dates[datasetIndex];
             }
           }
         });
-        
+
         return dataPoint;
       });
     }
-    
-    // Fallback implementation
-    return data.labels.map((label, index) => {
+
+    // Fallback for simple label-based data
+    return data.labels?.map((label, index) => {
       const dataPoint = { name: label };
       data.datasets.forEach(dataset => {
         dataPoint[dataset.label] = dataset.data[index];
       });
       return dataPoint;
-    });
+    }) || [];
   };
 
   const rechartsData = transformData();
 
-  // Customize the x-axis tick display
-  const formatXAxis = (tickItem) => {
-    if (useSequentialView) return tickItem;
-    
-    const date = new Date(tickItem);
-    return format(date, 'M/d');
-  };
-
-  // Create a properly scaled time axis for date view
+  // Calculate time axis configuration
   const getXAxisConfig = () => {
-    if (useSequentialView) {
+    if (!data?._timestamps?.length) {
       return {
         dataKey: "name",
         type: "category",
-        tick: { 
-          fill: theme.palette.text.primary, 
-          fontSize: 12 
-        },
-        angle: 0,
-        textAnchor: "middle",
+        tick: { fill: theme.palette.text.primary, fontSize: 12 },
         height: isMobile ? 30 : 50
       };
-    } else {
-      // Find min and max timestamps
-      let minTime = Infinity;
-      let maxTime = -Infinity;
-      
-      if (data && data._timestamps) {
-        data._timestamps.forEach(timestamp => {
-          minTime = Math.min(minTime, timestamp);
-          maxTime = Math.max(maxTime, timestamp);
-        });
-      }
-      
-      // Calculate proper domain with padding
-      const timeRange = maxTime - minTime;
-      const padding = Math.max(timeRange * 0.1, 24 * 60 * 60 * 1000); // 10% or 1 day min
-      
-      return {
-        dataKey: "timestamp",
-        type: "number",
-        scale: "time",
-        domain: [minTime - padding, maxTime + padding],
-        tickFormatter: formatXAxis,
-        tick: { 
-          fill: theme.palette.text.primary, 
-          fontSize: 12 
-        },
-        angle: 0,
-        textAnchor: "middle",
-        height: isMobile ? 30 : 50,
-        dy: 10,
-        // Customize the number of ticks to avoid crowding
-        ticks: calculateTimeTicks(minTime - padding, maxTime + padding)
-      };
     }
+
+    const minTime = Math.min(...data._timestamps);
+    const maxTime = Math.max(...data._timestamps);
+    const timeRange = maxTime - minTime;
+    const padding = Math.max(timeRange * 0.1, 24 * 60 * 60 * 1000); // 10% or 1 day min
+
+    return {
+      dataKey: "timestamp",
+      type: "number",
+      scale: "time",
+      domain: [minTime - padding, maxTime + padding],
+      tickFormatter: (tick) => format(new Date(tick), 'M/d'),
+      tick: { fill: theme.palette.text.primary, fontSize: 12 },
+      height: isMobile ? 30 : 50,
+      dy: 10,
+      ticks: calculateTimeTicks(minTime - padding, maxTime + padding)
+    };
   };
-  
-  // Calculate appropriate time ticks based on the range
+
   const calculateTimeTicks = (start, end) => {
     const range = end - start;
     const dayMs = 24 * 60 * 60 * 1000;
-    
-    // Determine number of ticks based on range
+
     let tickCount;
     if (range <= dayMs * 3) {
-      // If 3 days or less, show ticks for each day
       tickCount = Math.ceil(range / dayMs) + 1;
     } else if (range <= dayMs * 14) {
-      // If 2 weeks or less, show ~5 ticks
       tickCount = 5;
     } else {
-      // For longer ranges, show ~7 ticks
       tickCount = 7;
     }
-    
-    // Calculate evenly spaced ticks
+
     const step = range / (tickCount - 1);
-    return Array.from({length: tickCount}, (_, i) => start + i * step);
+    return Array.from({ length: tickCount }, (_, i) => start + i * step);
   };
 
   return (
@@ -177,36 +114,16 @@ function ForecastGraph({ data, options = {}, selectedUserId, onUserChange }) {
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
         {options.title && (
-          <Typography
-            variant="subtitle1"
-            component="h3"
-            sx={{ fontWeight: 600 }}
-          >
+          <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
             {options.title.text}
           </Typography>
         )}
 
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {selectedUserId !== undefined && onUserChange && (
-            <UserSelector onUserChange={onUserChange} selectedUserId={selectedUserId} />
-          )}
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={useSequentialView}
-                onChange={handleViewChange}
-                color="primary"
-                size="small"
-              />
-            }
-            label={useSequentialView ? "Sequential" : "Time"}
-            labelPlacement="start"
-            sx={{ ml: 0, fontSize: '0.8rem', whiteSpace: 'nowrap' }}
-          />
-        </Box>
+        {selectedUserId !== undefined && onUserChange && (
+          <UserSelector onUserChange={onUserChange} selectedUserId={selectedUserId} />
+        )}
       </Box>
-      
+
       <Box
         sx={{
           width: '100%',
@@ -214,79 +131,46 @@ function ForecastGraph({ data, options = {}, selectedUserId, onUserChange }) {
           '&:before': {
             content: '""',
             display: 'block',
-            paddingTop: {
-              xs: '70%',
-              sm: '55%',
-              md: '45%'
-            }
+            paddingTop: { xs: '70%', sm: '55%', md: '45%' }
           }
         }}
       >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-          }}
-        >
+        <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={rechartsData}
-              margin={{
-                top: 10,
-                right: 10,
-                left: 0,
-                bottom: isMobile ? 10 : 20, 
-              }}
+              margin={{ top: 10, right: 10, left: 0, bottom: isMobile ? 10 : 20 }}
             >
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke={theme.palette.divider}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
               <XAxis {...getXAxisConfig()} />
               <YAxis
-                tick={{ 
-                  fill: theme.palette.text.primary, 
-                  fontSize: { xs: 10, sm: 12 }
-                }}
-                domain={options.scales?.y?.min !== undefined ? 
-                  [options.scales.y.min, options.scales.y.max] : 
-                  ['auto', 'auto']
-                }
+                tick={{ fill: theme.palette.text.primary, fontSize: 12 }}
+                domain={options.scales?.y?.min !== undefined
+                  ? [options.scales.y.min, options.scales.y.max]
+                  : ['auto', 'auto']}
               />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{
                   backgroundColor: theme.palette.background.paper,
                   border: `1px solid ${theme.palette.divider}`,
                   borderRadius: theme.shape.borderRadius,
-                  boxShadow: theme.shadows[1],
-                  fontSize: { xs: 10, sm: 12 }
+                  boxShadow: theme.shadows[1]
                 }}
                 formatter={(value, name, props) => {
-                  // Find the date field for this dataset
                   const dateField = `${name}_date`;
                   const date = props.payload[dateField];
-                  
-                  // Return the formatted value with date if available
-                  if (date) {
-                    return [`${value} (${date})`, name];
-                  }
-                  return [value, name];
+                  return date ? [`${value} (${date})`, name] : [value, name];
                 }}
                 labelFormatter={(label, payload) => {
-                  if (!useSequentialView && payload && payload.length > 0) {
-                    return payload[0].payload.formattedTime || format(new Date(label), 'MM/dd/yyyy HH:mm');
+                  if (payload?.[0]?.payload?.formattedTime) {
+                    return payload[0].payload.formattedTime;
                   }
-                  return useSequentialView ? `Prediction: ${label}` : label;
+                  return typeof label === 'number'
+                    ? format(new Date(label), 'MM/dd/yyyy HH:mm')
+                    : label;
                 }}
               />
-              <Legend 
-                wrapperStyle={{
-                  fontSize: { xs: 10, sm: 12 }
-                }}
-              />
+              <Legend />
               {data.datasets.map((dataset, index) => (
                 <Line
                   key={index}
