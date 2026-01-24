@@ -75,8 +75,11 @@ func (s *ScoreService) GetScores(ctx context.Context, user_id int64, forecast_id
 		log.Info("getting scores by user and forecast", slog.Int64("user_id", user_id), slog.Int64("forecast_id", forecast_id))
 		cacheKey := fmt.Sprintf("score:by_user_and_forecast:%d:%d", user_id, forecast_id)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by user and forecast"))
-			return cachedData.([]models.Scores), nil
+			if data, ok := cachedData.([]models.Scores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by user and forecast"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by user and forecast"))
 		scores, err := s.repo.GetScores(ctx, models.ScoreFilters{UserID: &user_id, ForecastID: &forecast_id})
@@ -90,8 +93,11 @@ func (s *ScoreService) GetScores(ctx context.Context, user_id int64, forecast_id
 		log.Info("getting scores by user", slog.Int64("user_id", user_id))
 		cacheKey := fmt.Sprintf("score:by_user:%d", user_id)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by user"))
-			return cachedData.([]models.Scores), nil
+			if data, ok := cachedData.([]models.Scores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by user"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by user"))
 		scores, err := s.repo.GetScores(ctx, models.ScoreFilters{UserID: &user_id})
@@ -104,8 +110,11 @@ func (s *ScoreService) GetScores(ctx context.Context, user_id int64, forecast_id
 		log.Info("getting scores by forecast", slog.Int64("forecast_id", forecast_id))
 		cacheKey := fmt.Sprintf("score:by_forecast:%d", forecast_id)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by forecast"))
-			return cachedData.([]models.Scores), nil
+			if data, ok := cachedData.([]models.Scores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by forecast"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "scores by forecast"))
 		scores, err := s.repo.GetScores(ctx, models.ScoreFilters{ForecastID: &forecast_id})
@@ -118,8 +127,11 @@ func (s *ScoreService) GetScores(ctx context.Context, user_id int64, forecast_id
 		log.Info("getting all scores")
 		cacheKey := "score:all"
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "all scores"))
-			return cachedData.([]models.Scores), nil
+			if data, ok := cachedData.([]models.Scores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "all scores"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "all scores"))
 		scores, err := s.repo.GetScores(ctx, models.ScoreFilters{})
@@ -157,8 +169,11 @@ func (s *ScoreService) GetAverageScores(ctx context.Context) ([]models.Scores, e
 
 	// Try to get from cache first
 	if cachedData, found := s.cache.Get(cacheKey); found {
-		log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "average scores"))
-		return cachedData.([]models.Scores), nil
+		if data, ok := cachedData.([]models.Scores); ok {
+			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "average scores"))
+			return data, nil
+		}
+		log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 	}
 	log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "average scores"))
 	scores, err := s.repo.GetAverageScores(ctx)
@@ -202,8 +217,11 @@ func (s *ScoreService) GetAggregateScoresByUserID(ctx context.Context, filters m
 	if cacheable {
 		cacheKey := fmt.Sprintf("score:aggregate:%d:%s", *filters.UserID, dateRangeKey)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by user"))
-			return cachedData.(*models.OverallScores), nil
+			if data, ok := cachedData.(*models.OverallScores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by user"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by user"))
 		scores, err := s.repo.GetAggregateScores(ctx, filters)
@@ -237,8 +255,11 @@ func (s *ScoreService) GetAggregateScoresByUserIDAndCategory(ctx context.Context
 	if cacheable {
 		cacheKey := fmt.Sprintf("score:aggregate:%d:%s:%s", userID, category, dateRangeKey)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by user and category"))
-			return cachedData.(*models.OverallScores), nil
+			if data, ok := cachedData.(*models.OverallScores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by user and category"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by user and category"))
 		scores, err := s.repo.GetAggregateScores(ctx, filters)
@@ -263,8 +284,11 @@ func (s *ScoreService) GetAggregateScoresByForecastID(ctx context.Context, filte
 	if cacheable {
 		cacheKey := fmt.Sprintf("score:aggregate:forecast:%d:%s", *filters.ForecastID, dateRangeKey)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by forecast"))
-			return cachedData.(*models.OverallScores), nil
+			if data, ok := cachedData.(*models.OverallScores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by forecast"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by forecast"))
 		score, err := s.repo.GetAggregateScores(ctx, filters)
@@ -294,8 +318,11 @@ func (s *ScoreService) GetAggregateScoresByCategory(ctx context.Context, filters
 	if cacheable {
 		cacheKey := fmt.Sprintf("score:aggregate:%s:%s", category, dateRangeKey)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by category"))
-			return cachedData.(*models.OverallScores), nil
+			if data, ok := cachedData.(*models.OverallScores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by category"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores by category"))
 		scores, err := s.repo.GetAggregateScores(ctx, filters)
@@ -320,8 +347,11 @@ func (s *ScoreService) GetOverallScores(ctx context.Context, filters models.Scor
 	if cacheable {
 		cacheKey := fmt.Sprintf("score:aggregate:overall:%s", dateRangeKey)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "overall scores"))
-			return cachedData.(*models.OverallScores), nil
+			if data, ok := cachedData.(*models.OverallScores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "overall scores"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "overall scores"))
 		scores, err := s.repo.GetAggregateScores(ctx, filters)
@@ -361,8 +391,11 @@ func (s *ScoreService) GetAggregateScoresByUsers(ctx context.Context, filters mo
 	if cacheable {
 		cacheKey := fmt.Sprintf("score:aggregate:users:%s", dateRangeKey)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores grouped by users"))
-			return cachedData.([]models.UserScores), nil
+			if data, ok := cachedData.([]models.UserScores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores grouped by users"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores grouped by users"))
 		scores, err := s.repo.GetAggregateScoresByUsers(ctx, filters)
@@ -391,8 +424,11 @@ func (s *ScoreService) GetAggregateScoresByUsersAndCategory(ctx context.Context,
 	if cacheable {
 		cacheKey := fmt.Sprintf("score:aggregate:users:%s:%s", category, dateRangeKey)
 		if cachedData, found := s.cache.Get(cacheKey); found {
-			log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores grouped by users and category"))
-			return cachedData.([]models.UserScores), nil
+			if data, ok := cachedData.([]models.UserScores); ok {
+				log.Info("cache hit", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores grouped by users and category"))
+				return data, nil
+			}
+			log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 		}
 		log.Info("cache miss", slog.String("cache_key", cacheKey), slog.String("cache_type", "aggregate scores grouped by users and category"))
 		scores, err := s.repo.GetAggregateScoresByUsers(ctx, filters)

@@ -1,46 +1,56 @@
 package main
 
 import (
+	"backend/internal/auth"
 	"backend/internal/cache"
+	"backend/internal/config"
 	"backend/internal/database"
 	"backend/internal/handlers"
 	"backend/internal/middleware"
 	"backend/internal/repository"
 	"backend/internal/routes"
 	"backend/internal/services"
+	"context"
 	"log"
 	"net/http"
-	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func getDBConnectionString() string {
-	dbName := os.Getenv("DB_CONNECTION_STRING")
-	return dbName
-}
+// CORSMiddleware creates a CORS middleware with the specified allowed origin.
+func CORSMiddleware(allowedOrigin string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-// CORS middleware
-func CORSMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Handle preflight requests
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
 
-		w.Header().Set("Access-Control-Allow-Origin", "*") // https://www.samuelsforecasts.com
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		// Handle preflight requests
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func main() {
-	db_connection := getDBConnectionString()
-	db, err := database.NewDB(db_connection)
+	ctx := context.Background()
+
+	// Load configuration from Secret Manager and environment
+	cfg, err := config.Load(ctx)
+	if err != nil {
+		log.Fatalf("Error loading config: %v", err)
+	}
+
+	// Initialize auth with JWT secret
+	if err := auth.Init(cfg.JWTSecret); err != nil {
+		log.Fatalf("Error initializing auth: %v", err)
+	}
+
+	db, err := database.NewDB(cfg.DBConnString)
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
 	}
@@ -78,7 +88,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	routes.Setup(mux, handlers)
-	handler := CORSMiddleware(mux)
+	handler := CORSMiddleware(cfg.AllowedOrigin)(mux)
 	handler = middleware.RequestLogger(handler)
 
 	log.Println("Starting server on :8080")
