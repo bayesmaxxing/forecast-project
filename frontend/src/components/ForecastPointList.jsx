@@ -58,8 +58,8 @@ function ForecastPointsList({ points, users }) {
               <Paper elevation={1} sx={{ ml: 3, p: 2, borderRadius: 2 }}>
                 {/* User chip/avatar */}
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Chip 
-                    label={users.find(user => user.id === point.user_id)?.username || 'Unknown User'}
+                  <Chip
+                    label={users?.find(user => user.id === point.user_id)?.username || 'Unknown User'}
                     size="small"
                     sx={{ mr: 1 }}
                   />

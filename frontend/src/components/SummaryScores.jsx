@@ -35,7 +35,7 @@ function SummaryScores({user_id='all', dateRange=null}) {
     dateRange
   });
   const { forecasts = [], loading: forecastsLoading, error: forecastsError } = useForecastList({list_type: 'resolved'});
-  const { scores, loading: scoresLoading, error: scoresError } = useScores({
+  const { scores = [], loading: scoresLoading, error: scoresError } = useScores({
     type: user_id === 'all' ? 'average' : 'basic',
     userId: user_id
   });

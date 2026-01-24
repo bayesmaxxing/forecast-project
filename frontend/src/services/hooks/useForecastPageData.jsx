@@ -28,7 +28,7 @@ export function useForecastPageData({ categoryFilter, listType, selectedUserId }
   const combined = useMemo(() => {
     return Array.isArray(forecasts) 
       ? forecasts.map(forecast => {
-          const matchingPoint = points.find(point => point.forecast_id === forecast.id);
+          const matchingPoint = points?.find(point => point.forecast_id === forecast.id);
           return { ...forecast, latestPoint: matchingPoint || null};
         })
       : [];

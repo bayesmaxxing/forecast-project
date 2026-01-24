@@ -76,7 +76,7 @@ export const prepareChartData = (pointsData, multiUser = true, minTimeWindowHour
     // Create a dataset for each user
     const datasets = Object.entries(userPointsMap).map(([userId, userPoints], index) => {
       const sortedUserPoints = filterPointsByTimeWindow(userPoints);
-      const user = users.find(u => u.id === parseInt(userId, 10));
+      const user = users?.find(u => u.id === parseInt(userId, 10));
       const userName = user ? user.username : (sortedUserPoints[0]?.username || `User ${userId}`);
 
       return {
