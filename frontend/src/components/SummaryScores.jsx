@@ -72,7 +72,7 @@ function SummaryScores({user_id='all', dateRange=null}) {
 
   const combined = limitedForecasts.map(forecast => ({
     ...forecast,
-    score: scores.find(score => score.forecast_id === forecast.id)?.[`${selectedMetric}_time_weighted`] ?? 0
+    score: (scores || []).find(score => score.forecast_id === forecast.id)?.[`${selectedMetric}_time_weighted`] ?? 0
   }));
 
   const chartData = combined.map(forecast => ({
