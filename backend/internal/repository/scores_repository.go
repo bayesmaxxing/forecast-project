@@ -77,7 +77,6 @@ func buildScoreQuery(filters models.ScoreFilters) (string, error) {
 		strings.Join(whereConditions, " and "),
 		orderBy,
 	)
-	fmt.Println(query)
 	return query, nil
 }
 
@@ -359,7 +358,6 @@ func (r *PostgresScoreRepository) GetAggregateScoresByUsers(ctx context.Context,
 	log := logger.FromContext(ctx)
 
 	query, err := buildAggregateScoreQuery(filters)
-	fmt.Println(query)
 	if err != nil {
 		return nil, err
 	}

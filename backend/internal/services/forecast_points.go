@@ -68,10 +68,13 @@ func (f *ForecastPointService) GetForecastPointsByForecastID(ctx context.Context
 	log.Info("fetching forecast points by forecast id", slog.Any("filters", filters))
 	cacheKey := fmt.Sprintf("point:list:%d", filters.ForecastID)
 	if cachedPoints, found := f.cache.Get(cacheKey); found {
-		log.Info("cache hit",
-			slog.String("cache_key", cacheKey),
-			slog.String("cache_type", "forecast points by forecast id"))
-		return cachedPoints.([]*models.ForecastPoint), nil
+		if data, ok := cachedPoints.([]*models.ForecastPoint); ok {
+			log.Info("cache hit",
+				slog.String("cache_key", cacheKey),
+				slog.String("cache_type", "forecast points by forecast id"))
+			return data, nil
+		}
+		log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 	}
 	log.Info("cache miss",
 		slog.String("cache_key", cacheKey),
@@ -92,10 +95,13 @@ func (f *ForecastPointService) GetForecastPointsByForecastIDAndUser(ctx context.
 	cacheKey := fmt.Sprintf("point:list:user:%d:%d", filters.UserID, filters.ForecastID)
 
 	if cachedPoints, found := f.cache.Get(cacheKey); found {
-		log.Info("cache hit",
-			slog.String("cache_key", cacheKey),
-			slog.String("cache_type", "forecast points by forecast id and user id"))
-		return cachedPoints.([]*models.ForecastPoint), nil
+		if data, ok := cachedPoints.([]*models.ForecastPoint); ok {
+			log.Info("cache hit",
+				slog.String("cache_key", cacheKey),
+				slog.String("cache_type", "forecast points by forecast id and user id"))
+			return data, nil
+		}
+		log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 	}
 
 	log.Info("cache miss",
@@ -153,10 +159,13 @@ func (f *ForecastPointService) GetAllForecastPoints(ctx context.Context, filters
 
 	cacheKey := "point:all"
 	if cachedPoints, found := f.cache.Get(cacheKey); found {
-		log.Info("cache hit",
-			slog.String("cache_key", cacheKey),
-			slog.String("cache_type", "all forecast points"))
-		return cachedPoints.([]*models.ForecastPoint), nil
+		if data, ok := cachedPoints.([]*models.ForecastPoint); ok {
+			log.Info("cache hit",
+				slog.String("cache_key", cacheKey),
+				slog.String("cache_type", "all forecast points"))
+			return data, nil
+		}
+		log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 	}
 
 	log.Info("cache miss",
@@ -177,10 +186,13 @@ func (f *ForecastPointService) GetLatestForecastPoints(ctx context.Context, filt
 
 	cacheKey := "point:all:latest"
 	if cachedPoints, found := f.cache.Get(cacheKey); found {
-		log.Info("cache hit",
-			slog.String("cache_key", cacheKey),
-			slog.String("cache_type", "latest forecast points"))
-		return cachedPoints.([]*models.ForecastPoint), nil
+		if data, ok := cachedPoints.([]*models.ForecastPoint); ok {
+			log.Info("cache hit",
+				slog.String("cache_key", cacheKey),
+				slog.String("cache_type", "latest forecast points"))
+			return data, nil
+		}
+		log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 	}
 
 	log.Info("cache miss",
@@ -201,10 +213,13 @@ func (f *ForecastPointService) GetLatestForecastPointsByUser(ctx context.Context
 
 	cacheKey := fmt.Sprintf("point:all:latest:%d", filters.UserID)
 	if cachedPoints, found := f.cache.Get(cacheKey); found {
-		log.Info("cache hit",
-			slog.String("cache_key", cacheKey),
-			slog.String("cache_type", "latest forecast points by user"))
-		return cachedPoints.([]*models.ForecastPoint), nil
+		if data, ok := cachedPoints.([]*models.ForecastPoint); ok {
+			log.Info("cache hit",
+				slog.String("cache_key", cacheKey),
+				slog.String("cache_type", "latest forecast points by user"))
+			return data, nil
+		}
+		log.Warn("cache type mismatch, refetching", slog.String("cache_key", cacheKey))
 	}
 
 	log.Info("cache miss",
