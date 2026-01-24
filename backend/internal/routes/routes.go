@@ -13,6 +13,7 @@ type Handlers struct {
 	ForecastPoint *handlers.ForecastPointHandler
 	User          *handlers.UserHandler
 	Score         *handlers.ScoreHandler
+	Calibration   *handlers.CalibrationHandler
 }
 
 type Services struct {
@@ -20,6 +21,7 @@ type Services struct {
 	ForecastPoint *services.ForecastPointService
 	User          *services.UserService
 	Score         *services.ScoreService
+	Calibration   *services.CalibrationService
 }
 
 type Repositories struct {
@@ -27,6 +29,7 @@ type Repositories struct {
 	ForecastPoint repository.ForecastPointRepository
 	User          repository.UserRepository
 	Score         repository.ScoreRepository
+	Calibration   repository.CalibrationRepository
 }
 
 func Setup(mux *http.ServeMux, handlers *Handlers) {
@@ -63,6 +66,10 @@ func setupPublicRoutes(mux *http.ServeMux, handlers *Handlers) {
 	mux.HandleFunc("POST /users", handlers.User.CreateUser)
 	mux.HandleFunc("POST /users/login", handlers.User.Login)
 	// mux.HandleFunc("POST /users/reset-password", handlers.User.AdminResetPassword)
+
+	// calibration
+	mux.HandleFunc("GET /calibration", handlers.Calibration.GetCalibration)
+	mux.HandleFunc("GET /calibration/users", handlers.Calibration.GetCalibrationByUsers)
 }
 
 func setupProtectedRoutes(mux *http.ServeMux, handlers *Handlers) {

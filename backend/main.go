@@ -55,6 +55,7 @@ func main() {
 		ForecastPoint: repository.NewForecastPointRepository(db),
 		User:          repository.NewUserRepository(db),
 		Score:         repository.NewScoreRepository(db),
+		Calibration:   repository.NewCalibrationRepository(db),
 	}
 
 	cache := cache.NewCache()
@@ -64,6 +65,7 @@ func main() {
 		ForecastPoint: services.NewForecastPointService(repositories.ForecastPoint, repositories.Forecast, cache),
 		User:          services.NewUserService(repositories.User, cache),
 		Score:         services.NewScoreService(repositories.Score, cache),
+		Calibration:   services.NewCalibrationService(repositories.Calibration, cache),
 	}
 
 	handlers := &routes.Handlers{
@@ -71,6 +73,7 @@ func main() {
 		ForecastPoint: handlers.NewForecastPointHandler(services.ForecastPoint),
 		User:          handlers.NewUserHandler(services.User),
 		Score:         handlers.NewScoreHandler(services.Score),
+		Calibration:   handlers.NewCalibrationHandler(services.Calibration),
 	}
 
 	mux := http.NewServeMux()

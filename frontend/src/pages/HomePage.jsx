@@ -5,6 +5,7 @@ import UserLeaderboard from '../components/UserLeaderboard';
 import LatestForecastPoints from '../components/LatestForecastPoints';
 import DateRangeSelector from '../components/DateRangeSelector';
 import UserSelector from '../components/UserSelector';
+import CalibrationChart from '../components/CalibrationChart';
 import { DATE_RANGE_OPTIONS } from '../services/api/scoreService';
 import {
   Container,
@@ -64,6 +65,10 @@ function HomePage() {
             <UserLeaderboard dateRange={dateRange} />
           </Grid2>
         </Grid2>
+
+        <Box sx={{ mt: 4 }}>
+          <CalibrationChart userId={selectedUserId} dateRange={dateRange} />
+        </Box>
       </Box>
 
       <Box component="section" sx={{ mb: 6 }}>
